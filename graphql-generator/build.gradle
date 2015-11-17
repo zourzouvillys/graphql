@@ -30,6 +30,10 @@ publishing {
 		maven {
 			name "jivePublic"
 			url "https://getjive.artifactoryonline.com/getjive/public-snapshots"
+			credentials {
+				username System.env['ARTIFACTORY_USER']
+				password System.env['ARTIFACTORY_API_KEY']
+			}
 		}
 		maven {
 			name "jivePrivate"
