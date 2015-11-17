@@ -1,0 +1,95 @@
+enum DogCommand { SIT, DOWN, HEEL }
+
+scalar MyScalar
+
+interface Node {
+
+  id: ID!
+  
+}
+
+/**
+ * The root used with queries by users.
+ */
+
+type QueryRoot {
+
+  /**
+   * Fetches a single node.  The result can be spread if you wish to fetch a specific type.
+   */
+
+  node(id: ID!) : Node
+  
+  /**
+   * Fetches a single PBX by domain.  To fetch by ID use node().
+   */
+  
+  pbx (domain: String!) : PBX 
+
+  /**
+   * Returns a list of all PBXes that are visible to the caller.
+   */
+  
+  pbxes(q: String) : [PBX!]!
+
+}
+
+
+type PBX implements Node {
+
+  id: String
+  domain: String
+  
+  dids: [DID!]!
+
+}
+
+type DID {
+
+  id: String
+  number (region: String!) : String
+  action: String
+  name: String
+  caller_id: CallerID
+  
+}
+
+
+interface Bar {
+  one: Boolean
+  four(argument: String = "string"): String
+}
+
+type Foo implements Bar {
+  one: Boolean
+  two(argument: InputType!): String
+  three(argument: InputType, other: String): Int
+  four(argument: String = "string"): String
+  five(argument: [String] = ["string", "string"]): String
+  six(argument: InputType = {key: "value", another: 123}): String
+}
+
+
+type CallerID {
+
+  name: String
+  
+}
+
+type Line {
+}
+
+type RingGroup {
+}
+
+union Extension = Line | RingGroup
+
+
+input InputType {
+  key: String!
+  answer: Int = 42
+}
+
+extend type Foo {
+  seven(argument: [String]): Int
+}

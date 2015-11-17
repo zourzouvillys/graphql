@@ -1,0 +1,57 @@
+
+
+query listUsersAndPhoneNumbers ($userSearch: String!, $numberFormat : NumberDialStringFormat = "E164") {
+  users(q: $userSearch) {
+    ... Users
+  }
+}
+
+
+query getUser ($username : String!, $numberFormat : NumberDialStringFormat = "E164") {
+  user(username: $username) {  ... User }
+}
+
+
+fragment Users on TestUsersConnection {
+  edges {
+    cursor,
+    node {
+      ... User
+    }
+  }
+}
+
+fragment PhoneNumbers on PhoneNumbersConnection {
+  totalCount,
+  edges {
+    node {
+      ... UserPhoneNumber
+    }
+  }
+}
+
+
+
+fragment User on TestUser {
+  id,
+  fullName: name {
+    firstName,
+    lastName
+  }
+  age,
+  phoneNumbers {
+    ... PhoneNumbers
+  },
+  languagesSpoken
+}
+
+fragment UserPhoneNumber on PhoneNumber {
+  id,
+  name,
+  dialstring(format: $numberFormat),
+  ... on NanpaNumber {
+    callerName
+  }
+}
+
+

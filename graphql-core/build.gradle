@@ -1,0 +1,92 @@
+
+buildscript {
+
+  repositories {
+    jcenter()    
+	mavenCentral()
+  }
+
+  dependencies {
+	classpath "com.prezi.pride:gradle-pride-plugin:0.11"
+  }
+
+}
+
+repositories {
+    jcenter()
+}
+
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+apply plugin: 'pride'
+apply plugin: 'eclipse'
+
+group = "io.joss.graphql"
+version = '1.0-SNAPSHOT'
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '2.8' 
+}
+
+configurations {
+    provided
+}
+
+sourceSets {	
+    main.compileClasspath += configurations.provided
+    test.compileClasspath += configurations.provided
+    test.runtimeClasspath += configurations.provided
+}
+
+dependencies {
+    compile 'org.projectlombok:lombok:1.16.6'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.assertj:assertj-core:3.2.0'
+	testCompile 'com.google.guava:guava:19.0-rc2'
+	testCompile 'com.fasterxml.jackson.core:jackson-databind:2.6.3'
+}
+
+compileJava {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
+
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+  classifier 'sources'
+  from sourceSets.main.allJava
+}
+
+
+
+publishing {
+	repositories {
+		maven {
+			name "jivePublic"
+			url "https://getjive.artifactoryonline.com/getjive/public-snapshots"
+		}
+		maven {
+			name "jivePrivate"
+			url "https://getjive.artifactoryonline.com/getjive/libs-snapshot-local"
+			credentials {
+				username System.env['ARTIFACTORY_USER']
+				password System.env['ARTIFACTORY_API_KEY']
+			}
+		}
+	}
+    publications {
+        jar(MavenPublication) {
+			pom.withXml {
+				asNode().remove(asNode().dependencies[0])
+			}
+            from components.java
+        }
+        sourcesJar(MavenPublication) {
+            from components.java
+			artifact sourcesJar {
+				classifier "sources"
+			}
+        }
+    }
+}
+

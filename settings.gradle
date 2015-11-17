@@ -1,0 +1,8 @@
+
+[ 'graphql-core', 'graphql-server', 'graphql-generator', 'graphql-cli' ].each { _ ->
+
+
+  include _
+  project(':' + _).projectDir = file(_)
+
+}
