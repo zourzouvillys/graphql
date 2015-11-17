@@ -8,14 +8,14 @@ buildscript {
     }
     dependencies {
         classpath "com.prezi.pride:gradle-pride-plugin:0.11"
-    	classpath "com.github.jengelman.gradle.plugins:shadow:1.2.2"
+//    	classpath "com.github.jengelman.gradle.plugins:shadow:1.2.2"
     }    
 }
 
 apply plugin: 'pride'
 apply plugin: 'java'
 apply plugin: 'application'
-apply plugin: "com.github.johnrengelman.shadow"
+//apply plugin: "com.github.johnrengelman.shadow"
 
 
 group "io.joss.graphql"
