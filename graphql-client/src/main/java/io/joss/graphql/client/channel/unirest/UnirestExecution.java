@@ -69,7 +69,7 @@ public class UnirestExecution implements GQLExecution
 
       if (req.getStatus() != 200)
       {
-        throw new GQLHttpException(req.getStatus(), req.getStatusText(), req.getHeaders(), req.getBody());
+        throw new UnirestHttpException(req.getStatus(), req.getStatusText(), req.getHeaders(), req.getBody());
       }
 
       JSONObject body = new JSONObject(req.getBody());
