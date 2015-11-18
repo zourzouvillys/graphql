@@ -38,7 +38,6 @@ import io.joss.graphql.core.value.GQLListValue;
 import io.joss.graphql.core.value.GQLObjectValue;
 import io.joss.graphql.core.value.GQLValue;
 import io.joss.graphql.core.value.GQLValues;
-import io.joss.graphql.core.value.GQLListValue.GQLListValueBuilder;
 
 public class ParseContext
 {
@@ -696,7 +695,7 @@ public class ParseContext
   private GQLListValue parseArray()
   {
 
-    final GQLListValueBuilder b = GQLListValue.builder();
+    final GQLListValue.Builder b = GQLListValue.builder();
 
     this.require("[");
 

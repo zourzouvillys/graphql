@@ -17,7 +17,7 @@ import lombok.experimental.Wither;
 @EqualsAndHashCode
 @ToString
 @Wither
-@Builder
+@Builder(builderClassName = "Builder")
 public final class GQLListValue implements GQLValue
 {
 
