@@ -17,7 +17,7 @@ import io.joss.graphql.core.binder.runtime.DataContext;
 import io.joss.graphql.core.binder.runtime.DataContexts;
 import io.joss.graphql.core.doc.GQLDocument;
 import io.joss.graphql.core.doc.GQLSelectedOperation;
-import io.joss.graphql.core.parser.GraphQLParser;
+import io.joss.graphql.core.parser.GQLParser;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -71,7 +71,7 @@ public class TestCase2
 
     // parse incoming request:
 
-    GQLDocument doc = GraphQLParser.parseDocument("{ child { selfs { id, selfs { id } } } }");
+    GQLDocument doc = GQLParser.parseDocument("{ child { selfs { id, selfs { id } } } }");
 
     DataContext root = DataContexts.build(scanner.registry(), scanner.root(), GQLSelectedOperation.defaultQuery(doc));
 

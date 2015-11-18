@@ -3,12 +3,12 @@ package io.jgql.core.parser;
 import org.junit.Test;
 
 import io.joss.graphql.core.doc.GQLDocument;
-import io.joss.graphql.core.parser.GraphQLParser;
+import io.joss.graphql.core.parser.GQLParser;
 
 public class ParseContextTest
 {
 
-  private final GraphQLParser PARSER = new GraphQLParser();
+  private final GQLParser PARSER = new GQLParser();
 
   @Test(expected = IllegalArgumentException.class)
   public void testFail()

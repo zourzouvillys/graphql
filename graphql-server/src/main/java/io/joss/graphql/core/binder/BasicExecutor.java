@@ -9,7 +9,7 @@ import io.joss.graphql.core.binder.runtime.DataContext;
 import io.joss.graphql.core.binder.runtime.DataContexts;
 import io.joss.graphql.core.doc.GQLDocument;
 import io.joss.graphql.core.doc.GQLSelectedOperation;
-import io.joss.graphql.core.parser.GraphQLParser;
+import io.joss.graphql.core.parser.GQLParser;
 import io.joss.graphql.core.value.GQLValue;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +42,7 @@ public class BasicExecutor
 
     // parse incoming request:
 
-    GQLDocument doc = GraphQLParser.parseDocument(query);
+    GQLDocument doc = GQLParser.parseDocument(query);
 
     DataContext root = DataContexts.build(scanner.registry(), scanner.root(), GQLSelectedOperation.defaultQuery(doc));
 

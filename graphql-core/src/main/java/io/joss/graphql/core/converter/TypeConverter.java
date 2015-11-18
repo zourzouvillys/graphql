@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.jgql.core.reflect.ReflectionUtilsTest;
 import lombok.Value;
 
 /**
@@ -44,7 +45,7 @@ public class TypeConverter
 
   private TypeConverter registerBuiltins()
   {
-    
+
     register(String.class, Integer.class, Integer::new);
     register(Integer.class, String.class, val -> val.toString());
 
@@ -65,9 +66,9 @@ public class TypeConverter
 
     register(String.class, Instant.class, val -> Instant.parse(val));
     register(Instant.class, String.class, val -> val.toString());
-    
+
     return this;
-    
+
   }
 
   /**
@@ -97,12 +98,41 @@ public class TypeConverter
 
     TypeMapper<? super Object, ? super Object> converter = registered.get(new Converstion(input.getClass(), outputClass));
 
-    if (converter == null)
+    if (converter != null)
     {
-      throw new RuntimeException(String.format("No converter from '%s' to '%s'", input.getClass(), outputClass));
+      return (O) converter.convert(input);
     }
 
-    return (O) converter.convert(input);
+    for (Class<?> iface : input.getClass().getInterfaces())
+    {
+
+      converter = registered.get(new Converstion(iface, outputClass));
+
+      if (converter != null)
+      {
+        return (O) converter.convert(input);
+      }
+
+    }
+    
+    // check out the superclasses.
+
+    Class<?> superclass = input.getClass();
+
+    while (superclass != null)
+    {
+
+      converter = registered.get(new Converstion(superclass, outputClass));
+
+      if (converter != null)
+      {
+        return (O) converter.convert(input);
+      }
+
+      superclass = superclass.getSuperclass();
+    }
+
+    throw new RuntimeException(String.format("No converter from '%s' to '%s'", input.getClass(), outputClass));
 
   }
 

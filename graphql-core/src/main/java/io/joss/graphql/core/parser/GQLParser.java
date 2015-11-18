@@ -21,7 +21,7 @@ import io.joss.graphql.core.value.GQLValue;
  *
  */
 
-public class GraphQLParser
+public class GQLParser
 {
 
   public GQLValue parseValue(String value)
@@ -115,7 +115,7 @@ public class GraphQLParser
 
   public static GQLDocument parseDocument(String input)
   {
-    return new GraphQLParser().parse(input);
+    return new GQLParser().parse(input);
   }
 
   public static GQLDocument parseDocument(InputStream input)

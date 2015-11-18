@@ -8,7 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import io.joss.graphql.core.doc.GQLDocument;
-import io.joss.graphql.core.parser.GraphQLParser;
+import io.joss.graphql.core.parser.GQLParser;
 
 public class DefinitionPrinterTest
 {
@@ -37,7 +37,7 @@ public class DefinitionPrinterTest
   {
 
 
-    GQLDocument doc = GraphQLParser.parseDocument(input);
+    GQLDocument doc = GQLParser.parseDocument(input);
 
     //
     ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -46,7 +46,7 @@ public class DefinitionPrinterTest
     ps.close();
     os.flush();
     
-    GQLDocument doc2 = GraphQLParser.parseDocument(os.toString());
+    GQLDocument doc2 = GQLParser.parseDocument(os.toString());
     
     Assert.assertEquals(doc, doc2);
 

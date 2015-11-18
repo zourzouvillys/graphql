@@ -9,6 +9,7 @@ import java.util.List;
 import io.joss.graphql.core.binder.reflect.ParameterizedTypedClass;
 import io.joss.graphql.core.binder.reflect.ReflectionUtils;
 import io.joss.graphql.core.binder.reflect.TypedClass;
+import io.joss.graphql.core.converter.TypeConverter;
 import io.joss.graphql.core.value.GQLListValue;
 import io.joss.graphql.core.value.GQLObjectValue;
 import io.joss.graphql.core.value.GQLValue;
@@ -19,9 +20,11 @@ public class Converter
 
   private GQLValue value;
   private TypedClass<?> type;
+  private TypeConverter converter;
 
-  public Converter(GQLValue value, TypedClass<?> type)
+  public Converter(TypeConverter converter, GQLValue value, TypedClass<?> type)
   {
+    this.converter = converter;
     this.value = value;
     this.type = type;
   }
@@ -73,9 +76,10 @@ public class Converter
       }
 
       return collection;
+      
     }
 
-    Converter c = new Converter(value, type);
+    Converter c = new Converter(converter, value, type);
 
     return Proxy.newProxyInstance(
         getClass().getClassLoader(),
@@ -95,26 +99,7 @@ public class Converter
 
   private Object convert(GQLValue value, Class<?> type)
   {
-
-    if (type.equals(Integer.TYPE) || type.equals(Integer.class))
-    {
-      return value.apply(GQLValueConverters.intConverter());
-    }
-    else if (type.equals(Long.TYPE) || type.equals(Long.class))
-    {
-      return value.apply(GQLValueConverters.longConverter());
-    }
-    else if (type.equals(Boolean.TYPE) || type.equals(Boolean.class))
-    {
-      return value.apply(GQLValueConverters.booleanConverter());
-    }
-    else if (type.equals(String.class))
-    {
-      return value.apply(GQLValueConverters.stringConverter());
-    }
-
-    throw new RuntimeException(String.format("Don't know how to convert %s to %s", value.getClass().getSimpleName(), type.getSimpleName()));
-
+    return converter.convert(value, type);    
   }
 
 }

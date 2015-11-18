@@ -22,7 +22,7 @@ import io.joss.graphql.core.binder.TypeScanner;
 import io.joss.graphql.core.doc.GQLDocument;
 import io.joss.graphql.core.lang.GQLSchemaBuilder;
 import io.joss.graphql.core.lang.GQLTypeRegistry;
-import io.joss.graphql.core.parser.GraphQLParser;
+import io.joss.graphql.core.parser.GQLParser;
 import io.joss.graphql.core.types.GQLTypes;
 import io.joss.graphql.core.utils.TypePrinter;
 import io.joss.graphql.generator.java.JavaClientGenerator;
@@ -105,10 +105,10 @@ public class CommandLineMain
       try
       {
 
-        GQLTypeRegistry ps = new GraphQLParser().parseSchema(schema.equals("-") ? System.in : new FileInputStream(Paths.get(schema).toFile()));
+        GQLTypeRegistry ps = new GQLParser().parseSchema(schema.equals("-") ? System.in : new FileInputStream(Paths.get(schema).toFile()));
 
         // now, generate the queries.
-        GQLDocument doc = GraphQLParser.parseDocument(new FileInputStream(queryFile));
+        GQLDocument doc = GQLParser.parseDocument(new FileInputStream(queryFile));
 
         // and generate the java code ...
         JavaClientGenerator gen = new JavaClientGenerator(ps, ps.decl(rootQueryType), doc);

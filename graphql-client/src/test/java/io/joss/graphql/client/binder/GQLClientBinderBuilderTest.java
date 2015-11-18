@@ -17,6 +17,7 @@ public class GQLClientBinderBuilderTest
   public void test()
   {
 
+    // create our test server stub.
     ClientStub client = GQLClientBinderBuilder
         .forStub(MyTestClient.ClientStub.class)
         .withChannel(LoopbackChannelBuilder.forInstance(new TestServerRoot()).build())

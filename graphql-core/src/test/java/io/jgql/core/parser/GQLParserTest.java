@@ -21,13 +21,13 @@ import org.junit.Test;
 import io.joss.graphql.core.doc.GQLOpType;
 import io.joss.graphql.core.doc.GQLOperationDefinition;
 import io.joss.graphql.core.lang.GQLTypeRegistry;
-import io.joss.graphql.core.parser.GraphQLParser;
+import io.joss.graphql.core.parser.GQLParser;
 import io.joss.graphql.core.utils.TypePrinter;
 
-public class GraphQLParserTest
+public class GQLParserTest
 {
 
-  private final GraphQLParser PARSER = new GraphQLParser();
+  private final GQLParser PARSER = new GQLParser();
 
   @Test
   public void testParseQuery()

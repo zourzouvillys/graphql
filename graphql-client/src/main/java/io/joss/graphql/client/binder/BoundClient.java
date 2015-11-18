@@ -1,7 +1,6 @@
 package io.joss.graphql.client.binder;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,10 +10,11 @@ import io.joss.graphql.client.runtime.RuntimeQuery;
 import io.joss.graphql.core.binder.reflect.ParameterizedTypedClass;
 import io.joss.graphql.core.binder.reflect.ReflectionUtils;
 import io.joss.graphql.core.binder.reflect.TypedClass;
-import io.joss.graphql.core.binder.reflect.TypedParameter;
+import io.joss.graphql.core.converter.TypeConverter;
 import io.joss.graphql.core.doc.GQLDocument;
 import io.joss.graphql.core.doc.GQLOperationDefinition;
 import io.joss.graphql.core.value.GQLObjectValue;
+import io.joss.graphql.core.value.GQLValueTypeConverter;
 
 /**
  * A slow reflection based implementation.
@@ -28,10 +28,12 @@ public class BoundClient
 
   private Map<Method, GQLOperationDefinition> methods = new HashMap<>();
   private GQLChannel channel;
+  private TypeConverter converter = new GQLValueTypeConverter();
 
   public BoundClient(GQLChannel channel)
   {
     this.channel = channel;
+
   }
 
   void add(Method method, GQLOperationDefinition op)
@@ -54,8 +56,7 @@ public class BoundClient
       public Object execute()
       {
         TypedClass<Object> returnType = ReflectionUtils.wrap(method.getAnnotatedReturnType());
-        
-        return convert(channel.execute(doc).get(), ((ParameterizedTypedClass<?>)returnType).parameter(0));
+        return convert(channel.execute(doc).get(), ((ParameterizedTypedClass<?>) returnType).parameter(0));
       }
 
     };
@@ -73,7 +74,7 @@ public class BoundClient
 
   private Object convert(GQLObjectValue result, TypedClass<?> type)
   {
-    Converter c = new Converter(result, type);
+    Converter c = new Converter(converter, result, type);
     return Proxy.newProxyInstance(
         getClass().getClassLoader(),
         new Class<?>[] { type.rawClass() },

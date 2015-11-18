@@ -16,7 +16,7 @@ import io.joss.graphql.core.binder.runtime.DataContext;
 import io.joss.graphql.core.binder.runtime.DataContexts;
 import io.joss.graphql.core.doc.GQLDocument;
 import io.joss.graphql.core.doc.GQLSelectedOperation;
-import io.joss.graphql.core.parser.GraphQLParser;
+import io.joss.graphql.core.parser.GQLParser;
 import io.joss.graphql.core.value.GQLObjectValue;
 import io.joss.graphql.core.value.GQLValue;
 

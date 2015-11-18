@@ -23,7 +23,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 import io.joss.graphql.client.runtime.GQLChannel;
 import io.joss.graphql.core.doc.GQLDocument;
-import io.joss.graphql.core.parser.GraphQLParser;
+import io.joss.graphql.core.parser.GQLParser;
 import io.joss.graphql.core.value.GQLObjectValue;
 import io.joss.graphql.core.value.GQLStringValue;
 
@@ -77,7 +77,7 @@ public class UnirestHttpChannelTest
         .build();
 
     // the document we're using to query.
-    GQLDocument doc = GraphQLParser.parseDocument("{ a: tenant { id, __typename }  }");
+    GQLDocument doc = GQLParser.parseDocument("{ a: tenant { id, __typename }  }");
 
     // execute it - blocking.
     GQLObjectValue value = channel.execute(doc).get();

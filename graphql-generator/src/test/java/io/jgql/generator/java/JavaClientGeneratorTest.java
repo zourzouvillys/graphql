@@ -6,7 +6,7 @@ import io.jgql.generator.java.modeltest.TestClientQueryRoot;
 import io.joss.graphql.core.binder.TypeBindingResult;
 import io.joss.graphql.core.binder.TypeScanner;
 import io.joss.graphql.core.doc.GQLDocument;
-import io.joss.graphql.core.parser.GraphQLParser;
+import io.joss.graphql.core.parser.GQLParser;
 import io.joss.graphql.generator.java.JavaClientGenerator;
 
 public class JavaClientGeneratorTest
@@ -20,7 +20,7 @@ public class JavaClientGeneratorTest
     TypeBindingResult result = TypeScanner.bind(TestClientQueryRoot.class);
 
     // now, generate the queries.    
-    GQLDocument doc = GraphQLParser.parseDocument(getClass().getResourceAsStream("/test.gql"));
+    GQLDocument doc = GQLParser.parseDocument(getClass().getResourceAsStream("/test.gql"));
     
     
     // and generate the java code ...
