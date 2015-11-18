@@ -15,11 +15,15 @@ import io.joss.graphql.core.doc.GQLSelectedOperation;
 import io.joss.graphql.core.doc.GQLVariableDefinition;
 import io.joss.graphql.core.lang.GQLTypeRegistry;
 import io.joss.graphql.core.lang.GQLTypeVisitors;
+import io.joss.graphql.generator.java.codedom.Block;
+import io.joss.graphql.generator.java.codedom.Expressions;
+import io.joss.graphql.generator.java.codedom.FieldDeclaration;
 import io.joss.graphql.generator.java.codedom.MethodDeclaration;
+import io.joss.graphql.generator.java.codedom.MethodDeclaration.Builder;
 import io.joss.graphql.generator.java.codedom.Modifier;
 import io.joss.graphql.generator.java.codedom.SingleVariableDeclaration;
+import io.joss.graphql.generator.java.codedom.Statements;
 import io.joss.graphql.generator.java.codedom.TypeDeclaration;
-import io.joss.graphql.generator.java.codedom.MethodDeclaration.Builder;
 import lombok.Getter;
 
 /**
@@ -147,8 +151,15 @@ public class JavaClientGenerator
 
     TypeDeclaration.Builder tdb = TypeDeclaration.builder();
 
-    tdb.isInterface(true);
+    tdb.isInterface(false);
     tdb.modifier(Modifier.PUBLIC);
+    
+    
+    MethodDeclaration.Builder cdb = MethodDeclaration.builder();
+    cdb.constructor(true);
+    cdb.modifier(Modifier.PUBLIC);
+    cdb.name(CodeUtils.toTypeName(ctx.parent() == null ? (query.name() + "Result") : type.name()));
+
 
     if (RelayUtils.isRelayNode(ctx))
     {
@@ -176,11 +187,11 @@ public class JavaClientGenerator
 
       RelayConnectionContext relay = RelayUtils.toRelayConnection(ctx);
       // GQLDeclaration edgeType = extractRelayType(ctx.declaration());
-      tdb.superInterface(String.format("%s.RelayCollection<%s, %s, %s>",
-          RUNTIME_PACKAGE,
-          type.name(),
-          relay.edge().decl().name(),
-          relay.edge().edgeType().name()));
+//      tdb.superInterface(String.format("%s.RelayCollection<%s, %s, %s>",
+//          RUNTIME_PACKAGE,
+//          type.name(),
+//          relay.edge().decl().name(),
+//          relay.edge().edgeType().name()));
 
     }
 
@@ -189,13 +200,15 @@ public class JavaClientGenerator
 
       RelayConnectionContext relay = RelayUtils.toRelayConnection(ctx.parent());
 
-      tdb.superInterface(String.format("%s.RelayEdge<%s, %s, %s>",
-          RUNTIME_PACKAGE,
-          relay.decl().name(),
-          relay.edge().decl().name(),
-          relay.edge().edgeType().name()));
+      // tdb.superInterface(String.format("%s.RelayEdge<%s, %s, %s>",
+      // RUNTIME_PACKAGE,
+      // relay.decl().name(),
+      // relay.edge().decl().name(),
+      // relay.edge().edgeType().name()));
 
     }
+    
+    Block.Builder blockb = Block.builder();
 
     for (DataContext child : ctx.children())
     {
@@ -205,10 +218,21 @@ public class JavaClientGenerator
         // it's not scalar, so need to create a type for it.
         generateResultType(ctx.parent() != null ? queryShape : tdb, child, query);
       }
+      
+      //
+      FieldDeclaration.Builder fdb = FieldDeclaration.builder();
+      fdb.modifier(Modifier.PRIVATE);
+      fdb.modifier(Modifier.FINAL);
+      fdb.name(child.name());
+      fdb.type(child.type().apply(new MethodReturnVisitor(this)));
+
+      tdb.bodyDeclaration(fdb.build());
 
       //
 
       MethodDeclaration.Builder getter = MethodDeclaration.builder();
+      
+      getter.modifier(Modifier.PUBLIC);
 
       if (child.fdecl().deprecationReason() != null)
       {
@@ -220,10 +244,30 @@ public class JavaClientGenerator
       getter.type(child.type().apply(new MethodReturnVisitor(this)));
       getter.name(child.name());
 
+      Block.Builder bb = Block.builder();
+      
+      bb.statement(Statements.returnValue(Expressions.thisField(child.name())));
+      
+      getter.body(bb.build());
+      
       tdb.bodyDeclaration(getter.build());
 
+      ///
+      
+      cdb.parameter(SingleVariableDeclaration.builder()
+          .type(child.type().apply(new MethodReturnVisitor(this)))
+          .name(child.name())
+          .build());
+      
+      blockb.statement(Statements.assign(Expressions.thisField(child.name()), Expressions.simpleName(child.name())));
+
+      
     }
 
+    cdb.body(blockb.build());
+    tdb.bodyDeclaration(cdb.build());
+
+    
     TypeDeclaration td = tdb.build();
 
     queryShape.bodyDeclaration(td);

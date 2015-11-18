@@ -1,14 +1,10 @@
 package io.joss.graphql.client.binder;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 
-import io.joss.graphql.client.binder.MyTestClient.ClientStub;
-import io.joss.graphql.client.binder.MyTestClient.GetUserResult;
 import io.joss.graphql.client.channel.loopback.LoopbackChannelBuilder;
-import io.joss.graphql.client.channel.unirest.UnirestHttpChannelBuilder;
-import io.joss.graphql.client.runtime.RuntimeQuery;
 
 public class GQLClientBinderBuilderTest
 {
@@ -18,7 +14,7 @@ public class GQLClientBinderBuilderTest
   {
 
     // create our test server stub.
-    ClientStub client = GQLClientBinderBuilder
+    MyTestClient.ClientStub client = GQLClientBinderBuilder
         .forStub(MyTestClient.ClientStub.class)
         .withChannel(LoopbackChannelBuilder.forInstance(new TestServerRoot()).build())
         .build();
@@ -26,7 +22,7 @@ public class GQLClientBinderBuilderTest
     // client implementation should return a bound instance.
     assertNotNull(client);
     
-    GetUserResult res = client.getUser("theo", "e164").execute();
+    MyTestClient.GetUserResult res = client.getUser("theo", "e164").execute();
     
     // make sure the reuslt doesn't bork.
     assertNotNull(res);

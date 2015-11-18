@@ -11,6 +11,8 @@ import lombok.Value;
 @Builder(builderClassName = "Builder")
 public class MethodDeclaration implements BodyDeclaration
 {
+  
+  private final boolean constructor;
 
   private final String javadoc;
   @Singular
@@ -19,14 +21,16 @@ public class MethodDeclaration implements BodyDeclaration
   private final Set<Modifier> modifiers;
   private String type;
   private String name;
-  
+
   @Singular
   private List<SingleVariableDeclaration> parameters;
+
+  private Block body;
 
   @Override
   public <R> R apply(BodyDeclarationVisitor<R> visitor)
   {
     return visitor.visitMethod(this);
   }
-  
+
 }

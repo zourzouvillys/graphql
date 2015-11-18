@@ -2,178 +2,427 @@ package io.joss.graphql.client.binder;
 
 import java.util.Collection;
 
-import io.joss.graphql.client.runtime.GQLPath;
-import io.joss.graphql.client.runtime.RelayCollection;
-import io.joss.graphql.client.runtime.RelayEdge;
-import io.joss.graphql.client.runtime.RuntimeQuery;
-import io.joss.graphql.core.binder.annotatons.GQLArg;
 import io.joss.graphql.core.binder.annotatons.GQLNonNull;
 
+@javax.annotation.Generated(value = "io.joss.graphql.generator.java.JavaClientGenerator", date = "2015-11-18T13:54:12.597Z")
 class MyTestClient
 {
 
-  public interface ListUsersAndPhoneNumbersResult
+  public class ListUsersAndPhoneNumbersResult
   {
 
-    @GQLPath("users.edges.node.name")
-    public interface ScalarName
+    @io.joss.graphql.client.runtime.GQLPath("users.edges.node.name")
+    public class ScalarName
     {
 
-      String firstName();
+      private final String firstName;
 
-      String lastName();
+      public String firstName()
+      {
+        return this.firstName;
+      }
+
+      private final String lastName;
+
+      public String lastName()
+      {
+        return this.lastName;
+      }
+
+      ScalarName(String firstName, String lastName)
+      {
+        this.firstName = firstName;
+        this.lastName = lastName;
+      }
 
     }
 
-    @GQLPath("users.edges.node.phoneNumbers.edges.node")
-    public interface PhoneNumber
+    @io.joss.graphql.client.runtime.GQLPath("users.edges.node.phoneNumbers.edges.node")
+    public class PhoneNumber
     {
 
-      String id();
+      private final String id;
+      private final String name;
+      private final String dialstring;
+      private final String callerName;
 
-      String name();
+      PhoneNumber(String id, String name, String dialstring, String callerName)
+      {
+        this.id = id;
+        this.name = name;
+        this.dialstring = dialstring;
+        this.callerName = callerName;
+      }
 
-      String dialstring();
+      public String id()
+      {
+        return this.id;
+      }
 
-      String callerName();
+      public String name()
+      {
+        return this.name;
+      }
+
+      public String dialstring()
+      {
+        return this.dialstring;
+      }
+
+      public String callerName()
+      {
+        return this.callerName;
+      }
 
     }
 
-    @GQLPath("users.edges.node.phoneNumbers.edges")
-    public interface PhoneNumbersEdge extends RelayEdge<PhoneNumbersConnection, PhoneNumbersEdge, PhoneNumber>
+    @io.joss.graphql.client.runtime.GQLPath("users.edges.node.phoneNumbers.edges")
+    public class PhoneNumbersEdge
     {
 
-      PhoneNumber node();
+      private final PhoneNumber node;
+
+      public PhoneNumber node()
+      {
+        return this.node;
+      }
+
+      PhoneNumbersEdge(PhoneNumber node)
+      {
+        this.node = node;
+      }
 
     }
 
-    @GQLPath("users.edges.node.phoneNumbers")
-    public interface PhoneNumbersConnection extends RelayCollection<PhoneNumbersConnection, PhoneNumbersEdge, PhoneNumber>
+    @io.joss.graphql.client.runtime.GQLPath("users.edges.node.phoneNumbers")
+    public class PhoneNumbersConnection
     {
 
-      int totalCount();
+      private final int totalCount;
 
-      Collection<PhoneNumbersEdge> edges();
+      public int totalCount()
+      {
+        return this.totalCount;
+      }
+
+      private final Collection<PhoneNumbersEdge> edges;
+
+      public Collection<PhoneNumbersEdge> edges()
+      {
+        return this.edges;
+      }
+
+      PhoneNumbersConnection(int totalCount, Collection<PhoneNumbersEdge> edges)
+      {
+        this.totalCount = totalCount;
+        this.edges = edges;
+      }
 
     }
 
     /** A test user */
-    @GQLPath("users.edges.node")
-    public interface TestUser
+    @io.joss.graphql.client.runtime.GQLPath("users.edges.node")
+    public class TestUser
     {
 
-      String id();
+      private final String id;
+
+      public String id()
+      {
+        return this.id;
+      }
+
+      private final ScalarName name;
 
       /** the user's name */
-      ScalarName name();
+      public ScalarName name()
+      {
+        return this.name;
+      }
 
-      int age();
+      private final int age;
 
-      PhoneNumbersConnection phoneNumbers();
+      public int age()
+      {
+        return this.age;
+      }
+
+      private final PhoneNumbersConnection phoneNumbers;
+
+      public PhoneNumbersConnection phoneNumbers()
+      {
+        return this.phoneNumbers;
+      }
+
+      private final @GQLNonNull Collection<@GQLNonNull String> languagesSpoken;
 
       /** The languages spoken by this user */
-      @GQLNonNull
-      Collection<@GQLNonNull String> languagesSpoken();
+      public @GQLNonNull Collection<@GQLNonNull String> languagesSpoken()
+      {
+        return this.languagesSpoken;
+      }
+
+      TestUser(String id, ScalarName name, int age, PhoneNumbersConnection phoneNumbers, @GQLNonNull Collection<@GQLNonNull String> languagesSpoken)
+      {
+        this.id = id;
+        this.name = name;
+        this.age = age;
+        this.phoneNumbers = phoneNumbers;
+        this.languagesSpoken = languagesSpoken;
+      }
 
     }
 
-    @GQLPath("users.edges")
-    public interface TestUserEdge extends RelayEdge<TestUsersConnection, TestUserEdge, TestUser>
+    @io.joss.graphql.client.runtime.GQLPath("users.edges")
+    public class TestUserEdge
     {
 
-      String cursor();
+      private final String cursor;
 
-      TestUser node();
+      public String cursor()
+      {
+        return this.cursor;
+      }
+
+      private final TestUser node;
+
+      public TestUser node()
+      {
+        return this.node;
+      }
+
+      TestUserEdge(String cursor, TestUser node)
+      {
+        this.cursor = cursor;
+        this.node = node;
+      }
 
     }
 
-    @GQLPath("users")
-    public interface TestUsersConnection extends RelayCollection<TestUsersConnection, TestUserEdge, TestUser>
+    @io.joss.graphql.client.runtime.GQLPath("users")
+    public class TestUsersConnection
     {
 
-      Collection<TestUserEdge> edges();
+      private final Collection<TestUserEdge> edges;
+
+      public Collection<TestUserEdge> edges()
+      {
+        return this.edges;
+      }
+
+      TestUsersConnection(Collection<TestUserEdge> edges)
+      {
+        this.edges = edges;
+      }
 
     }
 
-    TestUsersConnection users();
+    private final TestUsersConnection users;
+
+    public TestUsersConnection users()
+    {
+      return this.users;
+    }
+
+    ListUsersAndPhoneNumbersResult(TestUsersConnection users)
+    {
+      this.users = users;
+    }
 
   }
 
-  public interface GetUserResult
+  public class GetUserResult
   {
 
-    @GQLPath("user.name")
-    public interface ScalarName
+    @io.joss.graphql.client.runtime.GQLPath("user.name")
+    public class ScalarName
     {
 
-      String firstName();
+      private final String firstName;
 
-      String lastName();
+      public String firstName()
+      {
+        return this.firstName;
+      }
+
+      private final String lastName;
+
+      public String lastName()
+      {
+        return this.lastName;
+      }
+
+      ScalarName(String firstName, String lastName)
+      {
+        this.firstName = firstName;
+        this.lastName = lastName;
+      }
 
     }
 
-    @GQLPath("user.phoneNumbers.edges.node")
-    public interface PhoneNumber
+    @io.joss.graphql.client.runtime.GQLPath("user.phoneNumbers.edges.node")
+    public class PhoneNumber
     {
 
-      String id();
+      private final String id;
 
-      String name();
+      public String id()
+      {
+        return this.id;
+      }
 
-      String dialstring();
+      private final String name;
 
-      String callerName();
+      public String name()
+      {
+        return this.name;
+      }
+
+      private final String dialstring;
+
+      public String dialstring()
+      {
+        return this.dialstring;
+      }
+
+      private final String callerName;
+
+      public String callerName()
+      {
+        return this.callerName;
+      }
+
+      PhoneNumber(String id, String name, String dialstring, String callerName)
+      {
+        this.id = id;
+        this.name = name;
+        this.dialstring = dialstring;
+        this.callerName = callerName;
+      }
 
     }
 
-    @GQLPath("user.phoneNumbers.edges")
-    public interface PhoneNumbersEdge extends RelayEdge<PhoneNumbersConnection, PhoneNumbersEdge, PhoneNumber>
+    @io.joss.graphql.client.runtime.GQLPath("user.phoneNumbers.edges")
+    public class PhoneNumbersEdge
     {
 
-      PhoneNumber node();
+      private final PhoneNumber node;
+
+      public PhoneNumber node()
+      {
+        return this.node;
+      }
+
+      PhoneNumbersEdge(PhoneNumber node)
+      {
+        this.node = node;
+      }
 
     }
 
-    @GQLPath("user.phoneNumbers")
-    public interface PhoneNumbersConnection extends RelayCollection<PhoneNumbersConnection, PhoneNumbersEdge, PhoneNumber>
+    @io.joss.graphql.client.runtime.GQLPath("user.phoneNumbers")
+    public class PhoneNumbersConnection
     {
 
-      int totalCount();
+      private final int totalCount;
 
-      Collection<PhoneNumbersEdge> edges();
+      public int totalCount()
+      {
+        return this.totalCount;
+      }
+
+      private final Collection<PhoneNumbersEdge> edges;
+
+      public Collection<PhoneNumbersEdge> edges()
+      {
+        return this.edges;
+      }
+
+      PhoneNumbersConnection(int totalCount, Collection<PhoneNumbersEdge> edges)
+      {
+        this.totalCount = totalCount;
+        this.edges = edges;
+      }
 
     }
 
     /** A test user */
-    @GQLPath("user")
-    public interface TestUser
+    @io.joss.graphql.client.runtime.GQLPath("user")
+    public class TestUser
     {
 
-      String id();
+      private final String id;
+
+      public String id()
+      {
+        return this.id;
+      }
+
+      private final ScalarName name;
 
       /** the user's name */
-      ScalarName name();
+      public ScalarName name()
+      {
+        return this.name;
+      }
 
-      int age();
+      private final int age;
 
-      PhoneNumbersConnection phoneNumbers();
+      public int age()
+      {
+        return this.age;
+      }
+
+      private final PhoneNumbersConnection phoneNumbers;
+
+      public PhoneNumbersConnection phoneNumbers()
+      {
+        return this.phoneNumbers;
+      }
+
+      private final @GQLNonNull Collection<@GQLNonNull String> languagesSpoken;
 
       /** The languages spoken by this user */
-      @GQLNonNull
-      Collection<@GQLNonNull String> languagesSpoken();
+      public @GQLNonNull Collection<@GQLNonNull String> languagesSpoken()
+      {
+        return this.languagesSpoken;
+      }
+
+      TestUser(String id, ScalarName name, int age, PhoneNumbersConnection phoneNumbers, @GQLNonNull Collection<@GQLNonNull String> languagesSpoken)
+      {
+        this.id = id;
+        this.name = name;
+        this.age = age;
+        this.phoneNumbers = phoneNumbers;
+        this.languagesSpoken = languagesSpoken;
+      }
 
     }
 
-    TestUser user();
+    private final TestUser user;
+
+    public TestUser user()
+    {
+      return this.user;
+    }
+
+    GetUserResult(TestUser user)
+    {
+      this.user = user;
+    }
 
   }
 
   public interface ClientStub
   {
 
-    RuntimeQuery<ListUsersAndPhoneNumbersResult> listUsersAndPhoneNumbers(@GQLArg("userSearch") String userSearch, @GQLArg("numberFormat") String numberFormat);
+    io.joss.graphql.client.runtime.RuntimeQuery<ListUsersAndPhoneNumbersResult> listUsersAndPhoneNumbers(
+        @io.joss.graphql.client.runtime.GQLParamName("userSearch") String userSearch,
+        @io.joss.graphql.client.runtime.GQLParamName("numberFormat") String numberFormat);
 
-    RuntimeQuery<GetUserResult> getUser(@GQLArg("username") String username, @GQLArg("numberFormat") String numberFormat);
+    io.joss.graphql.client.runtime.RuntimeQuery<GetUserResult> getUser(
+        @io.joss.graphql.client.runtime.GQLParamName("username") String username,
+        @io.joss.graphql.client.runtime.GQLParamName("numberFormat") String numberFormat);
 
   }
 

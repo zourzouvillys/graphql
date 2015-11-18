@@ -5,14 +5,22 @@ import java.io.PrintStream;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.joss.graphql.generator.java.codedom.AssignmentExpression;
 import io.joss.graphql.generator.java.codedom.BodyDeclarationVisitor;
+import io.joss.graphql.generator.java.codedom.ExpressionStatement;
+import io.joss.graphql.generator.java.codedom.ExpressionVisitor;
 import io.joss.graphql.generator.java.codedom.FieldDeclaration;
+import io.joss.graphql.generator.java.codedom.FieldExpression;
 import io.joss.graphql.generator.java.codedom.MethodDeclaration;
 import io.joss.graphql.generator.java.codedom.Modifier;
+import io.joss.graphql.generator.java.codedom.ReturnStatement;
+import io.joss.graphql.generator.java.codedom.SimpleNameExpression;
 import io.joss.graphql.generator.java.codedom.SingleVariableDeclaration;
+import io.joss.graphql.generator.java.codedom.StatementVisitor;
+import io.joss.graphql.generator.java.codedom.ThisExpression;
 import io.joss.graphql.generator.java.codedom.TypeDeclaration;
 
-public class JavaWriter implements BodyDeclarationVisitor<Void>
+public class JavaWriter implements BodyDeclarationVisitor<Void>, StatementVisitor<Void>, ExpressionVisitor<Void>
 {
 
   private PrintStream out;
@@ -92,7 +100,9 @@ public class JavaWriter implements BodyDeclarationVisitor<Void>
       out.println();
 
     });
+
     indent();
+
     out.println("}");
   }
 
@@ -114,8 +124,13 @@ public class JavaWriter implements BodyDeclarationVisitor<Void>
     {
       out.print(" ");
     }
-    out.print(method.getType());
-    out.print(" ");
+
+    if (!method.isConstructor())
+    {
+      out.print(method.getType());
+      out.print(" ");
+    }
+
     out.print(method.getName());
     out.print("(");
     int i = 0;
@@ -130,8 +145,31 @@ public class JavaWriter implements BodyDeclarationVisitor<Void>
       out.print(param.getName());
     }
     out.print(")");
-    // no body for now.
-    out.println(";");
+
+    if (method.getBody() != null)
+    {
+
+      out.println();
+      this.depth++;
+      indent();
+      out.println("{");
+      this.depth++;
+
+      method.getBody().getStatements().forEach(stmt -> {
+        stmt.apply(this);
+      });
+
+      this.depth--;
+      indent();
+      out.println("}");
+      this.depth--;
+
+    }
+    else
+    {
+      // no body for now.
+      out.println(";");
+    }
     return null;
   }
 
@@ -170,5 +208,64 @@ public class JavaWriter implements BodyDeclarationVisitor<Void>
     out.println(";");
     return null;
   }
+
+
+  @Override
+  public Void visitExpressionStatement(ExpressionStatement stmt)
+  {
+    indent();
+    stmt.getExpression().apply(this);
+    out.println(";");
+    return null;
+  }
+  
+  @Override
+  public Void visitReturnStatement(ReturnStatement returnStatement)
+  {
+    indent();
+    out.print("return");
+    if (returnStatement.getExpression() != null)
+    {
+      out.print(" ");
+      returnStatement.getExpression().apply(this);
+    }
+    out.println(";");
+    return null;
+  }
+
+  @Override
+  public Void visitFieldExpression(FieldExpression fieldExpression)
+  {
+    fieldExpression.getExpression().apply(this);
+    out.print(".");
+    out.print(fieldExpression.getName());
+    return null;
+  }
+
+  @Override
+  public Void visitThisExpression(ThisExpression thisExpression)
+  {
+    out.print("this");
+    return null;
+  }
+
+  @Override
+  public Void visitAssignmentExpression(AssignmentExpression expr)
+  {
+    expr.getLeft().apply(this);
+    out.print(" ");
+    out.print(expr.getOperator());
+    out.print(" ");
+    expr.getRight().apply(this);
+    return null;
+  }
+
+  @Override
+  public Void visitSimpleNameExpression(SimpleNameExpression expr)
+  {
+    out.print(expr.getName());
+    return null;
+  }
+
 
 }
