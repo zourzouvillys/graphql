@@ -22,6 +22,8 @@ repositories {
 dependencies {
 	compile 'com.mashape.unirest:unirest-java:1.4.7'
     compile group: "io.joss.graphql", name: "graphql-core", version: "1.0-SNAPSHOT"
+    // todo: remove dep?
+    compile group: "io.joss.graphql", name: "graphql-server", version: "1.0-SNAPSHOT"
     testCompile 'junit:junit:4.12'
     testCompile 'com.github.tomakehurst:wiremock:1.57'
 }

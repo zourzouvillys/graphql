@@ -21,7 +21,9 @@ repositories {
 
 dependencies {
     // compile 'org.projectlombok:lombok:1.16.6'
+    compile group: "io.joss.graphql", name: "graphql-client", version: "1.0-SNAPSHOT"
     compile group: "io.joss.graphql", name: "graphql-server", version: "1.0-SNAPSHOT"
+    compile group: "io.joss.graphql", name: "graphql-core", version: "1.0-SNAPSHOT"
     testCompile 'junit:junit:4.12'
 }
 

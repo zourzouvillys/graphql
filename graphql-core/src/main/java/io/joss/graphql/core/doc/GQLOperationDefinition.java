@@ -10,7 +10,7 @@ import lombok.experimental.Wither;
 
 @ToString
 @EqualsAndHashCode
-@Builder
+@Builder(builderClassName = "Builder")
 @Wither
 public final class GQLOperationDefinition implements GQLDefinition
 {

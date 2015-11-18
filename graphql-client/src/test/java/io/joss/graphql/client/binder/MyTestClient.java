@@ -1,4 +1,4 @@
-package io.jgql.generator.java;
+package io.joss.graphql.client.binder;
 
 import java.util.Collection;
 
@@ -9,7 +9,7 @@ import io.joss.graphql.client.runtime.RuntimeQuery;
 import io.joss.graphql.core.binder.annotatons.GQLArg;
 import io.joss.graphql.core.binder.annotatons.GQLNonNull;
 
-class MyTest
+class MyTestClient
 {
 
   public interface ListUsersAndPhoneNumbersResult

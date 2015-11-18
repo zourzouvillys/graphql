@@ -1,4 +1,4 @@
-package io.joss.graphql.generator.java;
+package io.joss.graphql.client.runtime;
 
 public interface RelayEdge<E, C, N>
 {

@@ -16,20 +16,19 @@ import io.joss.graphql.core.decl.GQLUnionTypeDeclaration;
 import io.joss.graphql.core.doc.GQLArgument;
 import io.joss.graphql.core.doc.GQLDefinition;
 import io.joss.graphql.core.doc.GQLDirective;
+import io.joss.graphql.core.doc.GQLDirective.GQLDirectiveBuilder;
 import io.joss.graphql.core.doc.GQLDocument;
 import io.joss.graphql.core.doc.GQLFieldSelection;
 import io.joss.graphql.core.doc.GQLFragmentDefinition;
+import io.joss.graphql.core.doc.GQLFragmentDefinition.GQLFragmentDefinitionBuilder;
 import io.joss.graphql.core.doc.GQLFragmentSpreadSelection;
+import io.joss.graphql.core.doc.GQLFragmentSpreadSelection.Builder;
 import io.joss.graphql.core.doc.GQLInlineFragmentSelection;
+import io.joss.graphql.core.doc.GQLInlineFragmentSelection.GQLInlineFragmentSelectionBuilder;
 import io.joss.graphql.core.doc.GQLOpType;
 import io.joss.graphql.core.doc.GQLOperationDefinition;
 import io.joss.graphql.core.doc.GQLSelection;
 import io.joss.graphql.core.doc.GQLVariableDefinition;
-import io.joss.graphql.core.doc.GQLDirective.GQLDirectiveBuilder;
-import io.joss.graphql.core.doc.GQLFieldSelection.GQLFieldSelectionBuilder;
-import io.joss.graphql.core.doc.GQLFragmentDefinition.GQLFragmentDefinitionBuilder;
-import io.joss.graphql.core.doc.GQLFragmentSpreadSelection.Builder;
-import io.joss.graphql.core.doc.GQLInlineFragmentSelection.GQLInlineFragmentSelectionBuilder;
 import io.joss.graphql.core.doc.GQLVariableDefinition.GQLVariableDefinitionBuilder;
 import io.joss.graphql.core.parser.Lexer.TokenType;
 import io.joss.graphql.core.types.GQLTypeReference;
@@ -379,7 +378,7 @@ public class ParseContext
           .build();
     }
 
-    final GQLOperationDefinition.GQLOperationDefinitionBuilder b = GQLOperationDefinition.builder();
+    final GQLOperationDefinition.Builder b = GQLOperationDefinition.builder();
 
     if (this.skip("query"))
     {
@@ -582,7 +581,7 @@ public class ParseContext
 
       }
 
-      final GQLFieldSelectionBuilder fb = GQLFieldSelection.builder();
+      final GQLFieldSelection.Builder fb = GQLFieldSelection.builder();
 
       final String name = this.require(TokenType.NAME, "or '}' to match '{' defined at position " + opening.position().start());
 
