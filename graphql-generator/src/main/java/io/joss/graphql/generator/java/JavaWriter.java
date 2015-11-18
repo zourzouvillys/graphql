@@ -118,6 +118,12 @@ public class JavaWriter implements BodyDeclarationVisitor<Void>, StatementVisito
 
     javadoc(method.getJavadoc());
 
+    for (String annotation : method.getAnnotations())
+    {
+      indent(1);
+      out.println(annotation);
+    }
+
     indent(1);
 
     if (write(method.getModifiers()))
@@ -133,7 +139,8 @@ public class JavaWriter implements BodyDeclarationVisitor<Void>, StatementVisito
 
     out.print(method.getName());
     out.print("(");
-    int i = 0;
+    
+    int i = 0;    
     for (SingleVariableDeclaration param : method.getParameters())
     {
       if (i++ > 0)

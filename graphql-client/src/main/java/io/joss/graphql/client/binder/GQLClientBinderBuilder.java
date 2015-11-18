@@ -1,6 +1,7 @@
 package io.joss.graphql.client.binder;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.util.Collection;
@@ -80,6 +81,7 @@ public class GQLClientBinderBuilder<T>
       {
         List<GQLSelection> sel = generateQuery(((ParameterizedTypedClass<?>) method.returnType()).parameter(0).rawClass());
         GQLOperationDefinition op = GQLOperationDefinition.builder().selections(sel).build();
+        System.err.println(op);
         client.add(method.method(), op);
       }
       else
@@ -108,6 +110,15 @@ public class GQLClientBinderBuilder<T>
     for (Method m : klass.getDeclaredMethods())
     {
 
+      if (!Modifier.isPublic(m.getModifiers()))
+      {
+        continue;
+      }
+      else if (isObjectOverride(m))
+      {
+        continue;
+      }
+
       if (m.getReturnType().equals(Collection.class))
       {
 
@@ -125,7 +136,7 @@ public class GQLClientBinderBuilder<T>
         selection.add(fsb.build());
 
       }
-      else if (m.getReturnType().isAnnotationPresent(GQLPath.class) || m.getReturnType().isPrimitive() || m.getReturnType().equals(String.class))
+      else 
       {
 
         GQLFieldSelection.Builder fsb = GQLFieldSelection.builder();
@@ -145,6 +156,27 @@ public class GQLClientBinderBuilder<T>
 
     return selection;
 
+  }
+
+  private boolean isObjectOverride(Method m)
+  {
+
+    if (m.getDeclaringClass().equals(Object.class))
+    {
+      return true;
+    }
+
+    for (Method om : Object.class.getDeclaredMethods())
+    {
+      if (om.getName().equals(m.getName()))
+        return true;
+    }
+
+    return false;
+
+    // m.isAnnotationPresent(Override.class) && Object.class.hasMethod(m.getName(), m.getParameterTypes()) != null
+
+    // TODO Auto-generated method stub
   }
 
 }

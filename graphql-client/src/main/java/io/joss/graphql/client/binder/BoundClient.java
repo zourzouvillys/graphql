@@ -14,10 +14,12 @@ import io.joss.graphql.core.converter.TypeConverter;
 import io.joss.graphql.core.doc.GQLDocument;
 import io.joss.graphql.core.doc.GQLOperationDefinition;
 import io.joss.graphql.core.value.GQLObjectValue;
+import io.joss.graphql.core.value.GQLValue;
 import io.joss.graphql.core.value.GQLValueTypeConverter;
 
 /**
- * A slow reflection based implementation.
+ * A reflection based implementation of a bound client. A faster implementation could certainly be implemented using pre-compilation, but
+ * this should do the job for now.
  * 
  * @author theo
  *
@@ -44,19 +46,34 @@ public class BoundClient
   public Object dispatch(Object proxy, Method method, Object[] args)
   {
 
+    TypedClass<Object> returnType = ReflectionUtils.wrap(method.getAnnotatedReturnType());
+
     GQLOperationDefinition op = methods.get(method);
 
     GQLDocument doc = GQLDocument.builder()
         .definition(op)
         .build();
 
+    if (returnType.rawClass().isInstance(RuntimeQuery.class))
+    {
+      throw new RuntimeException("Client stub should return a RuntimeQuery<T>");
+    }
+
+    // the type we are returning to the caller.
+    TypedClass<?> type = ((ParameterizedTypedClass<?>) returnType).parameter(0);
+
     return new RuntimeQuery<Object>() {
 
       @Override
       public Object execute()
       {
-        TypedClass<Object> returnType = ReflectionUtils.wrap(method.getAnnotatedReturnType());
-        return convert(channel.execute(doc).get(), ((ParameterizedTypedClass<?>) returnType).parameter(0));
+
+        // perform the fetch, which returns the GQL value result.
+        GQLObjectValue result = channel.execute(doc).get();
+        
+        // use the converter to perform it.
+        return converter.convert(result, type.getType());
+        
       }
 
     };

@@ -4,15 +4,18 @@ import java.util.Collection;
 
 import io.joss.graphql.core.binder.annotatons.GQLNonNull;
 
-@javax.annotation.Generated(value = "io.joss.graphql.generator.java.JavaClientGenerator", date = "2015-11-18T13:54:12.597Z")
-class MyTestClient
+@javax.annotation.Generated(value = "io.joss.graphql.generator.java.JavaClientGenerator", date = "2015-11-18T14:16:31.503Z")
+public class MyTestClient
 {
 
-  public class ListUsersAndPhoneNumbersResult
+  @lombok.ToString
+  @lombok.EqualsAndHashCode
+  public static class ListUsersAndPhoneNumbersResult
   {
 
-    @io.joss.graphql.client.runtime.GQLPath("users.edges.node.name")
-    public class ScalarName
+    @lombok.ToString
+    @lombok.EqualsAndHashCode
+    public static class ScalarName
     {
 
       private final String firstName;
@@ -29,7 +32,8 @@ class MyTestClient
         return this.lastName;
       }
 
-      ScalarName(String firstName, String lastName)
+      @java.beans.ConstructorProperties({ "firstName", "lastName" })
+      public ScalarName(String firstName, String lastName)
       {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -37,16 +41,41 @@ class MyTestClient
 
     }
 
-    @io.joss.graphql.client.runtime.GQLPath("users.edges.node.phoneNumbers.edges.node")
-    public class PhoneNumber
+    @lombok.ToString
+    @lombok.EqualsAndHashCode
+    public static class PhoneNumber
     {
 
       private final String id;
+
+      public String id()
+      {
+        return this.id;
+      }
+
       private final String name;
+
+      public String name()
+      {
+        return this.name;
+      }
+
       private final String dialstring;
+
+      public String dialstring()
+      {
+        return this.dialstring;
+      }
+
       private final String callerName;
 
-      PhoneNumber(String id, String name, String dialstring, String callerName)
+      public String callerName()
+      {
+        return this.callerName;
+      }
+
+      @java.beans.ConstructorProperties({ "id", "name", "dialstring", "callerName" })
+      public PhoneNumber(String id, String name, String dialstring, String callerName)
       {
         this.id = id;
         this.name = name;
@@ -54,30 +83,11 @@ class MyTestClient
         this.callerName = callerName;
       }
 
-      public String id()
-      {
-        return this.id;
-      }
-
-      public String name()
-      {
-        return this.name;
-      }
-
-      public String dialstring()
-      {
-        return this.dialstring;
-      }
-
-      public String callerName()
-      {
-        return this.callerName;
-      }
-
     }
 
-    @io.joss.graphql.client.runtime.GQLPath("users.edges.node.phoneNumbers.edges")
-    public class PhoneNumbersEdge
+    @lombok.ToString
+    @lombok.EqualsAndHashCode
+    public static class PhoneNumbersEdge
     {
 
       private final PhoneNumber node;
@@ -87,15 +97,17 @@ class MyTestClient
         return this.node;
       }
 
-      PhoneNumbersEdge(PhoneNumber node)
+      @java.beans.ConstructorProperties({ "node" })
+      public PhoneNumbersEdge(PhoneNumber node)
       {
         this.node = node;
       }
 
     }
 
-    @io.joss.graphql.client.runtime.GQLPath("users.edges.node.phoneNumbers")
-    public class PhoneNumbersConnection
+    @lombok.ToString
+    @lombok.EqualsAndHashCode
+    public static class PhoneNumbersConnection
     {
 
       private final int totalCount;
@@ -112,7 +124,8 @@ class MyTestClient
         return this.edges;
       }
 
-      PhoneNumbersConnection(int totalCount, Collection<PhoneNumbersEdge> edges)
+      @java.beans.ConstructorProperties({ "totalCount", "edges" })
+      public PhoneNumbersConnection(int totalCount, Collection<PhoneNumbersEdge> edges)
       {
         this.totalCount = totalCount;
         this.edges = edges;
@@ -121,8 +134,9 @@ class MyTestClient
     }
 
     /** A test user */
-    @io.joss.graphql.client.runtime.GQLPath("users.edges.node")
-    public class TestUser
+    @lombok.ToString
+    @lombok.EqualsAndHashCode
+    public static class TestUser
     {
 
       private final String id;
@@ -162,7 +176,8 @@ class MyTestClient
         return this.languagesSpoken;
       }
 
-      TestUser(String id, ScalarName name, int age, PhoneNumbersConnection phoneNumbers, @GQLNonNull Collection<@GQLNonNull String> languagesSpoken)
+      @java.beans.ConstructorProperties({ "id", "name", "age", "phoneNumbers", "languagesSpoken" })
+      public TestUser(String id, ScalarName name, int age, PhoneNumbersConnection phoneNumbers, @GQLNonNull Collection<@GQLNonNull String> languagesSpoken)
       {
         this.id = id;
         this.name = name;
@@ -173,8 +188,9 @@ class MyTestClient
 
     }
 
-    @io.joss.graphql.client.runtime.GQLPath("users.edges")
-    public class TestUserEdge
+    @lombok.ToString
+    @lombok.EqualsAndHashCode
+    public static class TestUserEdge
     {
 
       private final String cursor;
@@ -191,7 +207,8 @@ class MyTestClient
         return this.node;
       }
 
-      TestUserEdge(String cursor, TestUser node)
+      @java.beans.ConstructorProperties({ "cursor", "node" })
+      public TestUserEdge(String cursor, TestUser node)
       {
         this.cursor = cursor;
         this.node = node;
@@ -199,8 +216,9 @@ class MyTestClient
 
     }
 
-    @io.joss.graphql.client.runtime.GQLPath("users")
-    public class TestUsersConnection
+    @lombok.ToString
+    @lombok.EqualsAndHashCode
+    public static class TestUsersConnection
     {
 
       private final Collection<TestUserEdge> edges;
@@ -210,7 +228,8 @@ class MyTestClient
         return this.edges;
       }
 
-      TestUsersConnection(Collection<TestUserEdge> edges)
+      @java.beans.ConstructorProperties({ "edges" })
+      public TestUsersConnection(Collection<TestUserEdge> edges)
       {
         this.edges = edges;
       }
@@ -224,18 +243,22 @@ class MyTestClient
       return this.users;
     }
 
-    ListUsersAndPhoneNumbersResult(TestUsersConnection users)
+    @java.beans.ConstructorProperties({ "users" })
+    public ListUsersAndPhoneNumbersResult(TestUsersConnection users)
     {
       this.users = users;
     }
 
   }
 
-  public class GetUserResult
+  @lombok.ToString
+  @lombok.EqualsAndHashCode
+  public static class GetUserResult
   {
 
-    @io.joss.graphql.client.runtime.GQLPath("user.name")
-    public class ScalarName
+    @lombok.ToString
+    @lombok.EqualsAndHashCode
+    public static class ScalarName
     {
 
       private final String firstName;
@@ -252,7 +275,8 @@ class MyTestClient
         return this.lastName;
       }
 
-      ScalarName(String firstName, String lastName)
+      @java.beans.ConstructorProperties({ "firstName", "lastName" })
+      public ScalarName(String firstName, String lastName)
       {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -260,8 +284,9 @@ class MyTestClient
 
     }
 
-    @io.joss.graphql.client.runtime.GQLPath("user.phoneNumbers.edges.node")
-    public class PhoneNumber
+    @lombok.ToString
+    @lombok.EqualsAndHashCode
+    public static class PhoneNumber
     {
 
       private final String id;
@@ -292,7 +317,8 @@ class MyTestClient
         return this.callerName;
       }
 
-      PhoneNumber(String id, String name, String dialstring, String callerName)
+      @java.beans.ConstructorProperties({ "id", "name", "dialstring", "callerName" })
+      public PhoneNumber(String id, String name, String dialstring, String callerName)
       {
         this.id = id;
         this.name = name;
@@ -302,8 +328,9 @@ class MyTestClient
 
     }
 
-    @io.joss.graphql.client.runtime.GQLPath("user.phoneNumbers.edges")
-    public class PhoneNumbersEdge
+    @lombok.ToString
+    @lombok.EqualsAndHashCode
+    public static class PhoneNumbersEdge
     {
 
       private final PhoneNumber node;
@@ -313,15 +340,17 @@ class MyTestClient
         return this.node;
       }
 
-      PhoneNumbersEdge(PhoneNumber node)
+      @java.beans.ConstructorProperties({ "node" })
+      public PhoneNumbersEdge(PhoneNumber node)
       {
         this.node = node;
       }
 
     }
 
-    @io.joss.graphql.client.runtime.GQLPath("user.phoneNumbers")
-    public class PhoneNumbersConnection
+    @lombok.ToString
+    @lombok.EqualsAndHashCode
+    public static class PhoneNumbersConnection
     {
 
       private final int totalCount;
@@ -338,7 +367,8 @@ class MyTestClient
         return this.edges;
       }
 
-      PhoneNumbersConnection(int totalCount, Collection<PhoneNumbersEdge> edges)
+      @java.beans.ConstructorProperties({ "totalCount", "edges" })
+      public PhoneNumbersConnection(int totalCount, Collection<PhoneNumbersEdge> edges)
       {
         this.totalCount = totalCount;
         this.edges = edges;
@@ -347,8 +377,9 @@ class MyTestClient
     }
 
     /** A test user */
-    @io.joss.graphql.client.runtime.GQLPath("user")
-    public class TestUser
+    @lombok.ToString
+    @lombok.EqualsAndHashCode
+    public static class TestUser
     {
 
       private final String id;
@@ -388,7 +419,8 @@ class MyTestClient
         return this.languagesSpoken;
       }
 
-      TestUser(String id, ScalarName name, int age, PhoneNumbersConnection phoneNumbers, @GQLNonNull Collection<@GQLNonNull String> languagesSpoken)
+      @java.beans.ConstructorProperties({ "id", "name", "age", "phoneNumbers", "languagesSpoken" })
+      public TestUser(String id, ScalarName name, int age, PhoneNumbersConnection phoneNumbers, @GQLNonNull Collection<@GQLNonNull String> languagesSpoken)
       {
         this.id = id;
         this.name = name;
@@ -406,7 +438,8 @@ class MyTestClient
       return this.user;
     }
 
-    GetUserResult(TestUser user)
+    @java.beans.ConstructorProperties({ "user" })
+    public GetUserResult(TestUser user)
     {
       this.user = user;
     }
@@ -417,11 +450,9 @@ class MyTestClient
   {
 
     io.joss.graphql.client.runtime.RuntimeQuery<ListUsersAndPhoneNumbersResult> listUsersAndPhoneNumbers(
-        @io.joss.graphql.client.runtime.GQLParamName("userSearch") String userSearch,
-        @io.joss.graphql.client.runtime.GQLParamName("numberFormat") String numberFormat);
+        @io.joss.graphql.client.runtime.GQLParamName("userSearch") String userSearch, @io.joss.graphql.client.runtime.GQLParamName("numberFormat") String numberFormat);
 
-    io.joss.graphql.client.runtime.RuntimeQuery<GetUserResult> getUser(
-        @io.joss.graphql.client.runtime.GQLParamName("username") String username,
+    io.joss.graphql.client.runtime.RuntimeQuery<GetUserResult> getUser(@io.joss.graphql.client.runtime.GQLParamName("username") String username,
         @io.joss.graphql.client.runtime.GQLParamName("numberFormat") String numberFormat);
 
   }

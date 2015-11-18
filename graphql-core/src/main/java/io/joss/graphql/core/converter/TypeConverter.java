@@ -1,5 +1,6 @@
 package io.joss.graphql.core.converter;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Type;
 import java.math.BigInteger;
@@ -7,7 +8,9 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.jgql.core.reflect.ReflectionUtilsTest;
+import io.joss.graphql.core.types.GQLListType;
+import io.joss.graphql.core.value.GQLListValue;
+import io.joss.graphql.core.value.GQLObjectValue;
 import lombok.Value;
 
 /**
@@ -33,8 +36,8 @@ public class TypeConverter
   @Value
   private static class Converstion
   {
-    private final Class<?> inputClass;
-    private final Class<?> outputClass;
+    private final Type inputClass;
+    private final Type outputClass;
   }
 
   private Map<Converstion, TypeMapper<Object, Object>> registered = new HashMap<>();
@@ -88,7 +91,7 @@ public class TypeConverter
    * @throws Exception
    */
 
-  public <I extends Object, O extends Object> O convert(I input, Class<O> outputClass)
+  public <I extends Object, O extends Object> O convert(I input, Type outputClass, Annotation[] annotations)
   {
 
     if (input == null)
@@ -114,7 +117,7 @@ public class TypeConverter
       }
 
     }
-    
+
     // check out the superclasses.
 
     Class<?> superclass = input.getClass();
@@ -132,18 +135,49 @@ public class TypeConverter
       superclass = superclass.getSuperclass();
     }
 
+    if (input instanceof GQLObjectValue)
+    {
+
+      // now, we try the source factories.
+      Object val = new DynamicClassCreationMaterializer().convert(this, (GQLObjectValue) input, outputClass, annotations);
+
+      if (val != null)
+      {
+        return (O) val;
+      }
+
+    }
+    
+    if (input instanceof GQLListValue)
+    {
+
+      // now, we try the source factories.
+      Object val = new DynamicListCreationMaterializer().convert(this, (GQLListValue) input, outputClass, annotations);
+
+      if (val != null)
+      {
+        return (O) val;
+      }
+
+    }
+
     throw new RuntimeException(String.format("No converter from '%s' to '%s'", input.getClass(), outputClass));
 
   }
 
   public <I, O> O convert(I input, Type outputClass)
   {
-    return convert(input, (Class<?>) outputClass);
+    return convert(input, outputClass, new Annotation[0]);
   }
 
   public <I, O> O convert(I input, AnnotatedType outputClass)
   {
-    return convert(input, outputClass.getType());
+    return convert(input, outputClass.getType(), outputClass.getAnnotations());
+  }
+
+  public <I, O> O convert(I input, Class<O> outputClass)
+  {
+    return convert(input, outputClass, new Annotation[0]);
   }
 
 }
