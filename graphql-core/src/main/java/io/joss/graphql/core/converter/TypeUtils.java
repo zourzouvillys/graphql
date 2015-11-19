@@ -14,7 +14,7 @@ public class TypeUtils
 
   public static AnnotatedType getParamterOfInterface(Class<?> klass, Class<?> wanted, int param)
   {
-    
+
     AnnotatedType val = TypeUtils.getInterfaceType(klass, wanted);
 
     if (val == null)
@@ -34,7 +34,7 @@ public class TypeUtils
 
     if (param >= ptype.getAnnotatedActualTypeArguments().length)
       throw new IllegalArgumentException("too many");
-    
+
     return ptype.getAnnotatedActualTypeArguments()[param];
 
   }
@@ -85,6 +85,20 @@ public class TypeUtils
     {
       ParameterizedType ptype = ((ParameterizedType) type);
       return ptype.getRawType().equals(wanted);
+    }
+    return false;
+  }
+
+  public static boolean isRawAssignableFrom(Type type, Class<?> wanted)
+  {
+    if (type instanceof Class<?> && wanted.isAssignableFrom((Class<?>) type))
+    {
+      return true;
+    }
+    else if (type instanceof ParameterizedType)
+    {
+      ParameterizedType ptype = ((ParameterizedType) type);
+      return wanted.isAssignableFrom((Class<?>) ptype.getRawType());
     }
     return false;
   }

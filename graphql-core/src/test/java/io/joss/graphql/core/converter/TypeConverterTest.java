@@ -56,15 +56,21 @@ public class TypeConverterTest
   @Test
   public void testTypeMaterializers() throws Exception
   {
+    
     GQLObjectValue input = GQLObjectValue.builder()
         .value("key", GQLValues.stringValue("xxx"))
         .value("vals", GQLValues.listValue(GQLValues.stringValue("1"), GQLValues.stringValue("2")))
         .build();
+    
     TestClass val = new GQLValueTypeConverter().convert(input, TestClass.class);
+    
     assertEquals("xxx", val.key);
+    
     assertEquals(2, val.vals.size());
+    
     assertEquals(1, (int) val.vals.get(0));
     assertEquals(2, (int) val.vals.get(1));
+    
   }
 
 }
