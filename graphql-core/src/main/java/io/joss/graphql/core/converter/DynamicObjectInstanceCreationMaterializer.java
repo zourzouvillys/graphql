@@ -14,21 +14,23 @@ import io.joss.graphql.core.value.GQLObjectValue;
 import io.joss.graphql.core.value.GQLValue;
 
 /**
- * Converts {@link GQLObjectValue} instances to any java class that looks like it can be constrcucted.
+ * Converts {@link GQLObjectValue} instances to any java class that looks like it can be constructed, currently
+ * through @ConstructorProperties.
  * 
  * @author theo
  *
  */
 
-public class DynamicClassCreationMaterializer implements TypeMaterializer<GQLObjectValue>
+public class DynamicObjectInstanceCreationMaterializer implements TypeMaterializer<GQLObjectValue>
 {
 
+  @SuppressWarnings("unchecked")
   @Override
   public <O> O convert(TypeConverter converter, GQLObjectValue from, Type target, Annotation[] annotations)
   {
 
-    Class<?> targetType = (Class<?>)target;
-    
+    Class<?> targetType = (Class<?>) target;
+
     // ---
 
     for (Constructor<?> ctor : targetType.getConstructors())
@@ -43,17 +45,6 @@ public class DynamicClassCreationMaterializer implements TypeMaterializer<GQLObj
 
     }
 
-    // look for a public static method named 'builder' that takes no args.
-
-    for (Method m : targetType.getDeclaredMethods())
-    {
-      if (Modifier.isStatic(m.getModifiers()) && m.getName().equals("builder") && m.getParameterCount() == 0)
-      {
-        return (O) builder(converter, from, targetType, annotations, m);
-      }
-    }
-
-    // TODO Auto-generated method stub
     return null;
   }
 
@@ -70,11 +61,10 @@ public class DynamicClassCreationMaterializer implements TypeMaterializer<GQLObj
 
   private <O> O create(TypeConverter converter, GQLObjectValue from, Class<O> targetType, Annotation[] annotations, Constructor<?> ctor, ConstructorProperties props)
   {
-    
+
     try
     {
-      
-      
+
       MethodHandle ref = MethodHandles.publicLookup().unreflectConstructor(ctor);
 
       for (int i = 0; i < props.value().length; ++i)
@@ -85,14 +75,13 @@ public class DynamicClassCreationMaterializer implements TypeMaterializer<GQLObj
 
         // ---
 
-
         GQLValue field = from.entries().get(prop);
         Object value = converter.convert(field, ptype);
-                
+
         ref = MethodHandles.insertArguments(ref, 0, value);
 
       }
-      
+
       return (O) ref.invoke();
 
     }
@@ -101,22 +90,7 @@ public class DynamicClassCreationMaterializer implements TypeMaterializer<GQLObj
       t.printStackTrace();
       throw new RuntimeException(t);
     }
-    
-  }
 
-  /**
-   * 
-   * @param from
-   * @param targetType
-   * @param annotations
-   * @param m
-   * @return
-   */
-
-  private <O> O builder(TypeConverter converter, GQLObjectValue from, Class<O> targetType, Annotation[] annotations, Method m)
-  {
-    // TODO Auto-generated method stub
-    return null;
   }
 
 }

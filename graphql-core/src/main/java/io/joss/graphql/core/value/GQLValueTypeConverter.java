@@ -1,5 +1,7 @@
 package io.joss.graphql.core.value;
 
+import io.joss.graphql.core.converter.DynamicObjectInstanceCreationMaterializer;
+import io.joss.graphql.core.converter.DynamicListCreationMaterializer;
 import io.joss.graphql.core.converter.TypeConverter;
 
 public class GQLValueTypeConverter extends TypeConverter
@@ -21,6 +23,9 @@ public class GQLValueTypeConverter extends TypeConverter
     this.register(GQLValue.class, Boolean.class, value -> value.apply(GQLValueConverters.booleanConverter()));
 
     this.register(GQLValue.class, String.class, value -> value.apply(GQLValueConverters.stringConverter()));
+
+    this.register(new DynamicObjectInstanceCreationMaterializer());
+    this.register(new DynamicListCreationMaterializer());
 
   }
 

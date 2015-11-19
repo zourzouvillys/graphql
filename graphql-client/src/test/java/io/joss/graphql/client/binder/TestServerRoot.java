@@ -3,6 +3,8 @@ package io.joss.graphql.client.binder;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang.RandomStringUtils;
+
 import com.google.common.collect.Lists;
 
 import io.joss.graphql.core.binder.annotatons.GQLField;
@@ -19,25 +21,25 @@ public class TestServerRoot
     @GQLField
     public String getId()
     {
-      return "xxerfr";
+      return  RandomStringUtils.randomAlphabetic(12);
     }
 
     @GQLField
     public String getName()
     {
-      return "sss";
+      return "my PSTN number";
     }
 
     @GQLField
     public String getCallerName()
     {
-      return "sss";
+      return "The Caller";
     }
 
     @GQLField
     public String getDialstring()
     {
-      return "sss";
+      return RandomStringUtils.randomAlphabetic(7);
     }
 
   }

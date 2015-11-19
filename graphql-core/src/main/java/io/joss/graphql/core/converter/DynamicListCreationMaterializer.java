@@ -12,6 +12,7 @@ import io.joss.graphql.core.value.GQLValue;
 public class DynamicListCreationMaterializer implements TypeMaterializer<GQLListValue>
 {
 
+  @SuppressWarnings("unchecked")
   @Override
   public <O> O convert(TypeConverter converter, GQLListValue from, Type targetType, Annotation[] annotations)
   {

@@ -4,8 +4,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 /**
- * 
- * @author theo
+ * A {@link TypeMaterializer} converts instances of a specified type into generic types. 
  */
 
 public interface TypeMaterializer<I>
