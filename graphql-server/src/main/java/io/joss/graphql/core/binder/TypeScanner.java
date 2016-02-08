@@ -1,6 +1,5 @@
 package io.joss.graphql.core.binder;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,6 +34,8 @@ import io.joss.graphql.core.value.GQLValue;
 
 /**
  * Scans the POJOs and builds a schema and java handlers up based on the provided model.
+ * 
+ * The query model is handled as a single class, all fields annotated on it are handled by that instance.
  * 
  * @author theo
  *
@@ -123,7 +124,7 @@ public class TypeScanner implements BindingProvider
    * @return
    */
 
-  private GQLInputTypeDeclaration add(InputClassBinding binding, String name)
+  public GQLInputTypeDeclaration add(InputClassBinding binding, String name)
   {
 
     if (decls.containsKey(name))
@@ -154,6 +155,13 @@ public class TypeScanner implements BindingProvider
 
     return decl;
 
+  }
+
+  public GQLTypeReference add(GQLObjectTypeDeclaration decl)
+  {
+    builder.add(decl);
+    this.decls.put(decl.name(), decl);
+    return GQLTypes.ref(decl);
   }
 
   /**
@@ -304,7 +312,7 @@ public class TypeScanner implements BindingProvider
     return ref;
   }
 
-  private GQLTypeReference ref(Class<?> klass)
+  public GQLTypeReference ref(Class<?> klass)
   {
 
     // handle builtin types.
@@ -416,7 +424,7 @@ public class TypeScanner implements BindingProvider
 
     TypeScanner scanner = new TypeScanner(builder);
 
-    GQLDeclaration root = scanner.add(klass);
+    GQLObjectTypeDeclaration root = (GQLObjectTypeDeclaration) scanner.add(klass);
 
     scanner.finish();
 
@@ -435,8 +443,8 @@ public class TypeScanner implements BindingProvider
 
     TypeScanner scanner = new TypeScanner(builder);
 
-    GQLDeclaration queryRoot = scanner.add(query);
-    GQLDeclaration mutateRoot = scanner.add(mutate);
+    GQLObjectTypeDeclaration queryRoot = (GQLObjectTypeDeclaration) scanner.add(query);
+    GQLObjectTypeDeclaration mutateRoot = (GQLObjectTypeDeclaration) scanner.add(mutate);
 
     scanner.finish();
 

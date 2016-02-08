@@ -23,7 +23,7 @@ public class GQLSchemaBuilder
     
     if (type.name() == null || type.name().isEmpty())
     {
-      throw new IllegalArgumentException("invalid name");
+      throw new IllegalArgumentException("empty name");
     }
     else if (types.containsKey(type.name()))
     {

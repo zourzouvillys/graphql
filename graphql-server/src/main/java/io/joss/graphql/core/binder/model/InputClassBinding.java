@@ -19,6 +19,10 @@ public class InputClassBinding
 
   public static InputClassBinding bind(Class<?> type)
   {
+    if (type == null)
+    {
+      throw new IllegalArgumentException("type");
+    }
     return new InputClassBinding(ReflectionUtils.forClass(type));
   }
 
@@ -26,7 +30,7 @@ public class InputClassBinding
   {
 
     List<InputClassField> inputs = new LinkedList<>();
-    
+
     for (TypedGetter<?> getter : type.getters())
     {
       inputs.add(new InputClassField(getter));

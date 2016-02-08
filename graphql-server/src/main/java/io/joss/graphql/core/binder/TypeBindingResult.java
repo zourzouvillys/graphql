@@ -1,6 +1,7 @@
 package io.joss.graphql.core.binder;
 
 import io.joss.graphql.core.decl.GQLDeclaration;
+import io.joss.graphql.core.decl.GQLObjectTypeDeclaration;
 import io.joss.graphql.core.lang.GQLTypeRegistry;
 
 public class TypeBindingResult
@@ -9,9 +10,9 @@ public class TypeBindingResult
   private GQLTypeRegistry registry;
   private TypeScanner scanner;
   private GQLDeclaration query;
-  private GQLDeclaration mutation;
+  private GQLObjectTypeDeclaration mutation;
 
-  TypeBindingResult(GQLTypeRegistry registry, TypeScanner scanner, GQLDeclaration query, GQLDeclaration mutation)
+  public TypeBindingResult(GQLTypeRegistry registry, TypeScanner scanner, GQLObjectTypeDeclaration query, GQLObjectTypeDeclaration mutation)
   {
     this.registry = registry;
     this.scanner = scanner;
@@ -34,7 +35,7 @@ public class TypeBindingResult
     return this.scanner;
   }
 
-  public GQLDeclaration mutation()
+  public GQLObjectTypeDeclaration mutation()
   {
     return mutation;
   }

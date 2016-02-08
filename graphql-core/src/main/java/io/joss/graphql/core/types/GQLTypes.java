@@ -14,6 +14,8 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 
+
+
 public class GQLTypes
 {
 
@@ -42,6 +44,11 @@ public class GQLTypes
   public static GQLDeclarationRef intType()
   {
     return concreteTypeRef("Int");
+  }
+  
+  public static GQLTypeReference nonNullStringType()
+  {
+    return nonNull(stringType());
   }
 
   public static GQLDeclarationRef stringType()
