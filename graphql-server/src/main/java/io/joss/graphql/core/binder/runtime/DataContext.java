@@ -254,7 +254,11 @@ public class DataContext implements GQLSelectionVisitor<Void>
 
       if (selected == null)
       {
-        throw new GQLException(String.format("Invalid field: '%s' on %s", field.name(), this.parent() == null ? "root node" : this.path()));
+        throw new GQLException(
+            String.format("Invalid field: '%s' on %s (%s)",
+                field.name(),
+                this.parent() == null ? "root node" : this.path(),
+                this.type()));
       }
 
       // resolve the underlying type.

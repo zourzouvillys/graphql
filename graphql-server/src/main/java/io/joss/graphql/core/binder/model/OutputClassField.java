@@ -49,6 +49,10 @@ public class OutputClassField
   public String name()
   {
 
+    if (method.getDeclaredAnnotation(GQLField.class) != null && !method.getDeclaredAnnotation(GQLField.class).name().isEmpty())
+      return method.getDeclaredAnnotation(GQLField.class).name();
+
+    
     String name = method.getName();
 
     if (name.startsWith("get") && Character.isUpperCase(name.charAt(3)))
