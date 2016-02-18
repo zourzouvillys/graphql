@@ -64,7 +64,8 @@ public class SingleValueFieldInvoker extends AbstractInvoker
       {
         try
         {
-          output.onNext(parent, handle.bindTo(parent).invoke());
+          Object val = handle.bindTo(parent).invoke();
+          output.onNext(parent, val);
         }
         catch (Throwable t)
         {

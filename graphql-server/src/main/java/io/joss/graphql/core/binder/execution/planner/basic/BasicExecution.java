@@ -150,6 +150,11 @@ public class BasicExecution
 
   private GQLValue applyField(Object child, DataContext ctx)
   {
+    if (child == null)
+    {
+      // we don't apply to anything that's null.
+      return null;
+    }
     if (ctx.isLeaf())
     {
       return GQLValues.stringValue(child.toString());

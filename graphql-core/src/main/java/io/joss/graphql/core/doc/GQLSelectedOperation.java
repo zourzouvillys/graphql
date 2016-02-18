@@ -1,5 +1,6 @@
 package io.joss.graphql.core.doc;
 
+import io.joss.graphql.core.parser.GQLParser;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
@@ -46,6 +47,11 @@ public final class GQLSelectedOperation
   public static GQLSelectedOperation defaultQuery(GQLDocument doc)
   {
     return query(doc, doc.operations().iterator().next());
+  }
+
+  public static GQLSelectedOperation defaultQuery(String doc)
+  {
+    return defaultQuery(GQLParser.parseDocument(doc));
   }
 
 }

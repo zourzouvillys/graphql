@@ -3,10 +3,13 @@ package io.joss.graphql.core.utils;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Strings;
+
 import io.joss.graphql.core.doc.GQLArgument;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+
 public class GQLUtils
 {
 
@@ -29,6 +32,24 @@ public class GQLUtils
     sb.append('=');
     sb.append(arg.value());
     return sb.toString();
+  }
+
+  public static boolean isValidTypeName(String name)
+  {
+    if (name == null || name.isEmpty())
+    {
+      return false;
+    }
+    return true;
+  }
+
+  public static String normalize(String input)
+  {
+    if (input == null)
+    {
+      return null;
+    }
+    return Strings.emptyToNull(input.trim());
   }
 
 }

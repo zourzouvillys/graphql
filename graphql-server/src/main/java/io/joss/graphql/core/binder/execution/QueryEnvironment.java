@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.joss.graphql.core.binder.reflect.TypedParameter;
+import io.joss.graphql.executor.GraphQLOutputType;
 import lombok.Builder;
 import lombok.Singular;
 
@@ -19,6 +20,11 @@ public class QueryEnvironment
   public Object getContext(TypedParameter<?> param)
   {
     return contexts.get(param.type().rawClass());
+  }
+
+  public Object getContext(Class<?> param)
+  {
+    return contexts.get(param);
   }
 
   public static QueryEnvironment emptyEnvironment()

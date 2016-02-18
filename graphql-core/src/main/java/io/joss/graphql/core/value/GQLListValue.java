@@ -61,10 +61,10 @@ public final class GQLListValue implements GQLValue
   public String toString()
   {
     StringBuilder sb = new StringBuilder();
-    sb.append("[");
+    sb.append("[ ");
     sb.append(values().stream()
-        .map(e -> e.toString())
-        .collect(Collectors.joining(",")));
+        .map(e -> e == null ? "null" : e.toString())
+        .collect(Collectors.joining(", ")));
     sb.append(" ]");
     return sb.toString();
   }

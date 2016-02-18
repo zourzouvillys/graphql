@@ -3,6 +3,9 @@ package io.joss.graphql.core.binder.model.invoker;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+
 import io.joss.graphql.core.binder.execution.QueryEnvironment;
 import io.joss.graphql.core.binder.model.OutputClassField;
 import io.joss.graphql.core.binder.model.OutputClassFieldArg;
@@ -30,7 +33,7 @@ public class StaticMethodInvoker extends AbstractInvoker
 
   public StaticMethodInvoker(OutputClassField field, TypedMethod<?> method, DataContext ctx, QueryEnvironment env)
   {
-    
+
     super(ctx, env);
 
     this.field = field;
@@ -53,7 +56,6 @@ public class StaticMethodInvoker extends AbstractInvoker
       throw new RuntimeException(ex);
     }
   }
-
 
   private MethodHandle adaptReturnType(MethodHandle unreflect)
   {
