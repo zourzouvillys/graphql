@@ -1,11 +1,10 @@
 package io.joss.graphql.executor;
 
 import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
-import com.sun.scenario.effect.impl.sw.sse.SSEBlend_MULTIPLYPeer;
 
 import io.joss.graphql.core.binder.execution.QueryEnvironment;
 import io.joss.graphql.core.doc.GQLArgument;
@@ -16,10 +15,17 @@ import io.joss.graphql.core.doc.GQLSelectedOperation;
 import io.joss.graphql.core.doc.GQLSelection;
 import io.joss.graphql.core.doc.GQLSelectionVisitor;
 import io.joss.graphql.core.parser.GQLException;
+import io.joss.graphql.core.value.DefaultValueVisitor;
+import io.joss.graphql.core.value.GQLBooleanValue;
+import io.joss.graphql.core.value.GQLEnumValueRef;
+import io.joss.graphql.core.value.GQLFloatValue;
+import io.joss.graphql.core.value.GQLIntValue;
+import io.joss.graphql.core.value.GQLListValue;
 import io.joss.graphql.core.value.GQLObjectValue;
-import io.joss.graphql.core.value.GQLObjectValue.Builder;
+import io.joss.graphql.core.value.GQLStringValue;
 import io.joss.graphql.core.value.GQLValue;
 import io.joss.graphql.core.value.GQLValues;
+import io.joss.graphql.core.value.GQLVariableRef;
 import io.joss.graphql.executor.GraphQLOutputType.Field;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +35,7 @@ public class ExecutionContext
 
   private QueryEnvironment env;
   private GraphQLEngine engine;
+  private GQLObjectValue input;
 
   public ExecutionContext(GraphQLEngine engine, QueryEnvironment env, GQLSelectedOperation op)
   {
@@ -58,7 +65,10 @@ public class ExecutionContext
 
     for (int i = 0; i < ret.length; ++i)
     {
-      ret[i] = res[i].build();
+      if (res[i] != null)
+      {
+        ret[i] = res[i].build();
+      }
     }
 
     return ret;
@@ -115,7 +125,7 @@ public class ExecutionContext
     GQLValue[] result = new GQLValue[roots.length];
 
     // perform the query.
-    query(result, type, roots, field, selection.args(), selection.selections());
+    query(result, type, roots, field, resolve(selection.args()), selection.selections());
 
     // for each value, append to the results.
 
@@ -284,6 +294,49 @@ public class ExecutionContext
   private String alias(GQLFieldSelection selection)
   {
     return selection.alias() == null ? selection.name() : selection.alias();
+  }
+
+  /**
+   * sets the input for this execution.
+   */
+
+  public void input(GQLObjectValue input)
+  {
+    this.input = input;
+  }
+
+  /**
+   * returns resolved arguments mapped against input.
+   */
+
+  private List<GQLArgument> resolve(List<GQLArgument> args)
+  {
+    return args.stream().map(this::resolve).collect(Collectors.toList());
+  }
+
+  private GQLArgument resolve(GQLArgument arg)
+  {
+    
+    return arg.withValue(arg.value().apply(new DefaultValueVisitor<GQLValue>() {
+
+      @Override
+      public GQLValue visitDefaultValue(GQLValue value)
+      {
+        return value;
+      }
+
+      @Override
+      public GQLValue visitVarValue(GQLVariableRef value)
+      {
+        if (input != null)
+        {
+          return input.entry(value.name()).orElse(null);
+        }
+        // TODO: should we treat as null, or fail? check spec.
+        return null;
+      }
+
+    }));
   }
 
 }

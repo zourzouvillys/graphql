@@ -18,6 +18,9 @@ import io.joss.graphql.core.binder.annotatons.GQLDefaultValue;
 import io.joss.graphql.core.binder.annotatons.GQLField;
 import io.joss.graphql.core.doc.GQLArgument;
 import io.joss.graphql.core.doc.GQLSelection;
+import io.joss.graphql.core.value.GQLValueConverters;
+import io.joss.graphql.core.value.GQLValueTypeConverter;
+import io.joss.graphql.core.value.GQLVariableRef;
 import io.joss.graphql.executor.GraphQLOutputType.ArgBuilder;
 import io.joss.graphql.executor.GraphQLOutputType.Builder;
 import io.joss.graphql.executor.GraphQLOutputType.Field;
@@ -90,7 +93,7 @@ final class AutoScanner
 
     public AbstractFieldHandler(Method method)
     {
-      
+
       this.method = method;
 
       for (int i = 0; i < method.getParameterCount(); ++i)
@@ -105,8 +108,9 @@ final class AutoScanner
         }
         else if (p.getAnnotation(GQLArg.class) != null)
         {
+          // the parametrer is an input.
           GQLArg arg = p.getAnnotation(GQLArg.class);
-          args.add((ctx, args, roots) -> arg(args, arg));
+          args.add((ctx, args, roots) -> arg(args, arg, type));
         }
         else if (Modifier.isStatic(method.getModifiers()))
         {
@@ -122,8 +126,20 @@ final class AutoScanner
 
     }
 
-    private Object arg(List<GQLArgument> args2, GQLArg arg)
+    private Object arg(List<GQLArgument> args, GQLArg ant, Class<?> type)
     {
+
+      for (GQLArgument arg : args)
+      {
+        if (arg.name().equals(ant.value()))
+        {
+          // note that we resolve variables BEFORE we dispatch, as it only needs to be done once per request rather than each node.
+          return GQLValueTypeConverter.getInstance().convert(arg.value(), type);
+        }
+      }
+      
+      // ??
+
       return null;
     }
 
@@ -222,7 +238,7 @@ final class AutoScanner
     {
 
       Preconditions.checkNotNull(method);
-      
+
       Object[] results = (Object[]) Array.newInstance(box(method.getReturnType()), roots.length);
 
       for (int i = 0; i < roots.length; ++i)

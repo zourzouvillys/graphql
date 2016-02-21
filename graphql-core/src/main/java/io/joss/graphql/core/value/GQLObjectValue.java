@@ -1,6 +1,7 @@
 package io.joss.graphql.core.value;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import lombok.Builder;
@@ -27,6 +28,11 @@ public final class GQLObjectValue implements GQLValue
   public Map<String, GQLValue> entries()
   {
     return this.values;
+  }
+
+  public Optional<GQLValue> entry(String key)
+  {
+    return Optional.ofNullable(values.get(key));
   }
 
   /**

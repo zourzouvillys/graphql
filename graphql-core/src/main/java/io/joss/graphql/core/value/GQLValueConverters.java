@@ -1,5 +1,13 @@
 package io.joss.graphql.core.value;
 
+
+/**
+ * Provides converters that translate to/from the given types.
+ * 
+ * @author theo
+ *
+ */
+
 public class GQLValueConverters
 {
 

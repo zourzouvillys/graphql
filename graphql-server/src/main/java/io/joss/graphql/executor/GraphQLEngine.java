@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 import io.joss.graphql.core.binder.execution.QueryEnvironment;
 import io.joss.graphql.core.doc.GQLOpType;
 import io.joss.graphql.core.doc.GQLSelectedOperation;
+import io.joss.graphql.core.parser.GQLException;
 import io.joss.graphql.core.value.GQLObjectValue;
 import io.joss.graphql.core.value.GQLValue;
 
@@ -46,7 +47,7 @@ public class GraphQLEngine
    * @return
    */
 
-  public GQLObjectValue execute(QueryEnvironment env, GQLSelectedOperation op, Object root, GQLValue input)
+  public GQLObjectValue execute(QueryEnvironment env, GQLSelectedOperation op, Object root, GQLObjectValue input)
   {
 
     // only support query for now.
@@ -58,11 +59,23 @@ public class GraphQLEngine
     // generate an execution plan.
     ExecutionContext builder = new ExecutionContext(this, env, op);
 
+    if (input != null)
+    {
+      builder.input(input);
+    }
+
     Object[] ret = (Object[]) Array.newInstance(root.getClass(), 1);
 
     ret[0] = root;
 
-    return builder.selections(app.type(root.getClass()), ret, op.operation().selections())[0];
+    GraphQLOutputType type = app.type(root.getClass());
+
+    if (type == null)
+    {
+      throw new GQLException(String.format("type '%s' isn't registered", root.getClass().getName()));
+    }
+
+    return builder.selections(type, ret, op.operation().selections())[0];
 
   }
 
