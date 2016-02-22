@@ -1,15 +1,17 @@
 package io.joss.graphql.executor;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import io.joss.graphql.core.binder.annotatons.GQLType;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class GraphQLEngineConfig
 {
 
@@ -42,6 +44,7 @@ public class GraphQLEngineConfig
   public GraphQLOutputType registerType(GraphQLOutputType type)
   {
     this.types.add(type);
+    log.debug("Registering GQL type {}", type.name());
     this.named.put(type.name(), type);
     return type;
   }
@@ -94,11 +97,17 @@ public class GraphQLEngineConfig
     }
 
     return type(gt.name());
+    
   }
 
-  private GraphQLOutputType type(String name)
+  public GraphQLOutputType type(String name)
   {
     return this.named.get(name);
+  }
+
+  public Collection<GraphQLOutputType> types()
+  {
+    return this.types;
   }
 
 }

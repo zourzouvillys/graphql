@@ -16,11 +16,12 @@ import io.joss.graphql.core.binder.annotatons.GQLArg;
 import io.joss.graphql.core.binder.annotatons.GQLContext;
 import io.joss.graphql.core.binder.annotatons.GQLDefaultValue;
 import io.joss.graphql.core.binder.annotatons.GQLField;
+import io.joss.graphql.core.binder.annotatons.GQLType;
 import io.joss.graphql.core.doc.GQLArgument;
 import io.joss.graphql.core.doc.GQLSelection;
-import io.joss.graphql.core.value.GQLValueConverters;
+import io.joss.graphql.core.types.GQLTypeReference;
+import io.joss.graphql.core.types.GQLTypes;
 import io.joss.graphql.core.value.GQLValueTypeConverter;
-import io.joss.graphql.core.value.GQLVariableRef;
 import io.joss.graphql.executor.GraphQLOutputType.ArgBuilder;
 import io.joss.graphql.executor.GraphQLOutputType.Builder;
 import io.joss.graphql.executor.GraphQLOutputType.Field;
@@ -104,7 +105,13 @@ final class AutoScanner
 
         if (p.getAnnotation(GQLContext.class) != null)
         {
-          args.add((ctx, args, roots) -> Preconditions.checkNotNull(ctx.env().getContext(type), type.getName()));
+          
+          args.add((ctx, args, roots) -> {
+            
+            
+            return Preconditions.checkNotNull(ctx.env().getContext(type), "requested context which was missing", type.getName());
+            
+          });
         }
         else if (p.getAnnotation(GQLArg.class) != null)
         {
@@ -137,7 +144,7 @@ final class AutoScanner
           return GQLValueTypeConverter.getInstance().convert(arg.value(), type);
         }
       }
-      
+
       // ??
 
       return null;
@@ -276,6 +283,9 @@ final class AutoScanner
 
     FieldBuilder fb = b.addField(Strings.isNullOrEmpty(field.name()) ? method.getName() : field.name());
 
+    // calculate the logical return type (we don't care about the actul type type).
+    fb.type(makeReturnType(method));
+
     for (int i = 0; i < method.getParameterCount(); ++i)
     {
       param(fb, method.getParameters()[i]);
@@ -298,6 +308,65 @@ final class AutoScanner
     // fb.type(GQLTypes.concreteTypeRef("xxx"));
 
     fb.handler(handler);
+
+  }
+
+  private static GQLTypeReference makeReturnType(Method method)
+  {
+    return makeReturnType(method.getReturnType());
+  }
+
+  /**
+   * 
+   */
+
+  public static String getGQLTypeName(Class<?> klass)
+  {
+
+    GQLType type = klass.getAnnotation(GQLType.class);
+
+    if (type != null)
+    {
+      if (Strings.isNullOrEmpty(type.name()))
+      {
+        return klass.getSimpleName();
+      }
+      return type.name();
+    }
+
+    return null;
+
+  }
+
+  /**
+   * Given an input java klass type, returns a GQLTypeReference for it.
+   */
+
+  private static GQLTypeReference makeReturnType(Class<?> klass)
+  {
+
+    if (klass.isArray())
+    {
+      return GQLTypes.listOf(makeReturnType(klass.getComponentType()));
+    }
+
+    if (klass.isAssignableFrom(String.class))
+    {
+      return GQLTypes.stringType();
+    }
+    else if (klass.equals(Boolean.TYPE) || klass.isAssignableFrom(Boolean.class))
+    {
+      return GQLTypes.booleanType();
+    }
+
+    String gtype = getGQLTypeName(klass);
+
+    if (gtype == null)
+    {
+      throw new RuntimeException(String.format("Unable to calculate name for %s", klass));
+    }
+
+    return GQLTypes.concreteTypeRef(gtype);
 
   }
 

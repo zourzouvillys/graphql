@@ -84,6 +84,8 @@ public class GraphQLEngineTest
     // fail("Not yet implemented");
     
   }
+  
+  
   @Test  
   public void testArgInputInt()
   {
@@ -102,6 +104,33 @@ public class GraphQLEngineTest
         new Test3Root(),
         GQLValues.objectValue(input));
     
+    assertEquals("123", val.entries().get("ret1").apply(GQLValueConverters.stringConverter()));
+    
+    // fail("Not yet implemented");
+    
+  }
+
+  @Test  
+  public void testFragmentSpread()
+  {
+    
+    GraphQLEngineConfig app = new GraphQLEngineConfig();
+    app.queryRoot(app.registerType(GraphQLOutputType.builder(Test1Root.class).build()));
+    app.registerType(GraphQLOutputType.builder(Test2Root.class).build());
+    GraphQLEngine engine = new GraphQLEngine(app);
+    
+    Map<String, GQLValue> input = new HashMap<>();
+
+    input.put("arg1", GQLValues.intValue(123));
+    
+    GQLObjectValue val = engine.execute(
+        QueryEnvironment.emptyEnvironment(), 
+        GQLSelectedOperation.defaultQuery("query App { child { x: id, ...F0 } } fragment F0 on Test2Root { id }"),
+        new Test1Root(),
+        GQLValues.objectValue(input));
+    
+    System.err.println(val);
+
     assertEquals("123", val.entries().get("ret1").apply(GQLValueConverters.stringConverter()));
     
     // fail("Not yet implemented");

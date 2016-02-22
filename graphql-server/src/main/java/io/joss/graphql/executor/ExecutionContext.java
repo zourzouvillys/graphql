@@ -1,6 +1,7 @@
 package io.joss.graphql.executor;
 
 import java.lang.reflect.Array;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,7 @@ import com.google.common.base.Preconditions;
 import io.joss.graphql.core.binder.execution.QueryEnvironment;
 import io.joss.graphql.core.doc.GQLArgument;
 import io.joss.graphql.core.doc.GQLFieldSelection;
+import io.joss.graphql.core.doc.GQLFragmentDefinition;
 import io.joss.graphql.core.doc.GQLFragmentSpreadSelection;
 import io.joss.graphql.core.doc.GQLInlineFragmentSelection;
 import io.joss.graphql.core.doc.GQLSelectedOperation;
@@ -16,13 +18,7 @@ import io.joss.graphql.core.doc.GQLSelection;
 import io.joss.graphql.core.doc.GQLSelectionVisitor;
 import io.joss.graphql.core.parser.GQLException;
 import io.joss.graphql.core.value.DefaultValueVisitor;
-import io.joss.graphql.core.value.GQLBooleanValue;
-import io.joss.graphql.core.value.GQLEnumValueRef;
-import io.joss.graphql.core.value.GQLFloatValue;
-import io.joss.graphql.core.value.GQLIntValue;
-import io.joss.graphql.core.value.GQLListValue;
 import io.joss.graphql.core.value.GQLObjectValue;
-import io.joss.graphql.core.value.GQLStringValue;
 import io.joss.graphql.core.value.GQLValue;
 import io.joss.graphql.core.value.GQLValues;
 import io.joss.graphql.core.value.GQLVariableRef;
@@ -36,11 +32,13 @@ public class ExecutionContext
   private QueryEnvironment env;
   private GraphQLEngine engine;
   private GQLObjectValue input;
+  private GQLSelectedOperation op;
 
   public ExecutionContext(GraphQLEngine engine, QueryEnvironment env, GQLSelectedOperation op)
   {
     this.engine = engine;
     this.env = env;
+    this.op = op;
   }
 
   public QueryEnvironment env()
@@ -49,7 +47,7 @@ public class ExecutionContext
   }
 
   /**
-   * Performs a selection.
+   * Performs a selection on a set of root objects.
    */
 
   public GQLObjectValue[] selections(GraphQLOutputType type, Object[] roots, List<GQLSelection> selections)
@@ -94,23 +92,47 @@ public class ExecutionContext
 
         if (field == null)
         {
-          throw new GQLException(String.format("Couldn't find field '%s'", selection.name()));
+          throw new GQLException(String.format("Couldn't find field '%s' on '%s'", selection.name(), type.name()));
         }
 
         select(res, type, roots, field, selection);
 
         return null;
+
       }
 
       @Override
       public Void visitFragmentSelection(GQLFragmentSpreadSelection selection)
       {
-        throw new RuntimeException();
+
+        // fetch the named fragment. if it doesn't exist it's an error.
+        GQLFragmentDefinition fragment = op.doc().fragment(selection.name());
+
+        if (fragment == null)
+        {
+          throw new GQLException(String.format("Unknown fragment '%s'", selection.name()));
+        }
+
+        if (!type.name().equals(fragment.namedType().name()))
+        {
+          // this type isn't the same as the one we're active on.
+          log.debug("Skipping fragment '{}' on '{}'", fragment.namedType().name(), type.name());
+          return null;
+        }
+
+        log.trace("Applying fragment spread {}", fragment);
+
+        fragment.selections().forEach(s -> selection(type, roots, res, s));
+
+        return null;
+
+        // fragment.apply(this);
       }
 
       @Override
       public Void visitInlineFragment(GQLInlineFragmentSelection selection)
       {
+        log.debug("Applying inline fragment selection with type condition {}", selection.typeCondition());
         throw new RuntimeException();
       }
 
@@ -184,7 +206,7 @@ public class ExecutionContext
 
       for (int i = 0; i < results.length; ++i)
       {
-        count += deep[i].length;
+        count += (deep[i] == null) ? 0 : deep[i].length;
       }
 
       Object[] deeper = (Object[]) Array.newInstance(providedType.getComponentType(), count);
@@ -194,9 +216,12 @@ public class ExecutionContext
       // now, copy the elements in.
       for (int i = 0; i < results.length; ++i)
       {
-        for (int x = 0; x < deep[i].length; ++x)
+        if (deep[i] != null)
         {
-          deeper[count++] = deep[i][x];
+          for (int x = 0; x < deep[i].length; ++x)
+          {
+            deeper[count++] = deep[i][x];
+          }
         }
       }
 
@@ -208,10 +233,13 @@ public class ExecutionContext
 
       if (childType == null)
       {
-        log.warn("Unable to find child type {}", providedType.getComponentType());
+
+        log.warn("Unable to find child type {} for component", providedType.getComponentType());
+        engine.types().forEach(ktype -> log.debug(" -> {}", ktype.name()));
         // WARN: don't know how to convert the child type.
         // this only happens here rather than compile time so we can allow dynamic return types.
         return;
+
       }
 
       GQLObjectValue[] xxx = selections(childType, deeper, children);
@@ -224,25 +252,38 @@ public class ExecutionContext
       for (int i = 0; i < results.length; ++i)
       {
 
-        GQLValue[] re = new GQLValue[deep[i].length];
-
-        for (int x = 0; x < deep[i].length; ++x)
+        if (deep[i] != null)
         {
 
-          Object val = xxx[count++];
+          GQLValue[] re = new GQLValue[deep[i].length];
 
-          if (val == null)
+          for (int x = 0; x < deep[i].length; ++x)
           {
-            continue;
+
+            Object val = xxx[count++];
+
+            if (val == null)
+            {
+              continue;
+            }
+
+            re[x] = (GQLValue) val;
+
           }
 
-          re[x] = (GQLValue) val;
+          results[i] = GQLValues.listValue(re);
 
         }
 
-        results[i] = GQLValues.listValue(re);
-
       }
+
+    }
+    else if (providedType.isAssignableFrom(Collection.class))
+    {
+
+      // the return type is a collection.
+
+      throw new RuntimeException("not yet supported");
 
     }
     else if (!children.isEmpty())
@@ -254,7 +295,8 @@ public class ExecutionContext
 
       if (childType == null)
       {
-        log.warn("Unable to find child type {}", providedType);
+        log.warn("Unable to find child type {} for non empty children", providedType);
+        engine.types().forEach(ktype -> log.debug(" -> {}", ktype.name()));
         // WARN: don't know how to convert the child type.
         // this only happens here rather than compile time so we can allow dynamic return types.
         return;
@@ -282,8 +324,10 @@ public class ExecutionContext
         Object returnedValue = placeholder[i];
 
         // convert.
-
-        results[i] = GQLValues.stringValue((returnedValue) != null ? returnedValue.toString() : "");
+        if (returnedValue != null)
+        {
+          results[i] = GQLValues.stringValue(returnedValue.toString());
+        }
 
       }
 
@@ -316,7 +360,7 @@ public class ExecutionContext
 
   private GQLArgument resolve(GQLArgument arg)
   {
-    
+
     return arg.withValue(arg.value().apply(new DefaultValueVisitor<GQLValue>() {
 
       @Override

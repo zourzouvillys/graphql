@@ -56,7 +56,16 @@ public class JsonValueWriter implements GQLValueVisitor<Void>
   public Void visitListValue(GQLListValue value)
   {
     g.writeStartArray();
-    value.values().forEach(val -> val.apply(this));
+    value.values().forEach(val -> {
+      if (val == null)
+      {
+        g.writeNull();
+      }
+      else
+      {
+        val.apply(this);
+      }
+    });
     g.writeEndArray();
     return null;
   }

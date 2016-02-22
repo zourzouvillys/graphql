@@ -11,11 +11,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import io.joss.graphql.core.decl.GQLDeclaration;
+import io.joss.graphql.core.types.GQLTypeReference;
 import io.joss.graphql.core.utils.GQLUtils;
 import io.joss.graphql.core.value.GQLStringValue;
 import io.joss.graphql.core.value.GQLValue;
 import io.joss.graphql.core.value.GQLValues;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 import lombok.ToString;
 
 /**
@@ -77,7 +79,7 @@ public final class GraphQLOutputType
   {
 
     private String name;
-    private GQLDeclaration type;
+    private GQLTypeReference type;
     private List<ArgBuilder> args = new LinkedList<>();
     private FieldHandler handler;
 
@@ -96,7 +98,7 @@ public final class GraphQLOutputType
      * The type of this field.
      */
 
-    public FieldBuilder type(GQLDeclaration type)
+    public FieldBuilder type(GQLTypeReference type)
     {
       this.type = type;
       return this;
@@ -227,6 +229,7 @@ public final class GraphQLOutputType
 
     private final String name;
     private final ImmutableList<Arg> args;
+    private final GQLTypeReference returnType;
 
     // note: handler being null will just always result in null being returned.
     // so, this must fail if the type is GQLNonNull.
@@ -238,9 +241,11 @@ public final class GraphQLOutputType
       this.name = fb.name;
       this.args = ImmutableList.copyOf(fb.args.stream().map(Arg::new).collect(Collectors.toList()));
       this.handler = fb.handler;
-
+      this.returnType = fb.type;
+      
       // validate
       Preconditions.checkState(GQLUtils.isValidTypeName(this.name), "invalid field name", this.name);
+      Preconditions.checkState(this.returnType != null, "invalid return type", this.returnType);
       Set<String> allItems = new HashSet<>();
       Set<String> dups = args.stream().map(arg -> arg.name.toLowerCase()).filter(n -> !allItems.add(n)).collect(Collectors.toSet());
       Preconditions.checkState(dups.isEmpty(), "duplicate args", dups);
@@ -250,6 +255,11 @@ public final class GraphQLOutputType
     public String name()
     {
       return this.name;
+    }
+    
+    public @NonNull GQLTypeReference returnType()
+    {
+      return this.returnType;
     }
 
     public FieldHandler handler()

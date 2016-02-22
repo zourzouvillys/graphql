@@ -1,6 +1,10 @@
 package io.joss.graphql.executor;
 
 import java.lang.reflect.Array;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
@@ -8,8 +12,12 @@ import io.joss.graphql.core.binder.execution.QueryEnvironment;
 import io.joss.graphql.core.doc.GQLOpType;
 import io.joss.graphql.core.doc.GQLSelectedOperation;
 import io.joss.graphql.core.parser.GQLException;
+import io.joss.graphql.core.utils.DefinitionPrinter;
+import io.joss.graphql.core.utils.GQLDocumentPrinter;
 import io.joss.graphql.core.value.GQLObjectValue;
-import io.joss.graphql.core.value.GQLValue;
+import io.joss.graphql.schema.__Schema;
+import io.joss.graphql.schema.__Type;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Entry point for executing GraphQL documents.
@@ -18,6 +26,7 @@ import io.joss.graphql.core.value.GQLValue;
  *
  */
 
+@Slf4j
 public class GraphQLEngine
 {
 
@@ -30,6 +39,11 @@ public class GraphQLEngine
   public GraphQLEngine(GraphQLEngineConfig app)
   {
     this.app = app;
+  }
+
+  public Collection<GraphQLOutputType> types()
+  {
+    return app.types();
   }
 
   /**
@@ -56,8 +70,14 @@ public class GraphQLEngine
     // run through each selection, resolve it, validate, and then build the execution plan.
     op.operation().selections();
 
+    log.debug("Executing: {}", new GQLDocumentPrinter().serialize(op.doc()));
+
+    //
+    Map<Class<?>, Object> ctx = new HashMap<>(env.getContexts());
+    ctx.put(GraphQLEngine.class, this);
+
     // generate an execution plan.
-    ExecutionContext builder = new ExecutionContext(this, env, op);
+    ExecutionContext builder = new ExecutionContext(this, env.withContexts(ctx), op);
 
     if (input != null)
     {
@@ -82,6 +102,21 @@ public class GraphQLEngine
   public GraphQLOutputType type(Class<?> type)
   {
     return this.app.type(type);
+  }
+
+  public GraphQLOutputType type(String name)
+  {
+    return this.app.type(name);
+  }
+
+  public __Schema schema()
+  {
+    return new __Schema(new __Type(app.queryRoot()), app.types().stream().filter(t -> !t.name().startsWith("__")).map(__Type::new).collect(Collectors.toList()));
+  }
+
+  public __Type schema(String name)
+  {
+    return new __Type(app.type(name));
   }
 
 }
