@@ -44,7 +44,7 @@ final class AutoScanner
 
     // GQLType type
 
-    b.name(klass.getSimpleName());
+    b.name(getGQLTypeName(klass));
 
     // keeps track of the actual method names, to see when we're already overridden.
     Set<String> matched = new HashSet<>();
@@ -105,12 +105,11 @@ final class AutoScanner
 
         if (p.getAnnotation(GQLContext.class) != null)
         {
-          
+
           args.add((ctx, args, roots) -> {
-            
-            
+
             return Preconditions.checkNotNull(ctx.env().getContext(type), "requested context which was missing", type.getName());
-            
+
           });
         }
         else if (p.getAnnotation(GQLArg.class) != null)
