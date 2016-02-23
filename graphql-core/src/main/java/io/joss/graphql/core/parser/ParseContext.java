@@ -394,7 +394,7 @@ public class ParseContext
     }
     else
     {
-      throw new IllegalArgumentException("Unknown operation type: " + this.next());
+      throw ParserExceptions.create(this, String.format("Unknown operation type: %s", this.next())); 
     }
 
     if (this.lexer.peek().type() == TokenType.NAME)
@@ -497,7 +497,7 @@ public class ParseContext
 
     if (fragmentName.equals("on"))
     {
-      throw new IllegalArgumentException("Fragment name must not be 'on'");
+      throw ParserExceptions.create(this, "Fragment name must not be 'on'"); 
     }
 
     b.name(fragmentName);
@@ -690,7 +690,7 @@ public class ParseContext
     {
       if (this.is("null"))
       {
-        throw new IllegalArgumentException("invalid enum name");
+        throw ParserExceptions.create(this, "Invalid ENUM name"); 
       }
       return GQLValues.enumValueRef(this.next());
     }

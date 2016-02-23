@@ -26,6 +26,7 @@ import com.google.common.net.HttpHeaders;
 import io.joss.graphql.core.doc.GQLDocument;
 import io.joss.graphql.core.doc.GQLOpType;
 import io.joss.graphql.core.doc.GQLSelectedOperation;
+import io.joss.graphql.core.parser.GQLException;
 import io.joss.graphql.core.parser.GQLParser;
 import io.joss.graphql.core.parser.SyntaxErrorException;
 import io.joss.graphql.core.value.GQLObjectValue;
@@ -83,6 +84,10 @@ public class GraphQLEngineResource
     catch (SyntaxErrorException ex)
     {
       return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.GQL_QUERY_SYNTAX_ERROR, ex.getMessage(), Position.create(ex))).build();
+    }
+    catch (GQLException ex)
+    {
+      return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.GQL_QUERY_SYNTAX_ERROR, ex.getMessage())).build();
     }
 
     if (doc.definitions().isEmpty())
@@ -156,6 +161,10 @@ public class GraphQLEngineResource
       doc = GQLParser.parseDocument(getQuery(body.query));
     }
     catch (SyntaxErrorException ex)
+    {
+      return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.GQL_QUERY_SYNTAX_ERROR, ex.getMessage())).build();
+    }
+    catch (GQLException ex)
     {
       return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.GQL_QUERY_SYNTAX_ERROR, ex.getMessage())).build();
     }

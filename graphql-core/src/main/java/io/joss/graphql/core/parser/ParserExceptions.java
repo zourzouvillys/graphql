@@ -23,4 +23,14 @@ public class ParserExceptions
     return new GQLException("EOF");
   }
 
+  public static SyntaxErrorException create(ParseContext ctx, String message)
+  {
+    return new SyntaxErrorException(ctx, message);
+  }
+
+  public static GQLException create(Lexer lexer, String message)
+  {
+    return new GQLException(message);
+  }
+
 }

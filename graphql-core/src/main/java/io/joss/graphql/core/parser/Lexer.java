@@ -167,7 +167,7 @@ public final class Lexer
 
     if (!m.find(this.pos) || m.start() != this.pos)
     {
-      throw new IllegalArgumentException("Unrecognised input: '" + text + "'");
+      throw ParserExceptions.create(this, "Unrecognised input: '" + text + "'");
     }
 
     this.pos = m.end();

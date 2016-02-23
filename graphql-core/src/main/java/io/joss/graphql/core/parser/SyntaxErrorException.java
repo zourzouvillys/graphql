@@ -15,7 +15,13 @@ public class SyntaxErrorException extends GQLException
     this.ctx = ctx;
     this.expected = expected;
     this.message = message;
-    // throw new IllegalArgumentException(String.format("Expected: '%s'. Got: '%s'", string, this.lexer.peek().toString()));
+  }
+
+  public SyntaxErrorException(ParseContext ctx, String message)
+  {
+    super(String.format("syntax error at or near '%s': %s", (ctx.lexer().peek() == null) ? "EOF" : ctx.lexer().peek().toString(), message));
+    this.ctx = ctx;
+    this.message = message;
   }
 
   /**
