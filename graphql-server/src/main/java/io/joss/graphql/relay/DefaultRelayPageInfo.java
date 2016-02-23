@@ -7,7 +7,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class DefaultRelayPageInfo implements RelayPageInfo
+public class DefaultRelayPageInfo extends RelayPageInfo
 {
 
   private boolean hasNextPage;

@@ -39,5 +39,5 @@ public @interface GQLType
    */
 
   Class<? extends GQLDeclaration> type() default GQLObjectTypeDeclaration.class;
-
+ 
 }

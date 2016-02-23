@@ -5,15 +5,15 @@ import io.joss.graphql.core.binder.annotatons.GQLNonNull;
 import io.joss.graphql.core.binder.annotatons.GQLType;
 
 @GQLType(name = "PageInfo")
-public interface RelayPageInfo
+public abstract class RelayPageInfo
 {
 
   @GQLField
   @GQLNonNull
-  Boolean hasNextPage();
+  public abstract Boolean hasNextPage();
 
   @GQLField
   @GQLNonNull
-  Boolean hasPreviousPage();
+  public abstract Boolean hasPreviousPage();
 
 }

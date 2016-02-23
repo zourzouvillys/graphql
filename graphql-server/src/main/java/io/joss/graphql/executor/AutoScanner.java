@@ -47,6 +47,7 @@ final class AutoScanner
 
     if (klass.isInterface())
     {
+      // Hmm, this doesn't seem right ...
       b.iface = true;
     }
 
