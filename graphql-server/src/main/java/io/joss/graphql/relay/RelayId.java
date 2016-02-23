@@ -16,9 +16,9 @@ public class RelayId
   private String type;
   private String id;
 
-  public static final RelayId fromParts(String type, int id)
+  public static final RelayId fromParts(String type, long id)
   {
-    return new RelayId(type, Integer.toString(id));
+    return new RelayId(type, Long.toString(id));
   }
 
   public static final RelayId fromParts(String type, String id)
@@ -42,6 +42,11 @@ public class RelayId
     return Integer.parseInt(id);
   }
 
+  public long longId()
+  {
+    return Long.parseLong(id);
+  }
+
   public String id()
   {
     return this.id;
@@ -52,12 +57,12 @@ public class RelayId
     return String.format("%s:%s", type, id);
   }
 
-  public static String toString(String type, int id)
+  public static String toString(String type, long id)
   {
     return fromParts(type, id).encode();
   }
 
-  public static String toString(Class<?> type, int id)
+  public static String toString(Class<?> type, long id)
   {
     return fromParts(ExecutorUtils.getGQLTypeName(type), id).encode();
   }
@@ -95,6 +100,23 @@ public class RelayId
     }
 
     return id.intId();
+
+  }
+
+  
+  public static long parseLong(Class<?> klass, String relayId)
+  {
+
+    String type = ExecutorUtils.getGQLTypeName(klass);
+
+    RelayId id = fromString(relayId);
+
+    if (!id.type().equals(type))
+    {
+      throw new IllegalArgumentException("Invalid ID for type");
+    }
+
+    return id.longId();
 
   }
 

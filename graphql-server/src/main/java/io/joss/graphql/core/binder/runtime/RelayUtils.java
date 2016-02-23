@@ -3,10 +3,15 @@ package io.joss.graphql.core.binder.runtime;
 import io.joss.graphql.core.decl.GQLDeclaration;
 import io.joss.graphql.core.decl.GQLDeclarationVisitors;
 import io.joss.graphql.core.decl.GQLObjectTypeDeclaration;
+import io.joss.graphql.core.doc.GQLDocument;
 import io.joss.graphql.core.types.GQLTypeReference;
 
 public class RelayUtils
 {
+
+  /**
+   * 
+   */
 
   public static class RelayConnectionContext
   {

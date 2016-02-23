@@ -11,4 +11,5 @@ public @interface GQLArg
 {
   String value();
   String type() default "";
+  String description() default "";
 }

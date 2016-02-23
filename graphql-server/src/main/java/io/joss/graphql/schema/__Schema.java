@@ -11,10 +11,12 @@ public class __Schema
 
   private __Type queryRoot;
   private Collection<__Type> types;
+  private __Type mutationRoot;
 
-  public __Schema(__Type queryRoot, Collection<__Type> types)
+  public __Schema(__Type queryRoot, __Type mutationRoot, Collection<__Type> types)
   {
     this.queryRoot = queryRoot;
+    this.mutationRoot = mutationRoot;
     this.types = types;
   }
 
@@ -33,7 +35,7 @@ public class __Schema
   @GQLField
   public __Type mutationType()
   {
-    return null;
+    return mutationRoot;
   }
 
   @GQLField

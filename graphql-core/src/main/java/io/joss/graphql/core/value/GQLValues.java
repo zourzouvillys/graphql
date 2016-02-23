@@ -101,7 +101,7 @@ public class GQLValues
    * An object of keys/values.
    */
 
-  public static GQLValue objectValue()
+  public static GQLObjectValue objectValue()
   {
     return GQLObjectValue.builder().build();
   }

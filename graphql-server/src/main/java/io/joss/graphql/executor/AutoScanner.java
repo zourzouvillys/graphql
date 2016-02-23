@@ -1,6 +1,7 @@
 package io.joss.graphql.executor;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
@@ -10,6 +11,7 @@ import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 import io.joss.graphql.core.binder.annotatons.GQLArg;
@@ -258,10 +260,15 @@ final class AutoScanner
         {
           results[i] = method.invoke(roots[i], super.generateParameters(ctx, args, new Object[] { roots[i] }));
         }
+        catch (InvocationTargetException ex)
+        {
+          throw Throwables.propagate(ex.getCause());
+        }
         catch (Throwable t)
         {
           log.warn("{} {}", method, roots);
           t.printStackTrace();
+          throw Throwables.propagate(t);
         }
 
       }
@@ -376,8 +383,10 @@ final class AutoScanner
     {
       ab.defaultValue(val.value());
     }
-
+    
     // calculate the GQLType?
+    ab.type(GQLTypes.nonNullStringType());
+
 
   }
 

@@ -3,6 +3,7 @@ package io.joss.graphql.executor;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -12,7 +13,7 @@ import io.joss.graphql.core.binder.execution.QueryEnvironment;
 import io.joss.graphql.core.doc.GQLOpType;
 import io.joss.graphql.core.doc.GQLSelectedOperation;
 import io.joss.graphql.core.parser.GQLException;
-import io.joss.graphql.core.utils.DefinitionPrinter;
+import io.joss.graphql.core.types.GQLTypeReference;
 import io.joss.graphql.core.utils.GQLDocumentPrinter;
 import io.joss.graphql.core.value.GQLObjectValue;
 import io.joss.graphql.schema.__Schema;
@@ -44,6 +45,11 @@ public class GraphQLEngine
   public Collection<GraphQLOutputType> types()
   {
     return app.types();
+  }
+
+  public Collection<GraphQLInputType> inputTypes()
+  {
+    return app.inputTypes();
   }
 
   /**
@@ -111,12 +117,41 @@ public class GraphQLEngine
 
   public __Schema schema()
   {
-    return new __Schema(new __Type(app.queryRoot()), app.types().stream().filter(t -> !t.name().startsWith("__")).map(__Type::new).collect(Collectors.toList()));
+    List<__Type> types = app.types().stream().filter(t -> !t.name().startsWith("__")).map(__Type::new).collect(Collectors.toList());
+    types.addAll(app.inputTypes().stream().filter(t -> !t.name().startsWith("__")).map(__Type::new).collect(Collectors.toList()));
+    return new __Schema(new __Type(app.queryRoot()), app.mutationRoot() != null ? new __Type(app.mutationRoot()) : null, types);
   }
 
   public __Type schema(String name)
   {
-    return new __Type(app.type(name));
+    GraphQLOutputType input = app.type(name);
+    if (input != null)
+    {
+      return new __Type(input);
+    }
+    GraphQLInputType output = app.inputType(name);
+    if (output != null)
+    {
+      return new __Type(output);
+    }
+    return null;
+  }
+
+  /**
+   * returns the specified __Type for the given type reference.
+   * 
+   * @param type
+   * @return
+   */
+
+  public __Type type(GQLTypeReference type)
+  {
+    return __Type.type(this, type);
+  }
+
+  public GraphQLInputType inputType(String name)
+  {
+    return this.app.inputType(name);
   }
 
 }

@@ -3,7 +3,7 @@ package io.joss.graphql.core.utils;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Strings;
+import com.google.common.reflect.TypeToken;
 
 import io.joss.graphql.core.doc.GQLArgument;
 import lombok.experimental.UtilityClass;
@@ -49,7 +49,12 @@ public class GQLUtils
     {
       return null;
     }
-    return Strings.emptyToNull(input.trim());
+    input = input.trim();
+    if (input.isEmpty())
+    {
+      return null;
+    }
+    return input;
   }
 
 }

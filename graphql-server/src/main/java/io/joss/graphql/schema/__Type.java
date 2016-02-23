@@ -11,6 +11,7 @@ import io.joss.graphql.core.types.GQLListType;
 import io.joss.graphql.core.types.GQLNonNullType;
 import io.joss.graphql.core.types.GQLTypeReference;
 import io.joss.graphql.executor.GraphQLEngine;
+import io.joss.graphql.executor.GraphQLInputType;
 import io.joss.graphql.executor.GraphQLOutputType;
 
 @GQLType(name = "__Type")
@@ -21,10 +22,16 @@ public class __Type
   private GQLNonNullType nonNull;
   private String scalar;
   private GQLListType list;
+  private GraphQLInputType input;
 
   public __Type(GraphQLOutputType type)
   {
     this.type = Preconditions.checkNotNull(type);
+  }
+
+  public __Type(GraphQLInputType type)
+  {
+    this.input = Preconditions.checkNotNull(type);
   }
 
   public __Type(GQLNonNullType type)
@@ -61,6 +68,10 @@ public class __Type
     {
       return "LIST";
     }
+    else if (this.input != null)
+    {
+      return "INPUT_OBJECT";
+    }
     return null;
   }
 
@@ -82,6 +93,10 @@ public class __Type
     else if (this.list != null)
     {
       return null;
+    }
+    else if (this.input != null)
+    {
+      return this.input.name();
     }
     return null;
   }
@@ -111,6 +126,10 @@ public class __Type
   @GQLField
   public __InputValue[] inputFields()
   {
+    if (input != null)
+    {
+      return input.fields().stream().map(__InputValue::new).filter(t -> !t.name().startsWith("__")).toArray(__InputValue[]::new);
+    }
     return new __InputValue[0];
   }
 
@@ -119,7 +138,7 @@ public class __Type
   {
     return new String[0];
   }
-  
+
   @GQLField
   public __Type[] possibleTypes()
   {
@@ -151,6 +170,8 @@ public class __Type
   public static __Type type(GraphQLEngine engine, GQLTypeReference type)
   {
 
+    Preconditions.checkNotNull(type);
+
     return type.apply(new GQLTypeVisitor<__Type>() {
 
       @Override
@@ -173,6 +194,15 @@ public class __Type
 
         if (xtype == null)
         {
+
+          GraphQLInputType itype = engine.inputType(type.name());
+
+          if (itype != null)
+          {
+            return new __Type(itype);
+          }
+
+          // must be a scalar...
           return new __Type(type.name());
           // throw new RuntimeException(String.format("Unable to resolve type '%s'", type.name()));
         }

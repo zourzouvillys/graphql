@@ -3,12 +3,8 @@ package io.joss.graphql.schema;
 import io.joss.graphql.core.binder.annotatons.GQLContext;
 import io.joss.graphql.core.binder.annotatons.GQLField;
 import io.joss.graphql.core.binder.annotatons.GQLType;
-import io.joss.graphql.core.lang.GQLTypeVisitor;
-import io.joss.graphql.core.types.GQLDeclarationRef;
-import io.joss.graphql.core.types.GQLListType;
-import io.joss.graphql.core.types.GQLNonNullType;
-import io.joss.graphql.core.types.GQLTypeReference;
 import io.joss.graphql.executor.GraphQLEngine;
+import io.joss.graphql.executor.GraphQLInputType;
 import io.joss.graphql.executor.GraphQLOutputType;
 
 @GQLType(name = "__Field")
@@ -31,13 +27,17 @@ public class __Field
   @GQLField
   public String description()
   {
-    return field.returnType().toString();
+    return field.description();
   }
 
   @GQLField
   public __InputValue[] args()
   {
-    return field.args().stream().map(__InputValue::new).toArray(__InputValue[]::new);
+    if (this.field != null)
+    {
+      return field.args().stream().map(__InputValue::new).toArray(__InputValue[]::new);
+    }
+    return new __InputValue[0];
   }
 
   @GQLField

@@ -23,6 +23,7 @@ dependencies {
 
     compile group: "io.joss.graphql", name: "graphql-core", version: "1.0-SNAPSHOT"
     compile 'org.slf4j:slf4j-api:1.7.13'
+	compile 'com.google.guava:guava:19.0'
 
 	testCompile 'com.google.guava:guava:18.0'
     testCompile 'junit:junit:4.12'
