@@ -3,8 +3,6 @@ package io.joss.graphql.core.utils;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.reflect.TypeToken;
-
 import io.joss.graphql.core.doc.GQLArgument;
 import lombok.experimental.UtilityClass;
 
