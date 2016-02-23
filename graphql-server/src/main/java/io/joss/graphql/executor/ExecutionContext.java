@@ -25,9 +25,15 @@ import io.joss.graphql.core.value.GQLVariableRef;
 import io.joss.graphql.executor.GraphQLOutputType.Field;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * A simple single-thread, non-async execution context.
+ * 
+ * @author Theo Zourzouvillys
+ *
+ */
+
 @Slf4j
 public class ExecutionContext
-
 {
 
   private QueryEnvironment env;
@@ -48,7 +54,8 @@ public class ExecutionContext
   }
 
   /**
-   * Performs a selection on a set of root objects.  This is the initial entry point into a query.
+   * Performs a selection on a set of root objects. This is the initial entry point into a query, as well as for items further down the
+   * chain.
    */
 
   public GQLObjectValue[] selections(GraphQLOutputType type, Object[] roots, List<GQLSelection> selections)
@@ -68,14 +75,32 @@ public class ExecutionContext
       {
         ret[i] = res[i].build();
       }
+      else if (roots[i] != null)
+      {
+        ret[i] = GQLValues.objectValue();
+      }
     }
 
     return ret;
+
+  }
+
+  /**
+   * looks at the actual type, and works out what type it is for __typename.
+   */
+
+  private String dynamictype(GraphQLOutputType type, Object root)
+  {
+    if (type.iface)
+    {
+      // only perform dynamic lookup if the current type is an interface.
+      return ExecutorUtils.getGQLTypeName(root.getClass());
+    }
+    return type.name();
   }
 
   /**
    * @param res
-   * 
    */
 
   private void selection(GraphQLOutputType type, Object[] roots, GQLObjectValue.Builder[] res, GQLSelection selection)
@@ -88,6 +113,31 @@ public class ExecutionContext
       @Override
       public Void visitFieldSelection(GQLFieldSelection selection)
       {
+
+        // our special __typename field ...
+        if (selection.name().toLowerCase().equals("__typename"))
+        {
+
+          for (int i = 0; i < res.length; ++i)
+          {
+
+            if (roots[i] == null)
+            {
+              continue;
+            }
+
+            if (res[i] == null)
+            {
+              res[i] = GQLObjectValue.builder();
+            }
+
+            // for each object, we need to pull out the type based on introspection at runtime, as there is no no other way to do this. FML.
+
+            res[i].value(alias(selection), GQLValues.stringValue(dynamictype(type, roots[i])));
+
+          }
+          return null;
+        }
 
         Field field = type.field(selection.name());
 
@@ -114,27 +164,53 @@ public class ExecutionContext
           throw new GQLException(String.format("Unknown fragment '%s'", selection.name()));
         }
 
-        if (!type.name().equals(fragment.namedType().name()))
-        {
-          // this type isn't the same as the one we're active on.
-          log.debug("Skipping fragment '{}' on '{}'", fragment.namedType().name(), type.name());
-          return null;
-        }
+        log.trace("Applying fragment spread selection {}", fragment);
 
-        log.trace("Applying fragment spread {}", fragment);
-
-        fragment.selections().forEach(s -> selection(type, roots, res, s));
+        apply(fragment.selections(), engine.type(fragment.namedType().name()));
 
         return null;
 
-        // fragment.apply(this);
+      }
+
+      /**
+       * Given a current root set, descends for any which are of the given subtype.
+       */
+
+      private void apply(List<GQLSelection> selections, GraphQLOutputType subtype)
+      {
+
+        Object[] holder = new Object[roots.length];
+
+        int matching = 0;
+
+        for (int i = 0; i < roots.length; ++i)
+        {
+          if (subtype.name().equals(dynamictype(type, roots[i])))
+          {
+            holder[i] = roots[i];
+            ++matching;
+          }
+        }
+
+        if (matching > 0)
+        {
+          selections.forEach(s -> selection(subtype, holder, res, s));
+        }
+
       }
 
       @Override
       public Void visitInlineFragment(GQLInlineFragmentSelection selection)
       {
-        log.debug("Applying inline fragment selection with type condition {}", selection.typeCondition());
-        throw new RuntimeException();
+
+        log.debug("Applying inline fragment spread on {}", selection.typeCondition().name());
+
+        GraphQLOutputType subtype = engine.type(selection.typeCondition().name());
+
+        apply(selection.selections(), subtype);
+
+        return null;
+
       }
 
     });
@@ -156,14 +232,21 @@ public class ExecutionContext
 
     for (int i = 0; i < target.length; ++i)
     {
+
+      if (target[i] == null)
+      {
+        target[i] = GQLObjectValue.builder();
+      }
+
       if (result[i] != null)
       {
-        if (target[i] == null)
-        {
-          target[i] = GQLObjectValue.builder();
-        }
         target[i].value(alias, result[i]);
       }
+      else
+      {
+        target[i].value(alias, null);
+      }
+
     }
 
   }
@@ -197,7 +280,7 @@ public class ExecutionContext
     Class<?> providedType = placeholder.getClass().getComponentType();
 
     // we've got all the values, so next up is converting this into something to return to the caller.
-    
+
     if (providedType.isArray())
     {
 
@@ -259,7 +342,7 @@ public class ExecutionContext
 
         if (deep[i] != null)
         {
-          
+
           // note that if the length is zero, we sill include it.
 
           GQLValue[] re = new GQLValue[deep[i].length];

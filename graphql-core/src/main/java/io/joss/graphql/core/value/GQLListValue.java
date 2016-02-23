@@ -21,6 +21,8 @@ import lombok.experimental.Wither;
 public final class GQLListValue implements GQLValue
 {
 
+  private static final GQLListValue EMPTY = builder().build();
+
   @Singular
   private final List<GQLValue> values;
 
@@ -41,7 +43,7 @@ public final class GQLListValue implements GQLValue
 
   public static GQLListValue emptyListValue()
   {
-    return builder().build();
+    return EMPTY;
   }
 
   /**

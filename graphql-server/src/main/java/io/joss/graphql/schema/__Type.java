@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 
 import io.joss.graphql.core.binder.annotatons.GQLContext;
 import io.joss.graphql.core.binder.annotatons.GQLField;
+import io.joss.graphql.core.binder.annotatons.GQLNonNull;
 import io.joss.graphql.core.binder.annotatons.GQLType;
 import io.joss.graphql.core.lang.GQLTypeVisitor;
 import io.joss.graphql.core.types.GQLDeclarationRef;
@@ -13,7 +14,9 @@ import io.joss.graphql.core.types.GQLTypeReference;
 import io.joss.graphql.executor.GraphQLEngine;
 import io.joss.graphql.executor.GraphQLInputType;
 import io.joss.graphql.executor.GraphQLOutputType;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @GQLType(name = "__Type")
 public class __Type
 {
@@ -58,6 +61,8 @@ public class __Type
     }
     else if (this.type != null)
     {
+      if (this.type.iface)
+        return "INTERFACE";
       return "OBJECT";
     }
     else if (this.scalar != null)
@@ -118,9 +123,21 @@ public class __Type
   }
 
   @GQLField
-  public __Type[] interfaces()
+  public @GQLNonNull __Type[] interfaces(@GQLContext GraphQLEngine engine)
   {
-    return new __Type[0];
+    if (this.type != null)
+    {
+      return type.interfaces().stream().map(name -> {
+        GraphQLOutputType type = engine.type(name);
+        if (type == null)
+        {
+          log.warn("unable to find {}", type);
+        }
+        return new __Type(type);
+      }).filter(f -> f != null)
+          .toArray(__Type[]::new);
+    }
+    return null;
   }
 
   @GQLField

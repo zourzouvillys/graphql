@@ -16,7 +16,9 @@ import lombok.experimental.Wither;
 public final class GQLObjectValue implements GQLValue
 {
 
-  @Singular
+  private static final GQLObjectValue EMPTY = builder().build();
+  
+  @Singular  
   private final Map<String, GQLValue> values;
 
   @Override
@@ -49,6 +51,11 @@ public final class GQLObjectValue implements GQLValue
         .collect(Collectors.joining(",")));
     sb.append(" }");
     return sb.toString();
+  }
+
+  public static GQLObjectValue emptyObjectValue()
+  {
+    return EMPTY;
   }
 
 }

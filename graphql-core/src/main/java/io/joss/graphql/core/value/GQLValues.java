@@ -103,7 +103,7 @@ public class GQLValues
 
   public static GQLObjectValue objectValue()
   {
-    return GQLObjectValue.builder().build();
+    return GQLObjectValue.emptyObjectValue();
   }
 
   /**

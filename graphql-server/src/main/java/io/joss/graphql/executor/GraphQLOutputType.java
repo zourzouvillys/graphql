@@ -141,10 +141,18 @@ public final class GraphQLOutputType
 
     private List<FieldBuilder> fields = new LinkedList<>();
     private String name;
+    public Set<String> interfaces = new HashSet<>();
+    public boolean iface = false;
 
     public Builder name(String name)
     {
       this.name = GQLUtils.normalize(name);
+      return this;
+    }
+
+    public Builder iface(String name)
+    {
+      this.interfaces.add(name);
       return this;
     }
 
@@ -309,6 +317,8 @@ public final class GraphQLOutputType
   // the output type name.
   private final String name;
   private final ImmutableList<Field> fields;
+  private final Set<String> interfaces;
+  public boolean iface = false;
 
   private GraphQLOutputType(Builder builder)
   {
@@ -316,6 +326,8 @@ public final class GraphQLOutputType
     Preconditions.checkState(GQLUtils.isValidTypeName(builder.name), "input type name", builder.name);
 
     this.name = builder.name;
+    
+    this.iface = builder.iface;
 
     List<Field> fields = new ArrayList<>(builder.fields.size());
 
@@ -329,6 +341,8 @@ public final class GraphQLOutputType
     Set<String> allItems = new HashSet<>();
     Set<String> dups = fields.stream().map(arg -> arg.name.toLowerCase()).filter(n -> !allItems.add(n)).collect(Collectors.toSet());
     Preconditions.checkState(dups.isEmpty(), "duplicate field names", dups);
+
+    this.interfaces = new HashSet<>(builder.interfaces);
 
   }
 
@@ -345,6 +359,11 @@ public final class GraphQLOutputType
   public Field field(String string)
   {
     return fields().stream().filter(p -> p.name().equals(string)).findAny().orElse(null);
+  }
+
+  public Set<String> interfaces()
+  {
+    return this.interfaces;
   }
 
 }

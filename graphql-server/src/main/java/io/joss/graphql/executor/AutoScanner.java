@@ -13,11 +13,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.common.reflect.TypeToken;
 
 import io.joss.graphql.core.binder.annotatons.GQLArg;
 import io.joss.graphql.core.binder.annotatons.GQLContext;
 import io.joss.graphql.core.binder.annotatons.GQLDefaultValue;
 import io.joss.graphql.core.binder.annotatons.GQLField;
+import io.joss.graphql.core.binder.annotatons.GQLType;
 import io.joss.graphql.core.doc.GQLArgument;
 import io.joss.graphql.core.doc.GQLSelection;
 import io.joss.graphql.core.types.GQLTypeReference;
@@ -43,9 +45,28 @@ final class AutoScanner
   static void scan(GraphQLOutputType.Builder b, Class<?> klass)
   {
 
+    if (klass.isInterface())
+    {
+      b.iface = true;
+    }
+
+    String self = ExecutorUtils.getGQLTypeName(klass);
+
+    for (TypeToken<?> t : TypeToken.of(klass).getTypes())
+    {
+
+      String name = ExecutorUtils.getGQLTypeName(t.getRawType());
+
+      if (name != null && !self.equals(name))
+      {
+        b.iface(name);
+      }
+
+    }
+
     // GQLType type
 
-    b.name(ExecutorUtils.getGQLTypeName(klass));
+    b.name(self);
 
     // keeps track of the actual method names, to see when we're already overridden.
     Set<String> matched = new HashSet<>();
@@ -383,10 +404,9 @@ final class AutoScanner
     {
       ab.defaultValue(val.value());
     }
-    
+
     // calculate the GQLType?
     ab.type(GQLTypes.nonNullStringType());
-
 
   }
 
