@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ExecutionContext
+
 {
 
   private QueryEnvironment env;
@@ -47,7 +48,7 @@ public class ExecutionContext
   }
 
   /**
-   * Performs a selection on a set of root objects.
+   * Performs a selection on a set of root objects.  This is the initial entry point into a query.
    */
 
   public GQLObjectValue[] selections(GraphQLOutputType type, Object[] roots, List<GQLSelection> selections)
@@ -195,6 +196,8 @@ public class ExecutionContext
 
     Class<?> providedType = placeholder.getClass().getComponentType();
 
+    // we've got all the values, so next up is converting this into something to return to the caller.
+    
     if (providedType.isArray())
     {
 
@@ -204,6 +207,7 @@ public class ExecutionContext
 
       int count = 0;
 
+      // work out how many nodes we have in total, so we can allocate an array for them.
       for (int i = 0; i < results.length; ++i)
       {
         count += (deep[i] == null) ? 0 : deep[i].length;
@@ -213,7 +217,8 @@ public class ExecutionContext
 
       count = 0;
 
-      // now, copy the elements in.
+      // now, copy the elements in. as an optmisation in the future we could avoid allocating the array for all elements as
+      // oposed to non null ones (which get ignored).
       for (int i = 0; i < results.length; ++i)
       {
         if (deep[i] != null)
@@ -234,7 +239,7 @@ public class ExecutionContext
       if (childType == null)
       {
 
-        log.warn("Unable to find child type {} for component", providedType.getComponentType());
+        log.warn("Unable to find child type {} for array component", providedType.getComponentType());
         engine.types().forEach(ktype -> log.debug(" -> {}", ktype.name()));
         // WARN: don't know how to convert the child type.
         // this only happens here rather than compile time so we can allow dynamic return types.
@@ -254,6 +259,8 @@ public class ExecutionContext
 
         if (deep[i] != null)
         {
+          
+          // note that if the length is zero, we sill include it.
 
           GQLValue[] re = new GQLValue[deep[i].length];
 

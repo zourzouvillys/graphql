@@ -25,7 +25,6 @@ public class GraphQLEngineConfig
   private Set<GraphQLOutputType> types = Sets.newHashSet();
   private Map<Class<?>, GraphQLOutputType> klasses = Maps.newHashMap();
   private Map<String, GraphQLOutputType> named = Maps.newHashMap();
-
   private GraphQLOutputType root;
 
   /**
@@ -44,7 +43,7 @@ public class GraphQLEngineConfig
   public GraphQLOutputType registerType(GraphQLOutputType type)
   {
     this.types.add(type);
-    log.debug("Registering GQL type {}", type.name());
+    log.trace("Registering GQL type {}", type.name());
     this.named.put(type.name(), type);
     return type;
   }

@@ -13,4 +13,7 @@ public class HttpErrorCodes
 
   public static final int GQL_QUERY_SYNTAX_ERROR = 2000;
 
+  // an opaque error given to client
+  public static final int INTERNAL_ERROR = 5000;
+
 }

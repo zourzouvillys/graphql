@@ -7,6 +7,6 @@ import io.joss.graphql.core.value.GQLObjectValue;
 public interface GraphQLRestRootProvider
 {
 
-  GQLObjectValue execute(GQLSelectedOperation query, Object object);
+  GQLObjectValue execute(GraphQLHttpParams http, GQLSelectedOperation query, GQLObjectValue input);
 
 }

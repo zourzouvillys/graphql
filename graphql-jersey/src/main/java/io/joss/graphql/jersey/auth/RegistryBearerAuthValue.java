@@ -1,6 +1,8 @@
 package io.joss.graphql.jersey.auth;
 
 
+import com.google.common.base.Preconditions;
+
 import lombok.Getter;
 import lombok.Value;
 
@@ -18,6 +20,7 @@ public class RegistryBearerAuthValue implements RegistryAuthValue
 
   public static RegistryAuthValue fromToken(String string)
   {
+    Preconditions.checkNotNull(string);
     return new RegistryBearerAuthValue(string);
   }
 

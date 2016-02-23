@@ -70,7 +70,7 @@ public class GraphQLEngine
     // run through each selection, resolve it, validate, and then build the execution plan.
     op.operation().selections();
 
-    log.debug("Executing: {}", new GQLDocumentPrinter().serialize(op.doc()));
+    log.debug("Executing GQL query: {}", new GQLDocumentPrinter().serialize(op.doc()));
 
     //
     Map<Class<?>, Object> ctx = new HashMap<>(env.getContexts());

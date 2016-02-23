@@ -30,6 +30,7 @@ import io.joss.graphql.core.parser.GQLParser;
 import io.joss.graphql.core.value.GQLObjectValue;
 import io.joss.graphql.core.value.GQLValue;
 import io.joss.graphql.core.value.GQLValues;
+import io.joss.graphql.jersey.GQLJacksonUtils;
 import io.joss.graphql.jersey.RegistryHttpUtils;
 import io.joss.graphql.jersey.auth.RegistryAuthValue;
 import io.joss.graphql.jersey.auth.RegistryBearerAuthValue;
@@ -41,7 +42,6 @@ import lombok.SneakyThrows;
 public class GraphQLEngineResource
 {
 
-  private static final MediaType GQL_SCHEMA_TYPE = new MediaType("application", "x-graphql-schema");
   private GraphQLRestRootProvider root;
 
   public GraphQLEngineResource(GraphQLRestRootProvider root)
@@ -62,7 +62,6 @@ public class GraphQLEngineResource
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   public Response get(
-      @QueryParam("schema") Boolean schema,
       @HeaderParam(HttpHeaders.AUTHORIZATION) String auth,
       @QueryParam("auth_token") String queryAuthToken,
       @QueryParam("q") String querystr,
@@ -74,14 +73,12 @@ public class GraphQLEngineResource
       return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.MISSING_PARAMETER, "query required")).build();
     }
 
-    RegistryAuthValue authValue = RegistryHttpUtils.parseAuth(auth);
-
-    if (authValue == null)
-    {
-      authValue = RegistryBearerAuthValue.fromToken(queryAuthToken);
-    }
-
     GQLDocument doc = GQLParser.parseDocument(getQuery(querystr));
+
+    if (doc.definitions().isEmpty())
+    {
+      return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.MISSING_PARAMETER, "query required")).build();
+    }
 
     final GQLSelectedOperation query;
 
@@ -96,15 +93,10 @@ public class GraphQLEngineResource
 
     if (query.operation().type() != GQLOpType.Query)
     {
-      return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.INVALID_OP_TYPE, "only query is alllwed over HTTP GET")).build();
+      return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.INVALID_OP_TYPE, "Only query is alllwed over HTTP GET")).build();
     }
 
-    // try (RequestContext ctx = core.open(RequestType.QUERY, authValue))
-    // {
-    // return Response.status(200).entity(ctx.query(query, GQLValues.objectValue())).build();
-    // }
-
-    GQLObjectValue res = root.execute(query, null);
+    GQLObjectValue res = root.execute(params(auth, queryAuthToken), query, null);
 
     return Response.status(200).entity(res)
         .header("Access-Control-Allow-Origin", "*")
@@ -131,33 +123,26 @@ public class GraphQLEngineResource
   @POST
   @Consumes("application/graphql")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response simplePost(@HeaderParam(HttpHeaders.AUTHORIZATION) String auth, @QueryParam("auth_token") String queryAuthToken, String query) throws Exception
+  public Response simplePost(
+      @HeaderParam(HttpHeaders.AUTHORIZATION) String auth,
+      @QueryParam("auth_token") String queryAuthToken,
+      String query) throws Exception
   {
-    return get(false, auth, queryAuthToken, query, null);
+    return get(auth, queryAuthToken, query, null);
   }
 
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response post(@HeaderParam(HttpHeaders.AUTHORIZATION) String auth, @QueryParam("auth_token") String queryAuthToken, HttpGraphQLQueryData body)
+  public Response post(
+      @HeaderParam(HttpHeaders.AUTHORIZATION) String auth,
+      @QueryParam("auth_token") String queryAuthToken,
+      HttpGraphQLQueryData body)
   {
-
-    RegistryAuthValue authValue = RegistryHttpUtils.parseAuth(auth);
-
-    if (authValue == null)
-    {
-      authValue = RegistryBearerAuthValue.fromToken(queryAuthToken);
-    }
-    else if (body != null && body.access_token != null)
-    {
-      authValue = RegistryBearerAuthValue.fromToken(body.access_token);
-    }
 
     GQLDocument doc = GQLParser.parseDocument(getQuery(body.query));
 
     final GQLSelectedOperation query;
-
-    GQLValue input = (GQLObjectValue) convertToGQL(body.variables);
 
     try
     {
@@ -168,9 +153,8 @@ public class GraphQLEngineResource
       return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.INVALID_OPERATION, String.format("Invalid operation '%s'", body.operation))).build();
     }
 
-    GQLObjectValue res = root.execute(query, null);
-
-    // .execute(QueryEnvironment.emptyEnvironment(), query, null);
+    GQLObjectValue input = (GQLObjectValue) GQLJacksonUtils.convertToGQL(body.variables);
+    GQLObjectValue res = root.execute(params(auth, body.access_token == null ? queryAuthToken : body.access_token), query, input);
 
     return Response.status(200)
         .header("Access-Control-Allow-Origin", "*")
@@ -179,48 +163,27 @@ public class GraphQLEngineResource
 
   }
 
-  private GQLValue convertToGQL(JsonNode value)
+  /**
+   * 
+   */
+
+  private GraphQLHttpParams params(String authHeader, String token)
   {
 
-    if (value == null)
+    RegistryAuthValue authValue = RegistryHttpUtils.parseAuth(authHeader);
+
+    if (authValue == null)
     {
-      return null;
+      if (token != null)
+      {
+        authValue = RegistryBearerAuthValue.fromToken(token);
+      }
     }
 
-    switch (value.getNodeType())
-    {
-      case ARRAY:
-        List<GQLValue> values = Lists.newArrayList();
-        for (JsonNode child : value)
-        {
-          values.add(convertToGQL(child));
-        }
-        return GQLValues.listValue(values);
-      case BINARY:
-        throw new RuntimeException("Not supported");
-      case BOOLEAN:
-        return GQLValues.booleanValue(value.asBoolean());
-      case NUMBER:
-        return GQLValues.floatValue(value.asDouble());
-      case OBJECT:
-        Iterator<Map.Entry<String, JsonNode>> it = ((ObjectNode) value).fields();
-        Map<String, GQLValue> map = Maps.newLinkedHashMap();
-        while (it.hasNext())
-        {
-          Entry<String, JsonNode> e = it.next();
-          map.put(e.getKey(), convertToGQL(e.getValue()));
-        }
-        return GQLValues.objectValue(map);
-      case STRING:
-        return GQLValues.stringValue(value.asText());
-      case NULL:
-      case MISSING:
-      case POJO:
-      default:
-        break;
-    }
+    return GraphQLHttpParams.builder()
+        .auth(authValue)
+        .build();
 
-    return GQLObjectValue.builder().value("in", GQLValues.booleanFalse()).build();
   }
 
 }

@@ -16,7 +16,6 @@ import io.joss.graphql.core.binder.annotatons.GQLArg;
 import io.joss.graphql.core.binder.annotatons.GQLContext;
 import io.joss.graphql.core.binder.annotatons.GQLDefaultValue;
 import io.joss.graphql.core.binder.annotatons.GQLField;
-import io.joss.graphql.core.binder.annotatons.GQLType;
 import io.joss.graphql.core.doc.GQLArgument;
 import io.joss.graphql.core.doc.GQLSelection;
 import io.joss.graphql.core.types.GQLTypeReference;
@@ -44,7 +43,7 @@ final class AutoScanner
 
     // GQLType type
 
-    b.name(getGQLTypeName(klass));
+    b.name(ExecutorUtils.getGQLTypeName(klass));
 
     // keeps track of the actual method names, to see when we're already overridden.
     Set<String> matched = new HashSet<>();
@@ -316,28 +315,6 @@ final class AutoScanner
   }
 
   /**
-   * 
-   */
-
-  public static String getGQLTypeName(Class<?> klass)
-  {
-
-    GQLType type = klass.getAnnotation(GQLType.class);
-
-    if (type != null)
-    {
-      if (Strings.isNullOrEmpty(type.name()))
-      {
-        return klass.getSimpleName();
-      }
-      return type.name();
-    }
-
-    return null;
-
-  }
-
-  /**
    * Given an input java klass type, returns a GQLTypeReference for it.
    */
 
@@ -358,7 +335,7 @@ final class AutoScanner
       return GQLTypes.booleanType();
     }
 
-    String gtype = getGQLTypeName(klass);
+    String gtype = ExecutorUtils.getGQLTypeName(klass);
 
     if (gtype == null)
     {
