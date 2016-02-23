@@ -56,6 +56,16 @@ public class GQLParserTest
                 .withArgs(newArrayList(stringArg("test", "hello"))));
 
   }
+  
+
+  @Test
+  public void testParseInvalidQuery()
+  {
+
+    GQLParser.parseDocument("{}");
+    
+  }
+
 
   @Test
   public void testParseSchema() throws Exception

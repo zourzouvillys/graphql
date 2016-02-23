@@ -532,6 +532,11 @@ public class ParseContext
 
     final Token opening = this.require("{");
 
+    if (this.is("}"))
+    {
+      throw ParserExceptions.expect(this, "Name", "found '}'");
+    }
+
     while (!this.is("}"))
     {
 

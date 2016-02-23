@@ -27,6 +27,7 @@ import io.joss.graphql.core.doc.GQLDocument;
 import io.joss.graphql.core.doc.GQLOpType;
 import io.joss.graphql.core.doc.GQLSelectedOperation;
 import io.joss.graphql.core.parser.GQLParser;
+import io.joss.graphql.core.parser.SyntaxErrorException;
 import io.joss.graphql.core.value.GQLObjectValue;
 import io.joss.graphql.core.value.GQLValue;
 import io.joss.graphql.core.value.GQLValues;
@@ -35,6 +36,7 @@ import io.joss.graphql.jersey.RegistryHttpUtils;
 import io.joss.graphql.jersey.auth.RegistryAuthValue;
 import io.joss.graphql.jersey.auth.RegistryBearerAuthValue;
 import io.joss.graphql.jersey.http.HttpErrorMessage;
+import io.joss.graphql.jersey.http.Position;
 import lombok.Data;
 import lombok.SneakyThrows;
 
@@ -73,7 +75,15 @@ public class GraphQLEngineResource
       return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.MISSING_PARAMETER, "query required")).build();
     }
 
-    GQLDocument doc = GQLParser.parseDocument(getQuery(querystr));
+    final GQLDocument doc;
+    try
+    {
+      doc = GQLParser.parseDocument(getQuery(querystr));
+    }
+    catch (SyntaxErrorException ex)
+    {
+      return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.GQL_QUERY_SYNTAX_ERROR, ex.getMessage(), Position.create(ex))).build();
+    }
 
     if (doc.definitions().isEmpty())
     {
@@ -140,7 +150,15 @@ public class GraphQLEngineResource
       HttpGraphQLQueryData body)
   {
 
-    GQLDocument doc = GQLParser.parseDocument(getQuery(body.query));
+    final GQLDocument doc;
+    try
+    {
+      doc = GQLParser.parseDocument(getQuery(body.query));
+    }
+    catch (SyntaxErrorException ex)
+    {
+      return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.GQL_QUERY_SYNTAX_ERROR, ex.getMessage())).build();
+    }
 
     final GQLSelectedOperation query;
 

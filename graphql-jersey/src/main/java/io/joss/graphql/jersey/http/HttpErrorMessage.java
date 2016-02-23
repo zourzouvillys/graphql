@@ -1,10 +1,18 @@
 package io.joss.graphql.jersey.http;
 
-import lombok.Value;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
-@Value
+@AllArgsConstructor
+@RequiredArgsConstructor
+@Data
 public class HttpErrorMessage
 {
-  private int code;
-  private String message;
+  
+  private final int code;
+  private final String message;
+  
+  private Position position;
+  
 }
