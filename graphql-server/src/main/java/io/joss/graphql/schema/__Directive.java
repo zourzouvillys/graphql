@@ -6,7 +6,7 @@ import io.joss.graphql.core.binder.annotatons.GQLType;
 @GQLType(name = "__Directive")
 public class __Directive
 {
-
+  
   @GQLField
   public String name()
   {

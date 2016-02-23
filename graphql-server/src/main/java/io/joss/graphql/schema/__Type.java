@@ -147,19 +147,19 @@ public class __Type
     {
       return input.fields().stream().map(__InputValue::new).filter(t -> !t.name().startsWith("__")).toArray(__InputValue[]::new);
     }
-    return new __InputValue[0];
+    return null;
   }
 
   @GQLField
   public String[] enumValues()
   {
-    return new String[0];
+    return null;
   }
 
   @GQLField
   public __Type[] possibleTypes()
   {
-    return new __Type[0];
+    return null;
   }
 
   @GQLField

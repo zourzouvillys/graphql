@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
+import io.joss.graphql.core.GQLConstants;
 import io.joss.graphql.core.binder.execution.QueryEnvironment;
 import io.joss.graphql.core.doc.GQLArgument;
 import io.joss.graphql.core.doc.GQLFieldSelection;
@@ -115,7 +116,7 @@ public class ExecutionContext
       {
 
         // our special __typename field ...
-        if (selection.name().toLowerCase().equals("__typename"))
+        if (selection.name().toLowerCase().equals(GQLConstants.__TYPENAME_FIELD_NAME))
         {
 
           for (int i = 0; i < res.length; ++i)
@@ -192,6 +193,7 @@ public class ExecutionContext
           }
         }
 
+        // don't bother if we don't actually have any ...
         if (matching > 0)
         {
           selections.forEach(s -> selection(subtype, holder, res, s));
@@ -202,15 +204,10 @@ public class ExecutionContext
       @Override
       public Void visitInlineFragment(GQLInlineFragmentSelection selection)
       {
-
-        log.debug("Applying inline fragment spread on {}", selection.typeCondition().name());
-
+        log.trace("Applying inline fragment spread on {}", selection.typeCondition().name());
         GraphQLOutputType subtype = engine.type(selection.typeCondition().name());
-
         apply(selection.selections(), subtype);
-
         return null;
-
       }
 
     });
@@ -232,6 +229,13 @@ public class ExecutionContext
 
     for (int i = 0; i < target.length; ++i)
     {
+
+      if (roots[i] == null)
+      {
+        // the root wasn't provided, so we really shouldn't have a value!
+        assert(target[i] == null);
+        continue;
+      }
 
       if (target[i] == null)
       {
