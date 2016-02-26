@@ -3,9 +3,11 @@ package io.joss.graphql.relay;
 import io.joss.graphql.core.binder.annotatons.GQLField;
 import io.joss.graphql.core.binder.annotatons.GQLNonNull;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @Value
+@EqualsAndHashCode(callSuper = false)
 @Builder
 public class DefaultRelayPageInfo extends RelayPageInfo
 {
