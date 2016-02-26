@@ -1,6 +1,7 @@
 package io.joss.graphql.relay;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.google.common.base.Splitter;
 
@@ -54,6 +55,7 @@ public class RelayId
 
   public String encode()
   {
+    Objects.requireNonNull(type);
     return String.format("%s:%s", type, id);
   }
 
@@ -113,7 +115,7 @@ public class RelayId
 
     if (!id.type().equals(type))
     {
-      throw new IllegalArgumentException("Invalid ID for type");
+      throw new IllegalArgumentException("Invalid ID for type: " + relayId);
     }
 
     return id.longId();
