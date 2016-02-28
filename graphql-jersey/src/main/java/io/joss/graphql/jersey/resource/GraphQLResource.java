@@ -136,11 +136,16 @@ public class GraphQLResource
 
     RegistryAuthValue authValue = RegistryHttpUtils.parseAuth(auth);
 
+    if (body == null)
+    {
+      return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.MISSING_PARAMETER, "body required")).build();
+    }
+
     if (authValue == null)
     {
       authValue = RegistryBearerAuthValue.fromToken(queryAuthToken);
     }
-    else if (body != null && body.access_token != null)
+    else if (body.access_token != null)
     {
       authValue = RegistryBearerAuthValue.fromToken(body.access_token);
     }
