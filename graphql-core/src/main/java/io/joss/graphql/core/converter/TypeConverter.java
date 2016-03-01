@@ -8,8 +8,8 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.joss.graphql.core.value.GQLListValue;
-import io.joss.graphql.core.value.GQLObjectValue;
+import com.google.common.reflect.TypeToken;
+
 import lombok.Value;
 
 /**
@@ -130,8 +130,13 @@ public class TypeConverter
    * @throws Exception
    */
 
-  @SuppressWarnings("unchecked")
   public <I extends Object, O extends Object> O convert(I input, Type outputClass, Annotation[] annotations)
+  {
+    return _convert(input, outputClass, annotations);
+  }
+
+  @SuppressWarnings("unchecked")
+  public <I extends Object, O extends Object> O _convert(I input, Type outputClass, Annotation[] annotations)
   {
 
     // null input always results in null output.
@@ -147,39 +152,25 @@ public class TypeConverter
       return (O) converter.convert(input);
     }
 
-    for (Class<?> iface : input.getClass().getInterfaces())
-    {
-
-      converter = registered.get(new Converstion(iface, outputClass));
-
-      if (converter != null)
-      {
-        return (O) converter.convert(input);
-      }
-
-    }
-
     // check out the superclasses.
 
-    Class<?> superclass = input.getClass();
-
-    while (superclass != null)
+    for (TypeToken<?> t : TypeToken.of(input.getClass()).getTypes())
     {
-
-      converter = registered.get(new Converstion(superclass, outputClass));
+      
+      converter = registered.get(new Converstion(t.getRawType(), outputClass));
 
       if (converter != null)
       {
         return (O) converter.convert(input);
       }
 
-      superclass = superclass.getSuperclass();
     }
+
 
     // ---
 
     // type the type materializers.
-    
+
     for (Map.Entry<Type, TypeMaterializer<? super Object>> materializer : this.materializers.entrySet())
     {
 

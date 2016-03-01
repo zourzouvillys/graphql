@@ -111,12 +111,20 @@ public class GraphQLEngineResource
       return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.INVALID_OP_TYPE, "Only query is alllwed over HTTP GET")).build();
     }
 
-    GQLObjectValue res = root.execute(params(auth, queryAuthToken), query, null);
+    try
+    {
+      GQLObjectValue res = root.execute(params(auth, queryAuthToken), query, null);
 
-    return Response.status(200).entity(res)
-        .header("Access-Control-Allow-Origin", "*")
-        .header("Access-Control-Allow-Credentials", "true")
-        .build();
+      return Response.status(200).entity(res)
+          .header("Access-Control-Allow-Origin", "*")
+          .header("Access-Control-Allow-Credentials", "true")
+          .build();
+
+    }
+    catch (GQLException ex)
+    {
+      return Response.status(400).entity(new HttpErrorMessage(HttpErrorCodes.GQL_QUERY_SYNTAX_ERROR, ex.getMessage())).build();
+    }
 
   }
 

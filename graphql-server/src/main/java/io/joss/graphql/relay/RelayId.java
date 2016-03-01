@@ -30,6 +30,10 @@ public class RelayId
   public static final RelayId fromString(String encoded)
   {
     List<String> parts = Splitter.on(':').splitToList(encoded);
+    if (parts.size() == 1)
+    {
+      return null;
+    }
     return fromParts(parts.get(0), parts.get(1));
   }
 
@@ -105,7 +109,6 @@ public class RelayId
 
   }
 
-  
   public static long parseLong(Class<?> klass, String relayId)
   {
 

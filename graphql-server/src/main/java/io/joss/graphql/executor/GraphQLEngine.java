@@ -78,31 +78,43 @@ public class GraphQLEngine
 
     log.debug("Executing GQL query: {}", new GQLDocumentPrinter().serialize(op.doc()));
 
-    //
-    Map<Class<?>, Object> ctx = new HashMap<>(env.getContexts());
-    ctx.put(GraphQLEngine.class, this);
-
-    // generate an execution plan.
-    ExecutionContext builder = new ExecutionContext(this, env.withContexts(ctx), op);
-
-    if (input != null)
+    try
     {
-      builder.input(input);
+      //
+      Map<Class<?>, Object> ctx = new HashMap<>(env.getContexts());
+      ctx.put(GraphQLEngine.class, this);
+
+      // generate an execution plan.
+      ExecutionContext builder = new ExecutionContext(this, env.withContexts(ctx), op);
+
+      if (input != null)
+      {
+        builder.input(input);
+      }
+
+      Object[] ret = (Object[]) Array.newInstance(root.getClass(), 1);
+
+      ret[0] = root;
+
+      GraphQLOutputType type = app.type(root.getClass());
+
+      if (type == null)
+      {
+        throw new GQLException(String.format("type '%s' isn't registered", root.getClass().getName()));
+      }
+
+      GQLObjectValue res = builder.selections(type, ret, op.operation().selections())[0];
+
+      log.trace("GQL result: {}", res);
+
+      return res;
+
     }
-
-    Object[] ret = (Object[]) Array.newInstance(root.getClass(), 1);
-
-    ret[0] = root;
-
-    GraphQLOutputType type = app.type(root.getClass());
-
-    if (type == null)
+    catch (Exception ex)
     {
-      throw new GQLException(String.format("type '%s' isn't registered", root.getClass().getName()));
+      log.warn("Exception caught processing GQL query", ex.getMessage(), ex);
+      throw ex;
     }
-
-    return builder.selections(type, ret, op.operation().selections())[0];
-
   }
 
   public GraphQLOutputType type(Class<?> type)
