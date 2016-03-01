@@ -116,4 +116,22 @@ public class JsonNodeBuilder implements GQLValueVisitor<JsonNode>
     return value.apply(generator);
   }
 
+  public static ArrayNode toJsonNode(GQLListValue value)
+  {
+    if (value == null)
+    {
+      return null;
+    }
+    return generator.visitListValue(value);
+  }
+
+  public static ObjectNode toJsonNode(GQLObjectValue value)
+  {
+    if (value == null)
+    {
+      return null;
+    }
+    return generator.visitObjectValue(value);
+  }
+
 }

@@ -7,7 +7,7 @@ import lombok.experimental.Wither;
 @EqualsAndHashCode
 @ToString
 @Wither
-public final class GQLEnumValueRef implements GQLValue
+public final class GQLEnumValueRef implements GQLConstantValue
 {
 
   private final String value;

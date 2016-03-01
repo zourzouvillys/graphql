@@ -1,6 +1,6 @@
 package io.joss.graphql.core.value;
 
-public enum GQLBooleanValue implements GQLValue
+public enum GQLBooleanValue implements GQLConstantValue
 {
 
   TRUE, FALSE;
