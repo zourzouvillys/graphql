@@ -62,6 +62,11 @@ public final class GQLObjectValue implements GQLValue
     return GQLObjectValue.builder().value(key, GQLValues.stringValue(value)).build();
   }
 
+  public static GQLObjectValue singleValue(String key, GQLValue value)
+  {
+    return GQLObjectValue.builder().value(key, value).build();
+  }
+
   /**
    * Creates a visitor which when applied to a gQLValue will return the specified field name, if it exists. Otherwise returens null.
    * 
