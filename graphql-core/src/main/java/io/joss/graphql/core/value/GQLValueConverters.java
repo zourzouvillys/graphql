@@ -1,6 +1,5 @@
 package io.joss.graphql.core.value;
 
-
 /**
  * Provides converters that translate to/from the given types.
  * 
@@ -10,6 +9,46 @@ package io.joss.graphql.core.value;
 
 public class GQLValueConverters
 {
+
+  private static final GQLValueVisitor<String> STRING_CONVERTER_INSTANCE = new DefaultValueVisitor<String>() {
+
+    @Override
+    public String visitDefaultValue(GQLValue value)
+    {
+      throw new IllegalArgumentException(value.getClass().toString());
+    }
+
+    @Override
+    public String visitStringValue(GQLStringValue value)
+    {
+      return value.value();
+    }
+
+    @Override
+    public String visitIntValue(GQLIntValue value)
+    {
+      return Long.toString(value.value());
+    }
+
+    @Override
+    public String visitFloatValue(GQLFloatValue value)
+    {
+      return Double.toString(value.value());
+    }
+
+    @Override
+    public String visitBooleanValue(GQLBooleanValue value)
+    {
+      return value == GQLBooleanValue.TRUE ? "true" : "false";
+    }
+
+    @Override
+    public String visitEnumValueRef(GQLEnumValueRef value)
+    {
+      return value.value();
+    }
+
+  };
 
   public static final GQLValueVisitor<Long> longConverter()
   {
@@ -110,55 +149,16 @@ public class GQLValueConverters
 
   }
 
+  /**
+   * Returns a converter which converts all values into their best string equivalent, where possible.
+   * 
+   * An array, object, or variable reference will throw an IllegalArgumentException exception.
+   * 
+   */
+
   public static final GQLValueVisitor<String> stringConverter()
   {
-
-    return new DefaultValueVisitor<String>() {
-
-      @Override
-      public String visitDefaultValue(GQLValue value)
-      {
-        throw new IllegalArgumentException(value.getClass().toString());
-      }
-
-      @Override
-      public String visitStringValue(GQLStringValue value)
-      {
-        return value.value();
-      }
-
-      @Override
-      public String visitIntValue(GQLIntValue value)
-      {
-        return Long.toString(value.value());
-      }
-
-      @Override
-      public String visitFloatValue(GQLFloatValue value)
-      {
-        return Double.toString(value.value());
-      }
-
-      @Override
-      public String visitBooleanValue(GQLBooleanValue value)
-      {
-        return value == GQLBooleanValue.TRUE ? "true" : "false";
-      }
-
-      // @Override
-      // public T visitVarValue(GQLVariableRef value)
-      // {
-      // return visitDefaultValue(value);
-      // }
-
-      @Override
-      public String visitEnumValueRef(GQLEnumValueRef value)
-      {
-        return value.value();
-      }
-
-    };
-
+    return STRING_CONVERTER_INSTANCE;
   }
 
 }

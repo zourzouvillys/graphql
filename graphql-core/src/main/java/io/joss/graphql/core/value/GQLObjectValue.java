@@ -16,8 +16,8 @@ public final class GQLObjectValue implements GQLValue
 {
 
   private static final GQLObjectValue EMPTY = builder().build();
-  
-  @Singular  
+
+  @Singular
   private final Map<String, GQLValue> values;
 
   @Override
@@ -55,6 +55,39 @@ public final class GQLObjectValue implements GQLValue
   public static GQLObjectValue emptyObjectValue()
   {
     return EMPTY;
+  }
+
+  public static GQLObjectValue singleValue(String key, String value)
+  {
+    return GQLObjectValue.builder().value(key, GQLValues.stringValue(value)).build();
+  }
+
+  /**
+   * Creates a visitor which when applied to a gQLValue will return the specified field name, if it exists. Otherwise returens null.
+   * 
+   * @param fieldName
+   * @return
+   */
+
+  public static GQLValueVisitor<GQLValue> fieldExtractor(String fieldName)
+  {
+
+    return new DefaultValueVisitor<GQLValue>() {
+
+      @Override
+      public GQLValue visitDefaultValue(GQLValue value)
+      {
+        return null;
+      }
+
+      @Override
+      public GQLValue visitObjectValue(GQLObjectValue value)
+      {
+        return value.entry(fieldName).orElse(null);
+      }
+
+    };
+
   }
 
 }

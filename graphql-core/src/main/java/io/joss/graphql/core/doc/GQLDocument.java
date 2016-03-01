@@ -81,4 +81,9 @@ public final class GQLDocument
         .collect(Collectors.toList());
   }
 
+  public GQLSelectedOperation select(String namedQuery)
+  {
+    return GQLSelectedOperation.namedQuery(this, namedQuery);
+  }
+
 }

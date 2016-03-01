@@ -1,5 +1,7 @@
 package io.joss.graphql.core.doc;
 
+import com.google.common.base.Strings;
+
 import io.joss.graphql.core.parser.GQLParser;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -35,9 +37,19 @@ public final class GQLSelectedOperation
     return new GQLSelectedOperation(doc, op);
   }
 
+  /**
+   * returns the selected operation with the specified named. If the name is null or empty, the default will be returned.
+   * 
+   * If the named query doesn't exist, {@link IllegalArgumentException} is thrown.
+   * 
+   * @param doc
+   * @param name
+   * @return
+   */
+
   public static GQLSelectedOperation namedQuery(GQLDocument doc, String name)
   {
-    if (name == null)
+    if (name == null || name.isEmpty())
     {
       return defaultQuery(doc);
     }
