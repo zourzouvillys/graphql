@@ -1,11 +1,11 @@
 package io.joss.graphql.core.doc;
 
-import com.google.common.base.Strings;
-
 import io.joss.graphql.core.parser.GQLParser;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.ToString;
 
+@ToString
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public final class GQLSelectedOperation
 {

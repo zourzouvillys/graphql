@@ -9,6 +9,16 @@ import io.joss.graphql.executor.ExecutorUtils;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
 
+/**
+ * Internal identifier for mapping type/id to a value we can provide to a user as a string.
+ * 
+ * it doesn't need to be sucure or provide any sort of tampering support. IDs are just IDs. Invalid ones jsut get treated as a never
+ * mathcing value.
+ * 
+ * @author theo
+ *
+ */
+
 @ToString
 @AllArgsConstructor
 public class RelayId

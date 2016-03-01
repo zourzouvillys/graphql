@@ -4,10 +4,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import io.joss.graphql.core.doc.GQLArgument;
+import io.joss.graphql.core.value.DefaultValueVisitor;
+import io.joss.graphql.core.value.GQLObjectValue;
+import io.joss.graphql.core.value.GQLValue;
+import io.joss.graphql.core.value.GQLVariableRef;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-
 public class GQLUtils
 {
 
@@ -53,6 +56,30 @@ public class GQLUtils
       return null;
     }
     return input;
+  }
+
+  public static final GQLValue resolve(GQLArgument arg, GQLObjectValue input)
+  {
+
+    return arg.value().apply(new DefaultValueVisitor<GQLValue>() {
+
+      @Override
+      public GQLValue visitDefaultValue(GQLValue value)
+      {
+        return value;
+      }
+
+      @Override
+      public GQLValue visitVarValue(GQLVariableRef value)
+      {
+        if (input != null)
+        {
+          return input.entry(value.name()).orElse(null);
+        }
+        return null;
+      }
+
+    });
   }
 
 }
