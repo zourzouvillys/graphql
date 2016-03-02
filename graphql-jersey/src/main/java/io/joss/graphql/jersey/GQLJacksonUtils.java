@@ -18,7 +18,19 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class GQLJacksonUtils
 {
-  
+
+  public static final GQLObjectValue convertToGQL(ObjectNode value)
+  {
+    Iterator<Map.Entry<String, JsonNode>> it = ((ObjectNode) value).fields();
+    Map<String, GQLValue> map = Maps.newLinkedHashMap();
+    while (it.hasNext())
+    {
+      Entry<String, JsonNode> e = it.next();
+      map.put(e.getKey(), convertToGQL(e.getValue()));
+    }
+    return GQLValues.objectValue(map);
+  }
+
   public static final GQLValue convertToGQL(JsonNode value)
   {
 
@@ -43,14 +55,7 @@ public class GQLJacksonUtils
       case NUMBER:
         return GQLValues.floatValue(value.asDouble());
       case OBJECT:
-        Iterator<Map.Entry<String, JsonNode>> it = ((ObjectNode) value).fields();
-        Map<String, GQLValue> map = Maps.newLinkedHashMap();
-        while (it.hasNext())
-        {
-          Entry<String, JsonNode> e = it.next();
-          map.put(e.getKey(), convertToGQL(e.getValue()));
-        }
-        return GQLValues.objectValue(map);
+        return convertToGQL((ObjectNode)value);
       case STRING:
         return GQLValues.stringValue(value.asText());
       case NULL:
@@ -62,6 +67,5 @@ public class GQLJacksonUtils
 
     return GQLObjectValue.builder().value("in", GQLValues.booleanFalse()).build();
   }
-
 
 }
