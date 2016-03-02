@@ -16,4 +16,9 @@ public class UnverifiedCredentials
     this.values = values;
   }
 
+  public List<RegistryAuthValue> values()
+  {
+    return values;
+  }
+
 }
