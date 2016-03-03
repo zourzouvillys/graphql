@@ -335,13 +335,12 @@ public class ExecutionContext
 
       if (childType == null)
       {
-
-        log.warn("Unable to find child type {} for array component", providedType.getComponentType());
+        log.warn("Unable to find child type {} ({}) for array component returned by {}.{} ({})",
+            providedType.getComponentType(), providedType, type.name(), field.name(), field.handler());
         engine.types().forEach(ktype -> log.debug(" -> {}", ktype.name()));
         // WARN: don't know how to convert the child type.
         // this only happens here rather than compile time so we can allow dynamic return types.
         return;
-
       }
 
       GQLObjectValue[] xxx = selections(childType, deeper, children);
@@ -386,8 +385,7 @@ public class ExecutionContext
     {
 
       // the return type is a collection.
-
-      throw new RuntimeException("not yet supported");
+      throw new RuntimeException(String.format("not yet supported on %s.%s", type.name(), field.name()));
 
     }
     else if (!children.isEmpty())

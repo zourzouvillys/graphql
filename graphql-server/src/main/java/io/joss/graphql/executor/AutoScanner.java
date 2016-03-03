@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.sound.midi.SysexMessage;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -267,8 +269,12 @@ final class AutoScanner
     {
 
       Preconditions.checkNotNull(method);
+      
+      Class<?> returnType = box(method.getReturnType());
+      
+      System.err.println(returnType + ": " + method);
 
-      Object[] results = (Object[]) Array.newInstance(box(method.getReturnType()), roots.length);
+      Object[] results = (Object[]) Array.newInstance(returnType, roots.length);
 
       for (int i = 0; i < roots.length; ++i)
       {
