@@ -18,7 +18,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.jaxrs.annotation.JacksonFeatures;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -54,14 +56,21 @@ public class GraphQLResource
   }
 
   @GET
+  @Path("schema")
+  public Response scheme()
+  {
+    return Response.status(200).entity(core.schema()).type(GQL_SCHEMA_TYPE).build();
+  }
+
+  @GET
   @Produces("application/x-graphql-schema")
   public Response schema()
   {
     return Response.status(200).entity(core.schema()).type(GQL_SCHEMA_TYPE).build();
-
   }
 
   @GET
+  @JacksonFeatures(serializationEnable = { SerializationFeature.INDENT_OUTPUT })
   @Produces(MediaType.APPLICATION_JSON)
   public Response get(
       @QueryParam("schema") Boolean schema,
@@ -131,6 +140,7 @@ public class GraphQLResource
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @JacksonFeatures(serializationEnable = { SerializationFeature.INDENT_OUTPUT })
   public Response post(@HeaderParam(HttpHeaders.AUTHORIZATION) String auth, @QueryParam("auth_token") String queryAuthToken, HttpGraphQLQueryData body)
   {
 

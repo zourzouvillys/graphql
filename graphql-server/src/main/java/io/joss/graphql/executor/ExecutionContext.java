@@ -188,10 +188,13 @@ public class ExecutionContext
 
         for (int i = 0; i < roots.length; ++i)
         {
-          if (subtype.name().equals(dynamictype(type, roots[i])))
+          if (roots[i] != null)
           {
-            holder[i] = roots[i];
-            ++matching;
+            if (subtype.name().equals(dynamictype(type, roots[i])))
+            {
+              holder[i] = roots[i];
+              ++matching;
+            }
           }
         }
 

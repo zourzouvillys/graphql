@@ -284,12 +284,12 @@ final class AutoScanner
         }
         catch (InvocationTargetException ex)
         {
+          log.warn("Something went wrong invoking {}, instance = {}", method, roots[i]);
           throw Throwables.propagate(ex.getCause());
         }
         catch (Throwable t)
         {
-          log.warn("{} {}", method, roots);
-          t.printStackTrace();
+          log.warn("{} {}", method, roots[i]);
           throw Throwables.propagate(t);
         }
 

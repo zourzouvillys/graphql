@@ -323,7 +323,7 @@ public final class GraphQLOutputType
   private GraphQLOutputType(Builder builder)
   {
 
-    Preconditions.checkState(GQLUtils.isValidTypeName(builder.name), "input type name", builder.name);
+    Preconditions.checkState(GQLUtils.isValidTypeName(builder.name), "output type name", builder.name);
 
     this.name = builder.name;
     

@@ -1,10 +1,8 @@
 package io.joss.graphql.jersey.resource;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.nio.charset.StandardCharsets;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -18,9 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.io.Files;
 import com.google.common.net.HttpHeaders;
 
 import io.joss.graphql.core.doc.GQLDocument;
@@ -30,8 +26,6 @@ import io.joss.graphql.core.parser.GQLException;
 import io.joss.graphql.core.parser.GQLParser;
 import io.joss.graphql.core.parser.SyntaxErrorException;
 import io.joss.graphql.core.value.GQLObjectValue;
-import io.joss.graphql.core.value.GQLValue;
-import io.joss.graphql.core.value.GQLValues;
 import io.joss.graphql.jersey.GQLJacksonUtils;
 import io.joss.graphql.jersey.RegistryHttpUtils;
 import io.joss.graphql.jersey.auth.RegistryAuthValue;
@@ -41,7 +35,7 @@ import io.joss.graphql.jersey.http.Position;
 import lombok.Data;
 import lombok.SneakyThrows;
 
-@Path("/graphql")
+@Path("/api/graphql")
 public class GraphQLEngineResource
 {
 
@@ -65,11 +59,17 @@ public class GraphQLEngineResource
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   public Response get(
+      @QueryParam("schema") Boolean schema,
       @HeaderParam(HttpHeaders.AUTHORIZATION) String auth,
       @QueryParam("auth_token") String queryAuthToken,
       @QueryParam("q") String querystr,
       @QueryParam("op") String opname) throws IOException
   {
+
+    if (schema != null)
+    {
+      querystr = new String(Files.toByteArray(new File(getClass().getResource("/introspection.gql").getFile())), StandardCharsets.UTF_8);
+    }
 
     if (querystr == null || querystr.trim().isEmpty())
     {
@@ -151,7 +151,7 @@ public class GraphQLEngineResource
       @QueryParam("auth_token") String queryAuthToken,
       String query) throws Exception
   {
-    return get(auth, queryAuthToken, query, null);
+    return get(null, auth, queryAuthToken, query, null);
   }
 
   @POST
