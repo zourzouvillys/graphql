@@ -34,7 +34,7 @@ public class GQLJacksonUtils
   public static final GQLValue convertToGQL(JsonNode value)
   {
 
-    if (value == null)
+    if (value == null || value.isNull())
     {
       return null;
     }
