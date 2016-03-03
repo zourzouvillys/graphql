@@ -180,6 +180,8 @@ public class ExecutionContext
       private void apply(List<GQLSelection> selections, GraphQLOutputType subtype)
       {
 
+        Preconditions.checkNotNull(subtype);
+
         Object[] holder = new Object[roots.length];
 
         int matching = 0;
@@ -206,6 +208,11 @@ public class ExecutionContext
       {
         log.trace("Applying inline fragment spread on {}", selection.typeCondition().name());
         GraphQLOutputType subtype = engine.type(selection.typeCondition().name());
+        if (subtype == null)
+        {
+          log.warn("Can't find subtype '{}'", selection.typeCondition().name());
+          return null;
+        }
         apply(selection.selections(), subtype);
         return null;
       }
@@ -233,7 +240,7 @@ public class ExecutionContext
       if (roots[i] == null)
       {
         // the root wasn't provided, so we really shouldn't have a value!
-        assert(target[i] == null);
+        assert (target[i] == null);
         continue;
       }
 
