@@ -1,6 +1,6 @@
 # jGQL - Java GraphQL Toolkit
 
-By Theo Zourzouvillys <theo@jive.com>
+By Theo Zourzouvillys <theo@zrz.io>
 
 Pronounced 'jay-gee-quil'
 

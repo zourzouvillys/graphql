@@ -22,7 +22,7 @@ public class TypeConverterTest
   public void test() throws Exception
   {
 
-    assertEquals(1234, TypeConverter.defaultConverter().convert("1234", Integer.class));
+    assertEquals(1234, (int)TypeConverter.defaultConverter().convert("1234", Integer.class));
     assertEquals((Double) 1.2, TypeConverter.defaultConverter().convert("1.2", Double.class));
     assertEquals(new Float(1234), TypeConverter.defaultConverter().convert("1234", Float.class));
     assertEquals(new BigInteger("12341234123412341234123412341234123412341234"),

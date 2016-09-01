@@ -39,12 +39,11 @@ sourceSets {
 }
 
 dependencies {
-    compile 'org.projectlombok:lombok:1.16.6'
+    compile 'org.projectlombok:lombok:1.16.10'
 	compile 'com.google.guava:guava:19.0'
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:3.2.0'
-	testCompile 'com.google.guava:guava:19.0-rc2'
-	testCompile 'com.fasterxml.jackson.core:jackson-databind:2.6.3'
+	testCompile 'com.fasterxml.jackson.core:jackson-databind:2.8.2'
 }
 
 compileJava {
