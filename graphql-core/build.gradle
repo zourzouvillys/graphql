@@ -2,7 +2,7 @@
 buildscript {
 
   repositories {
-    jcenter()    
+    jcenter()
 	mavenCentral()
   }
 
@@ -10,16 +10,13 @@ buildscript {
 	classpath "com.prezi.pride:gradle-pride-plugin:0.11"
   }
 
+
 }
 
 repositories {
     jcenter()
 }
 
-
-plugins {
-    id "com.jfrog.bintray" version "1.7.3"
-}
 
 
 apply plugin: 'java'
@@ -31,14 +28,14 @@ group = "io.joss.graphql"
 version = '1.0-SNAPSHOT'
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '2.8' 
+  gradleVersion = '2.8'
 }
 
 configurations {
     provided
 }
 
-sourceSets {	
+sourceSets {
     main.compileClasspath += configurations.provided
     test.compileClasspath += configurations.provided
     test.runtimeClasspath += configurations.provided
@@ -55,47 +52,5 @@ dependencies {
 compileJava {
   sourceCompatibility = 1.8
   targetCompatibility = 1.8
-}
-
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-  classifier 'sources'
-  from sourceSets.main.allJava
-}
-
-
-publishing {
-	repositories {
-		maven {
-			name "jivePublic"
-			url "https://getjive.artifactoryonline.com/getjive/public-snapshots"
-			credentials {
-				username System.env['ARTIFACTORY_USER']
-				password System.env['ARTIFACTORY_API_KEY']
-			}
-		}
-		maven {
-			name "jivePrivate"
-			url "https://getjive.artifactoryonline.com/getjive/libs-snapshot-local"
-			credentials {
-				username System.env['ARTIFACTORY_USER']
-				password System.env['ARTIFACTORY_API_KEY']
-			}
-		}
-	}
-    publications {
-        jar(MavenPublication) {
-			pom.withXml {
-				asNode().remove(asNode().dependencies[0])
-			}
-            from components.java
-        }
-        sourcesJar(MavenPublication) {
-            from components.java
-			artifact sourcesJar {
-				classifier "sources"
-			}
-        }
-    }
 }
 
