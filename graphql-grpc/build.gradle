@@ -3,32 +3,36 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "com.prezi.pride:gradle-pride-plugin:0.11"
-    }    
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.0'
+    }
 }
 
-apply plugin: 'pride'
 apply plugin: 'java'
-
-group "io.joss.graphql"
-version "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral();
-    jcenter()
-}
+apply plugin: 'com.google.protobuf'
 
 dependencies {
 
-	compile 'io.grpc:grpc-netty:1.0.3'
+	compile group: project.group, name: "graphql-server", version: project.version
 
-	compile 'org.projectlombok:lombok:1.16.6'
-	compile group: "io.joss.graphql", name: "graphql-server", version: "1.0-SNAPSHOT"
-    
-	compile 'com.google.guava:guava:19.0'
+  	compile 'com.google.protobuf:protobuf-java:3.1.0'
+  	
+	//compile 'io.grpc:grpc-stub:1.0.3'
+ 	//compile 'io.grpc:grpc-protobuf:1.0.3'
 
-	compile 'org.slf4j:slf4j-api:1.7.12'
-	compile 'org.apache.commons:commons-lang3:3.4'
+
+	compile libraries.grpc.netty 
+	compile libraries.lombok
+	compile libraries.guava
+	compile libraries.slf4j.api	
+	compile libraries.apache.commons.lang3
 		
-	testCompile 'junit:junit:4.12'
+	testCompile libraries.junit
+	
+}
+
+sourceSets {
+  main {
+    proto {
+    }
+  }
 }

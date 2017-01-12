@@ -5,12 +5,6 @@ public class ParserExceptions
 
   /**
    * Throw an except that is somethign excepted.
-   * 
-   * @param message
-   * 
-   * @param parseContext
-   * @param string
-   * @return
    */
 
   public static SyntaxErrorException expect(ParseContext ctx, String expected, String message)

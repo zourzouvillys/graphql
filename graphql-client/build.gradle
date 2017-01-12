@@ -1,60 +1,8 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath "com.prezi.pride:gradle-pride-plugin:0.11"
-    }    
-}
-
-apply plugin: 'pride'
-apply plugin: 'java'
-apply plugin: 'maven-publish'
-
-group "io.joss.graphql"
-version "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral();
-    jcenter()
-}
 
 dependencies {
-	compile 'com.mashape.unirest:unirest-java:1.4.7'
-    compile group: "io.joss.graphql", name: "graphql-core", version: "1.0-SNAPSHOT"
+	compile libraries.unirest
+    compile group: project.group, name: "graphql-core", version: project.version
     // todo: remove dep?
-    compile group: "io.joss.graphql", name: "graphql-server", version: "1.0-SNAPSHOT"
-    testCompile 'junit:junit:4.12'
+    compile group: project.group, name: "graphql-server", version: project.version
     testCompile 'com.github.tomakehurst:wiremock:1.57'
 }
-
-publishing {
-	repositories {
-		maven {
-			name "jivePublic"
-			url "https://getjive.artifactoryonline.com/getjive/public-snapshots"
-			credentials {
-				username System.env['ARTIFACTORY_USER']
-				password System.env['ARTIFACTORY_API_KEY']
-			}
-		}
-		maven {
-			name "jivePrivate"
-			url "https://getjive.artifactoryonline.com/getjive/libs-snapshot-local"
-			credentials {
-				username System.env['ARTIFACTORY_USER']
-				password System.env['ARTIFACTORY_API_KEY']
-			}
-		}
-	}
-    publications {
-        jar(MavenPublication) {
-            from components.java
-        }
-    }
-}
-
-
-
-
-

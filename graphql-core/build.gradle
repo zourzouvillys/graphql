@@ -1,56 +1,8 @@
 
-buildscript {
-
-  repositories {
-    jcenter()
-	mavenCentral()
-  }
-
-  dependencies {
-	classpath "com.prezi.pride:gradle-pride-plugin:0.11"
-  }
-
-
-}
-
-repositories {
-    jcenter()
-}
-
-
-
-apply plugin: 'java'
-apply plugin: 'maven-publish'
-apply plugin: 'pride'
-apply plugin: 'eclipse'
-
-group = "io.joss.graphql"
-version = '1.0-SNAPSHOT'
-
-task wrapper(type: Wrapper) {
-  gradleVersion = '2.8'
-}
-
-configurations {
-    provided
-}
-
-sourceSets {
-    main.compileClasspath += configurations.provided
-    test.compileClasspath += configurations.provided
-    test.runtimeClasspath += configurations.provided
-}
-
 dependencies {
-    compile 'org.projectlombok:lombok:1.16.10'
-	compile 'com.google.guava:guava:19.0'
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.assertj:assertj-core:3.2.0'
-	testCompile 'com.fasterxml.jackson.core:jackson-databind:2.8.2'
-}
-
-compileJava {
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
+    compile libraries.lombok
+	compile libraries.guava
+    testCompile libraries.junit
+	testCompile libraries.jackson.databind
 }
 

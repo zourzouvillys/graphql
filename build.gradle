@@ -1,59 +1,188 @@
 
 buildscript {
+
   repositories {
-        jcenter()
-   }
+    jcenter()
+  }
+
+  dependencies {
+	classpath "com.prezi.pride:gradle-pride-plugin:0.11"
+	classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1+"
+  }
+  
 }
 
-plugins {
-    id "com.jfrog.bintray" version "1.7"
-}
+ext.libraries = [
+  lombok: 'org.projectlombok:lombok:1.16.12',
+  junit: 'junit:junit:4.12',
+  guava: 'com.google.guava:guava:20.0',
+  slf4j: [
+    api: 'org.slf4j:slf4j-api:1.7.22'
+  ],
+  logback: [
+    classic: 'ch.qos.logback:logback-classic:1.1.8'
+  ],
+  jackson: [
+    databind: 'com.fasterxml.jackson.core:jackson-databind:2.8.5',
+    jaxrs_json_provider: 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.8.5'
+  ],
+  apache: [
+    commons: [
+      lang3: 'org.apache.commons:commons-lang3:3.5'
+    ]
+  ],
+  grpc: [
+    netty: 'io.grpc:grpc-netty:1.0.3'
+  ],
+  unirest: 'com.mashape.unirest:unirest-java:1.4.9',
+  assertj: [
+    core: 'org.assertj:assertj-core:3.6.1'
+  ]
+]
 
-group = 'io.zrz.graphql'
-version = '1.0'
+
+group = "io.joss.graphql"
+version = '1.0-SNAPSHOT'
+
+import java.text.SimpleDateFormat
+
+def globalVersion = new Version(project.version)
+
 
 allprojects {
+
+	def bintray_user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+	def bintray_key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+
+
 	repositories {
+    	mavenCentral();
 		jcenter()
 	}
-	apply plugin: 'maven'
-	apply plugin: 'maven-publish'
-	apply plugin: 'java'
+	
+    apply plugin: 'com.jfrog.bintray'
+	apply plugin: 'pride'
+	
+    configure(subprojects.findAll { new File(it.projectDir, 'src/main/java').directory }) {
+        apply plugin: 'java'
+    }    
+	
+	version = globalVersion
+	group = 'io.joss.graphql'
+	status = version.status
+
+    ext.publish = true
+
+    bintray {
+        user = bintray_user
+        key = bintray_key
+        configurations = ['published', 'archives']
+        publish = project.publish
+        pkg {
+            repo = 'graphql'
+            name = project.name
+            websiteUrl = 'https://github.com/zourzouvillys/graphql'
+            issueTrackerUrl = 'https://github.com/zourzouvillys/graphql/issues'
+            vcsUrl = 'git@github.com:zourzouvillys/graphql.git'
+            licenses = ['Apache-2.0']
+        }
+    }
+    
+	
 }
 
-publishing {
-	publications {
-		MyPublication(MavenPublication) {
-			from components.java
-			groupId 'org.jfrog.example.gradle'
-            		artifactId 'gradle-bintray-plugin-example'
-            		version '1.0'
+subprojects {
+
+    apply plugin: 'maven'
+
+    if (project.plugins.hasPlugin('java')) {
+    
+        // manifest.mainAttributes(provider: 'gradle')
+        
+        configurations {
+            published
+        }
+
+		configurations {
+		    provided
 		}
-	}
-}
+		        
+        dependencies {
+        	provided libraries.lombok
+            testCompile libraries.junit
+            testCompile libraries.assertj.core            
+        }
 
-bintray {
-	user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
-	key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
-	publications = ['MyPublication']
-	pkg {
-		repo = 'generic'
-		name = 'gradle-bintray-plugin-example'
-		userOrg = user
-		licenses = ['Apache-2.0']
-		vcsUrl = 'https://github.com/bintray/gradle-bintray-plugin.git'
-		labels = ['gear', 'gore', 'gorilla']
-		publicDownloadNumbers = true
-		attributes= ['a': ['ay1', 'ay2'], 'b': ['bee'], c: 'cee'] //Optional package-level attributes
-		version {
-			name = '1.0-Final'
-			desc = 'Gradle Bintray Plugin 1.0 final'
-			vcsTag = '1.3.0'
-			attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
+        task sourceJar(type: Jar) {
+            from sourceSets.main.allSource
+            classifier = 'sources'
+        }
+        
+        task javadocJar(type: Jar, dependsOn: javadoc) {
+            classifier = 'javadoc'
+            from javadoc.destinationDir
+        }
+        
+        javadoc {
+			failOnError = false        
+        }
+
+        // Add the sourceJars to non-extractor modules
+        artifacts {
+            published sourceJar
+            published javadocJar
+        }
+
+		compileJava {
+		  sourceCompatibility = 1.8
+		  targetCompatibility = 1.8
 		}
-	}
+
+		sourceSets {
+		    main.compileClasspath += configurations.provided
+		    test.compileClasspath += configurations.provided
+		    test.runtimeClasspath += configurations.provided
+		}
+
+
+    }
+
+
+
+
+
+
 }
 
-task wrapper(type: Wrapper) {
-  gradleVersion = '3.3'
+
+class Version {
+    String originalVersion
+    String thisVersion
+    String status
+    Date buildTime
+
+    Version(String versionValue) {
+        buildTime = new Date()
+        originalVersion = versionValue
+        if (originalVersion.endsWith('-SNAPSHOT')) {
+            status = 'integration'
+            thisVersion = originalVersion.substring(0, originalVersion.length() - 'SNAPSHOT'.length()) + getTimestamp()
+        } else {
+            status = 'release'
+            thisVersion = versionValue
+        }
+    }
+
+    String getTimestamp() {
+        // Convert local file timestamp to UTC
+        def format = new SimpleDateFormat('yyyyMMddHHmmss')
+        format.setCalendar(Calendar.getInstance(TimeZone.getTimeZone('UTC')));
+        return format.format(buildTime)
+    }
+
+    String toString() {
+        thisVersion
+    }
+    
+    
 }

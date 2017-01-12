@@ -17,7 +17,6 @@ public interface GQLPreparedStatement
   /**
    * Executes a query.
    * 
-   * @param namedQuery
    * @param input
    * @return
    */
@@ -30,7 +29,7 @@ public interface GQLPreparedStatement
   /**
    * Executes a query.
    * 
-   * @param namedQuery
+   * @param named
    * @return
    */
 
