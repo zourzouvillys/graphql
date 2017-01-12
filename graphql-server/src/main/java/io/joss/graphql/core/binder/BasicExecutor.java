@@ -37,23 +37,21 @@ public class BasicExecutor
   {
 
     // startup time:
-
     TypeBindingResult scanner = TypeScanner.bind(rootInstance.getClass());
 
     // parse incoming request:
-
     GQLDocument doc = GQLParser.parseDocument(query);
 
     DataContext root = DataContexts.build(scanner.registry(), scanner.root(), GQLSelectedOperation.defaultQuery(doc));
 
     // plan it:
-
     PreparedQuery prepared = new BasicExecutionPlanner(scanner.scanner()).plan(root);
 
     // execution time:
-
     log.info(" ---- Executing query");
 
+    
+    
     AtomicReference<GQLValue> result = new AtomicReference<GQLValue>();
 
     prepared.execute(rootInstance, env, completion -> {

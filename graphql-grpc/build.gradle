@@ -1,0 +1,34 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.prezi.pride:gradle-pride-plugin:0.11"
+    }    
+}
+
+apply plugin: 'pride'
+apply plugin: 'java'
+
+group "io.joss.graphql"
+version "1.0-SNAPSHOT"
+
+repositories {
+    mavenCentral();
+    jcenter()
+}
+
+dependencies {
+
+	compile 'io.grpc:grpc-netty:1.0.3'
+
+	compile 'org.projectlombok:lombok:1.16.6'
+	compile group: "io.joss.graphql", name: "graphql-server", version: "1.0-SNAPSHOT"
+    
+	compile 'com.google.guava:guava:19.0'
+
+	compile 'org.slf4j:slf4j-api:1.7.12'
+	compile 'org.apache.commons:commons-lang3:3.4'
+		
+	testCompile 'junit:junit:4.12'
+}

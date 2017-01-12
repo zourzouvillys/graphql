@@ -8,8 +8,9 @@ import lombok.Value;
 
 @Value
 @Builder(builderClassName = "Builder")
-public class Block
-{
-  @Singular
-  private List<Statement> statements;
+public class Block {
+
+	@Singular
+	private List<Statement> statements;
+
 }
