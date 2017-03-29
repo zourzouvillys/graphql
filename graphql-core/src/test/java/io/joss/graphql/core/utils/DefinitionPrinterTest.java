@@ -23,12 +23,12 @@ public class DefinitionPrinterTest
   public void test() throws IOException
   {
 
-    checkEquality("query {}");
+    checkEquality("query { a }");
     checkEquality("query { a }");
     checkEquality("query { a , b }");
     checkEquality("query { a, b { c } }");
     checkEquality("query Moo { a, b(a: true) }");
-    checkEquality("{}");
+    checkEquality("{ a }");
     checkEquality("{ a (text: \"in\") }");
     
   }

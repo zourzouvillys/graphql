@@ -4,71 +4,63 @@ import io.joss.graphql.core.decl.GQLDeclarationVisitor;
 import io.joss.graphql.core.decl.GQLInputTypeDeclaration;
 import io.joss.graphql.core.decl.GQLScalarTypeDeclaration;
 
-public class GQLDefinitionVisitors
-{
+public class GQLDefinitionVisitors {
 
-  public static GQLDefinitionVisitor<GQLOperationDefinition> operationExtractor()
-  {
-    return new GQLDefinitionVisitor<GQLOperationDefinition>() {
 
-      @Override
-      public GQLOperationDefinition visitOperation(GQLOperationDefinition op)
-      {
-        return op;
-      }
+	public static GQLDefinitionVisitor<GQLOperationDefinition> operationExtractor() {
+		return new GQLDefinitionVisitor<GQLOperationDefinition>() {
 
-      @Override
-      public GQLOperationDefinition visitFragment(GQLFragmentDefinition frag)
-      {
-        return null;
-      }
+			@Override
+			public GQLOperationDefinition visitOperation(GQLOperationDefinition op) {
+				return op;
+			}
 
-    };
-  }
+			@Override
+			public GQLOperationDefinition visitFragment(GQLFragmentDefinition frag) {
+				return null;
+			}
 
-  public static GQLDefinitionVisitor<GQLFragmentDefinition> fragmentExtractor()
-  {
-    return new GQLDefinitionVisitor<GQLFragmentDefinition>() {
+		};
+	}
 
-      @Override
-      public GQLFragmentDefinition visitOperation(GQLOperationDefinition op)
-      {
-        return null;
-      }
+	public static GQLDefinitionVisitor<GQLFragmentDefinition> fragmentExtractor() {
+		return new GQLDefinitionVisitor<GQLFragmentDefinition>() {
 
-      @Override
-      public GQLFragmentDefinition visitFragment(GQLFragmentDefinition frag)
-      {
-        return frag;
-      }
+			@Override
+			public GQLFragmentDefinition visitOperation(GQLOperationDefinition op) {
+				return null;
+			}
 
-    };
-  }
+			@Override
+			public GQLFragmentDefinition visitFragment(GQLFragmentDefinition frag) {
+				return frag;
+			}
 
-  /**
-   * A visitor which returns true for input or scalar declarations, false for everythign else.
-   * 
-   * @return
-   */
+		};
+	}
 
-  public static GQLDeclarationVisitor<Boolean> isInputOrScalarVisitor()
-  {
+	/**
+	 * A visitor which returns true for input or scalar declarations, false for
+	 * everythign else.
+	 * 
+	 * @return
+	 */
 
-    return new DefaultDeclarationVisitor<Boolean>(false) {
+	public static GQLDeclarationVisitor<Boolean> isInputOrScalarVisitor() {
 
-      @Override
-      public Boolean visitScalar(GQLScalarTypeDeclaration type)
-      {
-        return true;
-      }
+		return new DefaultDeclarationVisitor<Boolean>(false) {
 
-      @Override
-      public Boolean visitInput(GQLInputTypeDeclaration type)
-      {
-        return true;
-      }
+			@Override
+			public Boolean visitScalar(GQLScalarTypeDeclaration type) {
+				return true;
+			}
 
-    };
-  }
+			@Override
+			public Boolean visitInput(GQLInputTypeDeclaration type) {
+				return true;
+			}
+
+		};
+	}
 
 }

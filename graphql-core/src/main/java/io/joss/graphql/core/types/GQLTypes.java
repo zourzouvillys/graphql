@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import io.joss.graphql.core.decl.GQLDeclaration;
+import io.joss.graphql.core.decl.GQLInputTypeDeclaration;
 import io.joss.graphql.core.decl.GQLInterfaceTypeDeclaration;
 import io.joss.graphql.core.decl.GQLObjectTypeDeclaration;
 import io.joss.graphql.core.decl.GQLScalarTypeDeclaration;
@@ -108,6 +109,11 @@ public class GQLTypes
   public static GQLDeclarationRef typeRef(final String name)
   {
     return GQLDeclarationRef.builder().name(name).build();
+  }
+
+  public static GQLInputTypeDeclaration.Builder inputBuilder(final String name)
+  {
+    return GQLInputTypeDeclaration.builder().name(name);
   }
 
   public static GQLObjectTypeDeclaration.Builder structBuilder(final String name)

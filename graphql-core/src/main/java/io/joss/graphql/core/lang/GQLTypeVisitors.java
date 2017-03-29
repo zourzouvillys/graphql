@@ -8,66 +8,69 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 
-public class GQLTypeVisitors
-{
+public class GQLTypeVisitors {
 
-  public IsScalarTypeVisitor isScalar()
-  {
-    return new IsScalarTypeVisitor();
-  }
+	/**
+	 * Visitor which returns true if the type is a scalar.
+	 */
 
-  public IsListTypeVisitor isList()
-  {
-    return new IsListTypeVisitor();
-  }
+	public IsScalarTypeVisitor isScalar() {
+		return new IsScalarTypeVisitor();
+	}
 
-  /**
-   * resolves concrete references. it will fail (on purpose) if the type is non-null or list.
-   * 
-   * @param typeRegistry
-   * @return
-   */
+	/**
+	 * Visitor which returns true if the type is a list.
+	 */
 
-  public static TypeResolver resolver(GQLTypeRegistry typeRegistry)
-  {
-    return new TypeResolver(typeRegistry);
-  }
+	public IsListTypeVisitor isList() {
+		return new IsListTypeVisitor();
+	}
 
-  public static IsNonNullTypeVisitor isNotNull()
-  {
-    return new IsNonNullTypeVisitor();
-  }
+	/**
+	 * Visitors which returns true if the type is not nullable.
+	 */
 
-  /**
-   * Fetches the root declaration type - if it's a list it's the inner type, if it's a non null, then it's the actual type
-   * 
-   * @return
-   */
+	public static IsNonNullTypeVisitor isNotNull() {
+		return new IsNonNullTypeVisitor();
+	}
 
-  public static GQLTypeVisitor<GQLDeclaration> rootType()
-  {
+	/**
+	 * resolves concrete references. it will fail (on purpose) if the type is
+	 * non-null or list. So only an unwrapped type must be provided.
+	 * 
+	 * @param typeRegistry
+	 *            The registry to resolve named types.
+	 */
 
-    return new GQLTypeVisitor<GQLDeclaration>() {
+	public static TypeResolver resolver(GQLTypeRegistry typeRegistry) {
+		return new TypeResolver(typeRegistry);
+	}
 
-      @Override
-      public GQLDeclaration visitNonNull(GQLNonNullType type)
-      {
-        return type.type().apply(this);
-      }
+	/**
+	 * Fetches the root declaration type - if it's a list it's the inner type,
+	 * if it's a non null, then it's the actual type
+	 */
 
-      @Override
-      public GQLDeclaration visitList(GQLListType type)
-      {
-        return type.type().apply(this);
-      }
+	public static GQLTypeVisitor<GQLDeclaration> rootType() {
 
-      @Override
-      public GQLDeclaration visitDeclarationRef(GQLDeclarationRef type)
-      {
-        return type;
-      }
+		return new GQLTypeVisitor<GQLDeclaration>() {
 
-    };
-  }
+			@Override
+			public GQLDeclaration visitNonNull(GQLNonNullType type) {
+				return type.type().apply(this);
+			}
+
+			@Override
+			public GQLDeclaration visitList(GQLListType type) {
+				return type.type().apply(this);
+			}
+
+			@Override
+			public GQLDeclaration visitDeclarationRef(GQLDeclarationRef type) {
+				return type;
+			}
+
+		};
+	}
 
 }

@@ -62,7 +62,7 @@ public class GQLParserTest
   public void testParseInvalidQuery()
   {
 
-    GQLParser.parseDocument("{}");
+    GQLParser.parseDocument("{ d }");
     
   }
 
