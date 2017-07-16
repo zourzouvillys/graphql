@@ -9,7 +9,7 @@ import io.jgql.core.binder.testmodel.TestQueryRoot;
 import io.joss.graphql.core.binder.BasicExecutor;
 import io.joss.graphql.core.binder.JsonValueWriter;
 import io.joss.graphql.core.binder.TypeScanner;
-import io.joss.graphql.core.decl.GQLDeclaration;
+import io.joss.graphql.core.decl.GQLTypeDeclaration;
 import io.joss.graphql.core.lang.GQLSchemaBuilder;
 import io.joss.graphql.core.lang.GQLTypeRegistry;
 import io.joss.graphql.core.types.GQLTypes;
@@ -55,7 +55,7 @@ public class BindingExecutionTest
 
     TypeScanner scanner = new TypeScanner(builder);
 
-    GQLDeclaration root = scanner.add(FarmQueryRoot.class);
+    GQLTypeDeclaration root = scanner.add(FarmQueryRoot.class);
 
     scanner.finish();
 

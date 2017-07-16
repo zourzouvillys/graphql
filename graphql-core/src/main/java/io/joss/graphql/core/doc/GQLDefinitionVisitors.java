@@ -1,6 +1,7 @@
 package io.joss.graphql.core.doc;
 
-import io.joss.graphql.core.decl.GQLDeclarationVisitor;
+import io.joss.graphql.core.decl.GQLTypeDeclarationVisitor;
+import io.joss.graphql.core.utils.DefaultTypeDeclarationVisitor;
 import io.joss.graphql.core.decl.GQLInputTypeDeclaration;
 import io.joss.graphql.core.decl.GQLScalarTypeDeclaration;
 
@@ -46,9 +47,9 @@ public class GQLDefinitionVisitors {
 	 * @return
 	 */
 
-	public static GQLDeclarationVisitor<Boolean> isInputOrScalarVisitor() {
+	public static GQLTypeDeclarationVisitor<Boolean> isInputOrScalarVisitor() {
 
-		return new DefaultDeclarationVisitor<Boolean>(false) {
+		return new DefaultTypeDeclarationVisitor<Boolean>(false) {
 
 			@Override
 			public Boolean visitScalar(GQLScalarTypeDeclaration type) {

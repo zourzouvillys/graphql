@@ -1,11 +1,11 @@
 package io.joss.graphql.core.binder;
 
 import io.joss.graphql.core.binder.model.OutputClassBinding;
-import io.joss.graphql.core.decl.GQLDeclaration;
+import io.joss.graphql.core.decl.GQLTypeDeclaration;
 
 public interface BindingProvider
 {
 
-  OutputClassBinding meta(GQLDeclaration declaration);
+  OutputClassBinding meta(GQLTypeDeclaration declaration);
 
 }

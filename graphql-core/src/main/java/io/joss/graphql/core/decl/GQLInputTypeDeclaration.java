@@ -10,39 +10,40 @@ import lombok.experimental.Wither;
 @ToString
 @Wither
 @Builder(builderClassName = "Builder")
-public class GQLInputTypeDeclaration implements GQLDeclaration
-{
+public class GQLInputTypeDeclaration implements GQLExtendableTypeDeclaration {
 
   private final String name;
   private final String description;
+  private final boolean extension;
 
   @Singular
   private final List<GQLInputFieldDeclaration> fields;
 
-  public static class Builder
-  {
+  public static class Builder {
   }
 
   @Override
-  public String name()
-  {
+  public String name() {
     return this.name;
   }
 
-  public String description()
-  {
+  @Override
+  public String description() {
     return this.description;
   }
 
-  public List<GQLInputFieldDeclaration> fields()
-  {
+  public List<GQLInputFieldDeclaration> fields() {
     return this.fields;
   }
 
   @Override
-  public <R> R apply(GQLDeclarationVisitor<R> visitor)
-  {
+  public <R> R apply(GQLTypeDeclarationVisitor<R> visitor) {
     return visitor.visitInput(this);
+  }
+
+  @Override
+  public boolean isExtension() {
+    return this.extension;
   }
 
 }

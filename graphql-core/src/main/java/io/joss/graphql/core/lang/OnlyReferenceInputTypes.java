@@ -1,6 +1,6 @@
 package io.joss.graphql.core.lang;
 
-import io.joss.graphql.core.decl.GQLDeclaration;
+import io.joss.graphql.core.decl.GQLTypeDeclaration;
 import io.joss.graphql.core.doc.GQLDefinitionVisitors;
 import io.joss.graphql.core.types.GQLDeclarationRef;
 import io.joss.graphql.core.types.GQLListType;
@@ -31,7 +31,7 @@ public class OnlyReferenceInputTypes implements GQLTypeVisitor<Boolean>
   @Override
   public Boolean visitDeclarationRef(GQLDeclarationRef ref)
   {
-    GQLDeclaration type = this.reg.resolve(ref);
+    GQLTypeDeclaration type = this.reg.resolve(ref);
     return type.apply(GQLDefinitionVisitors.isInputOrScalarVisitor());
   }
 

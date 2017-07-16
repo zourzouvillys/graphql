@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import io.joss.graphql.core.decl.GQLDeclaration;
+import io.joss.graphql.core.decl.GQLTypeDeclaration;
 import io.joss.graphql.core.decl.GQLObjectTypeDeclaration;
 
 @Target(ElementType.TYPE)
@@ -38,6 +38,6 @@ public @interface GQLType
    * @return
    */
 
-  Class<? extends GQLDeclaration> type() default GQLObjectTypeDeclaration.class;
+  Class<? extends GQLTypeDeclaration> type() default GQLObjectTypeDeclaration.class;
  
 }

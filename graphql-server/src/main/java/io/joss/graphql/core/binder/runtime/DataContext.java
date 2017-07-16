@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import io.joss.graphql.core.decl.GQLArgumentDefinition;
-import io.joss.graphql.core.decl.GQLDeclaration;
-import io.joss.graphql.core.decl.GQLDeclarationVisitor;
+import io.joss.graphql.core.decl.GQLTypeDeclaration;
+import io.joss.graphql.core.decl.GQLTypeDeclarationVisitor;
 import io.joss.graphql.core.decl.GQLEnumDeclaration;
 import io.joss.graphql.core.decl.GQLInputTypeDeclaration;
 import io.joss.graphql.core.decl.GQLInterfaceTypeDeclaration;
@@ -84,7 +84,7 @@ public class DataContext implements GQLSelectionVisitor<Void>
    * @param root
    */
 
-  public DataContext(GQLTypeRegistry registry, GQLDeclaration root, GQLDocument doc)
+  public DataContext(GQLTypeRegistry registry, GQLTypeDeclaration root, GQLDocument doc)
   {
 
     if (root == null)
@@ -136,24 +136,24 @@ public class DataContext implements GQLSelectionVisitor<Void>
    * @return
    */
 
-  public GQLDeclaration declaration()
+  public GQLTypeDeclaration declaration()
   {
-    return type.apply(new GQLTypeVisitor<GQLDeclaration>() {
+    return type.apply(new GQLTypeVisitor<GQLTypeDeclaration>() {
 
       @Override
-      public GQLDeclaration visitNonNull(GQLNonNullType type)
+      public GQLTypeDeclaration visitNonNull(GQLNonNullType type)
       {
         return type.type().apply(this);
       }
 
       @Override
-      public GQLDeclaration visitList(GQLListType type)
+      public GQLTypeDeclaration visitList(GQLListType type)
       {
         return type.type().apply(this);
       }
 
       @Override
-      public GQLDeclaration visitDeclarationRef(GQLDeclarationRef type)
+      public GQLTypeDeclaration visitDeclarationRef(GQLDeclarationRef type)
       {
         return typeRegistry().resolve(type);
       }
@@ -406,7 +406,7 @@ public class DataContext implements GQLSelectionVisitor<Void>
       @Override
       public GQLValueOutputTypes visitDeclarationRef(GQLDeclarationRef type)
       {
-        return type.apply(new GQLDeclarationVisitor<GQLValueOutputTypes>() {
+        return type.apply(new GQLTypeDeclarationVisitor<GQLValueOutputTypes>() {
 
           @Override
           public GQLValueOutputTypes visitUnion(GQLUnionTypeDeclaration type)

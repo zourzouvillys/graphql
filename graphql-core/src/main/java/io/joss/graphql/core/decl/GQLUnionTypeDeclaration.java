@@ -13,35 +13,37 @@ import lombok.experimental.Wither;
 @Wither
 @ToString
 @Builder(builderClassName = "Builder")
-public final class GQLUnionTypeDeclaration implements GQLDeclaration
-{
+public final class GQLUnionTypeDeclaration implements GQLExtendableTypeDeclaration {
 
   private final String name;
   private final String description;
+  private final boolean extension;
 
   @Singular
   private final List<GQLDeclarationRef> types;
 
   @Override
-  public String name()
-  {
+  public String name() {
     return this.name;
   }
 
-  public String description()
-  {
+  @Override
+  public String description() {
     return this.description;
   }
 
-  public List<GQLDeclarationRef> types()
-  {
+  public List<GQLDeclarationRef> types() {
     return this.types;
   }
 
   @Override
-  public <R> R apply(final GQLDeclarationVisitor<R> visitor)
-  {
+  public <R> R apply(final GQLTypeDeclarationVisitor<R> visitor) {
     return visitor.visitUnion(this);
+  }
+
+  @Override
+  public boolean isExtension() {
+    return this.extension;
   }
 
 }

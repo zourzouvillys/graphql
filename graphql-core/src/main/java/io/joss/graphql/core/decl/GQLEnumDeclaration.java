@@ -12,34 +12,37 @@ import lombok.experimental.Wither;
 @EqualsAndHashCode
 @ToString
 @Builder(builderClassName = "Builder")
-public final class GQLEnumDeclaration implements GQLDeclaration
-{
+public final class GQLEnumDeclaration implements GQLExtendableTypeDeclaration {
 
   private final String name;
   private final String description;
+  private final boolean extension;
 
   @Singular
   private final List<GQLEnumValue> values;
 
-  public String name()
-  {
+  @Override
+  public String name() {
     return this.name;
   }
 
-  public String description()
-  {
+  @Override
+  public String description() {
     return this.description;
   }
 
-  public List<GQLEnumValue> values()
-  {
+  public List<GQLEnumValue> values() {
     return this.values;
   }
 
   @Override
-  public <R> R apply(final GQLDeclarationVisitor<R> visitor)
-  {
+  public <R> R apply(final GQLTypeDeclarationVisitor<R> visitor) {
     return visitor.visitEnum(this);
+  }
+
+  @Override
+  public boolean isExtension() {
+    return this.extension;
   }
 
 }

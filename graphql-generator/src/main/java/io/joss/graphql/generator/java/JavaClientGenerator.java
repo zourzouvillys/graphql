@@ -11,7 +11,7 @@ import io.joss.graphql.core.binder.runtime.DataContext;
 import io.joss.graphql.core.binder.runtime.DataContexts;
 import io.joss.graphql.core.binder.runtime.RelayUtils;
 import io.joss.graphql.core.binder.runtime.RelayUtils.RelayConnectionContext;
-import io.joss.graphql.core.decl.GQLDeclaration;
+import io.joss.graphql.core.decl.GQLTypeDeclaration;
 import io.joss.graphql.core.doc.GQLDocument;
 import io.joss.graphql.core.doc.GQLOperationDefinition;
 import io.joss.graphql.core.doc.GQLSelectedOperation;
@@ -52,9 +52,9 @@ public class JavaClientGenerator
 
   private io.joss.graphql.generator.java.codedom.TypeDeclaration.Builder asyncStub;
 
-  private GQLDeclaration root;
+  private GQLTypeDeclaration root;
 
-  public JavaClientGenerator(GQLTypeRegistry registry, GQLDeclaration root, GQLDocument document)
+  public JavaClientGenerator(GQLTypeRegistry registry, GQLTypeDeclaration root, GQLDocument document)
   {
     this.registry = registry;
     this.document = document;
@@ -150,7 +150,7 @@ public class JavaClientGenerator
   private String generateResultType(TypeDeclaration.Builder queryShape, DataContext ctx, GQLOperationDefinition query)
   {
 
-    GQLDeclaration type = ctx.type().apply(GQLTypeVisitors.rootType());
+    GQLTypeDeclaration type = ctx.type().apply(GQLTypeVisitors.rootType());
 
     TypeDeclaration.Builder tdb = TypeDeclaration.builder();
 

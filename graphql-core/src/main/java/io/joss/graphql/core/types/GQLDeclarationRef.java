@@ -1,7 +1,7 @@
 package io.joss.graphql.core.types;
 
-import io.joss.graphql.core.decl.GQLDeclaration;
-import io.joss.graphql.core.decl.GQLDeclarationVisitor;
+import io.joss.graphql.core.decl.GQLTypeDeclaration;
+import io.joss.graphql.core.decl.GQLTypeDeclarationVisitor;
 import io.joss.graphql.core.lang.GQLTypeVisitor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -21,13 +21,13 @@ import lombok.experimental.Wither;
 @EqualsAndHashCode
 @ToString
 @Builder(builderClassName = "Builder")
-public final class GQLDeclarationRef implements GQLTypeReference, GQLDeclaration
+public final class GQLDeclarationRef implements GQLTypeReference, GQLTypeDeclaration
 {
 
   private final String name;
 
   // the reference, set in the schema builder when resolving types.
-  private final GQLDeclaration ref;
+  private final GQLTypeDeclaration ref;
 
   @Override
   public String name()
@@ -42,7 +42,7 @@ public final class GQLDeclarationRef implements GQLTypeReference, GQLDeclaration
   }
 
   @Override
-  public <R> R apply(final GQLDeclarationVisitor<R> visitor)
+  public <R> R apply(final GQLTypeDeclarationVisitor<R> visitor)
   {
     if (visitor == null)
     {
@@ -51,7 +51,7 @@ public final class GQLDeclarationRef implements GQLTypeReference, GQLDeclaration
     return ref.apply(visitor);
   }
 
-  public GQLDeclaration ref()
+  public GQLTypeDeclaration ref()
   {
     return this.ref;
   }

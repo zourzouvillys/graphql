@@ -24,7 +24,7 @@ import lombok.experimental.Wither;
 @Wither
 @ToString
 @Builder(builderClassName = "Builder")
-public final class GQLScalarTypeDeclaration implements GQLDeclaration
+public final class GQLScalarTypeDeclaration implements GQLTypeDeclaration
 {
 
   private final String name;
@@ -42,7 +42,7 @@ public final class GQLScalarTypeDeclaration implements GQLDeclaration
   }
 
   @Override
-  public <R> R apply(final GQLDeclarationVisitor<R> visitor)
+  public <R> R apply(final GQLTypeDeclarationVisitor<R> visitor)
   {
     return visitor.visitScalar(this);
   }

@@ -8,11 +8,13 @@ import io.joss.graphql.core.decl.GQLArgumentDefinition;
 import io.joss.graphql.core.decl.GQLDeclaration;
 import io.joss.graphql.core.decl.GQLEnumDeclaration;
 import io.joss.graphql.core.decl.GQLEnumValue;
+import io.joss.graphql.core.decl.GQLInputFieldDeclaration;
 import io.joss.graphql.core.decl.GQLInputTypeDeclaration;
 import io.joss.graphql.core.decl.GQLInterfaceTypeDeclaration;
 import io.joss.graphql.core.decl.GQLObjectTypeDeclaration;
 import io.joss.graphql.core.decl.GQLParameterableFieldDeclaration;
 import io.joss.graphql.core.decl.GQLScalarTypeDeclaration;
+import io.joss.graphql.core.decl.GQLSchemaDeclaration;
 import io.joss.graphql.core.decl.GQLUnionTypeDeclaration;
 import io.joss.graphql.core.doc.GQLArgument;
 import io.joss.graphql.core.doc.GQLDefinition;
@@ -41,693 +43,750 @@ import io.joss.graphql.core.value.GQLValues;
 
 public class ParseContext {
 
-	private final Lexer lexer;
+  private final Lexer lexer;
 
-	public ParseContext(final String doc) {
-		this.lexer = new Lexer(doc);
-	}
+  public ParseContext(final String doc) {
+    this.lexer = new Lexer(doc);
+  }
 
-	/**
-	 * parse a list of type definitions.
-	 */
+  /**
+   * parse a list of type definitions.
+   */
 
-	public List<GQLDeclaration> parseSchema() {
-		final List<GQLDeclaration> types = new LinkedList<>();
-		while (this.lexer.isReadable()) {
-			final GQLDeclaration val = this.parseTypeDefinition();
-			if (val != null) {
-				types.add(val);
-			}
-		}
-		return types;
-	}
+  public List<GQLDeclaration> parseSchema() {
+    final List<GQLDeclaration> types = new LinkedList<>();
+    while (this.lexer.isReadable()) {
+      final GQLDeclaration val = this.parseTypeDefinition();
+      if (val != null) {
+        types.add(val);
+      }
+    }
+    return types;
+  }
 
-	/**
-	 * parses a single type definition.
-	 */
+  /**
+   * parses a single type definition.
+   */
 
-	private GQLDeclaration parseTypeDefinition() {
+  private GQLDeclaration parseTypeDefinition() {
 
-		String comment = null;
+    String comment = null;
+    List<GQLDirective> directives = null;
 
-		if (this.is(TokenType.COMMENT)) {
-			comment = this.require(TokenType.COMMENT);
-		}
+    if (this.is(TokenType.COMMENT)) {
+      comment = this.require(TokenType.COMMENT);
+    }
 
-		switch (this.lexer.peek().value()) {
+    if (this.is("@")) {
+      directives = this.parseDirectives();
+    }
 
-		case "extend":
-			this.require("extend");
-			this.parseObjectTypeDefinition().withDescription(comment);
-			return null;
+    switch (this.lexer.peek().value()) {
 
-		case "interface":
-			return this.parseInterfaceDefinition();
+      case "extend":
+        this.require("extend");
+        if (this.is("input")) {
+          return this.parseInputDefinition().withExtension(true).withDescription(comment);
+        } else if (this.is("type")) {
+          return this.parseObjectTypeDefinition().withExtension(true).withDescription(comment);
+        } else if (this.is("union")) {
+          return this.parseUnionDefinition().withExtension(true).withDescription(comment);
+        } else if (this.is("enum")) {
+          return this.parseEnumDefinition().withExtension(true).withDescription(comment);
+        } else if (this.is("interface")) {
+          return this.parseInterfaceDefinition().withExtension(true).withDescription(comment);
+        }
+        throw ParserExceptions.expect(this, "unsupported extend", null);
 
-		case "type":
-			return this.parseObjectTypeDefinition().withDescription(comment);
+      case "schema":
+        return this.parseSchemaDefinition();
 
-		case "enum":
-			return this.parseEnumDefinition().withDescription(comment);
+      case "interface":
+        return this.parseInterfaceDefinition();
 
-		case "union":
-			return this.parseUnionDefinition().withDescription(comment);
+      case "type":
+        return this.parseObjectTypeDefinition().withDescription(comment).withDirectives(directives);
 
-		case "input":
-			return this.parseInputDefinition().withDescription(comment);
+      case "enum":
+        return this.parseEnumDefinition().withDescription(comment);
 
-		case "scalar":
-			return this.parseScalarDefinition().withDescription(comment);
+      case "union":
+        return this.parseUnionDefinition().withDescription(comment);
 
-		default:
-			throw ParserExceptions.expect(this, "type definition", null);
-		}
+      case "input":
+        return this.parseInputDefinition().withDescription(comment);
 
-	}
+      case "scalar":
+        return this.parseScalarDefinition().withDescription(comment);
 
-	private GQLScalarTypeDeclaration parseScalarDefinition() {
-		this.require("scalar");
-		return GQLTypes.scalar(this.require(TokenType.NAME));
-	}
+      case "directive":
+        return this.parseDirectiveDefinition().withDescription(comment);
 
-	/**
-	 *
-	 * @return
-	 */
+      default:
+        throw ParserExceptions.expect(this, "type definition", null);
+    }
 
-	private GQLInterfaceTypeDeclaration parseInterfaceDefinition() {
+  }
 
-		final GQLInterfaceTypeDeclaration.Builder b = GQLInterfaceTypeDeclaration.builder();
+  private GQLScalarTypeDeclaration parseDirectiveDefinition() {
 
-		this.require("interface");
+    this.require("directive");
 
-		b.name(this.require(TokenType.NAME));
+    return GQLTypes.scalar(this.require(TokenType.NAME));
 
-		if (this.skip("implements")) {
-			do {
-				b.iface(GQLTypes.concreteTypeRef(this.require(TokenType.NAME)));
-			} while (this.is(","));
-		}
+  }
 
-		this.require("{");
+  private GQLScalarTypeDeclaration parseScalarDefinition() {
+    this.require("scalar");
+    return GQLTypes.scalar(this.require(TokenType.NAME));
+  }
 
-		// now read each of the definitions.
+  /**
+   *
+   * @return
+   */
 
-		while (!this.is("}")) {
+  private GQLInterfaceTypeDeclaration parseInterfaceDefinition() {
 
-			final GQLParameterableFieldDeclaration.Builder fb = GQLParameterableFieldDeclaration.builder();
+    final GQLInterfaceTypeDeclaration.Builder b = GQLInterfaceTypeDeclaration.builder();
 
-			fb.name(this.require(TokenType.NAME));
+    this.require("interface");
 
-			if (this.is("(")) {
-				fb.args(this.parseArgumentDefinitions());
-			}
+    b.name(this.require(TokenType.NAME));
 
-			this.require(":");
+    if (this.skip("implements")) {
+      do {
+        b.iface(GQLTypes.concreteTypeRef(this.require(TokenType.NAME)));
+      } while (this.is(","));
+    }
 
-			fb.type(this.parseTypeRef());
+    this.require("{");
 
-			b.field(fb.build());
+    // now read each of the definitions.
 
-		}
+    while (!this.is("}")) {
 
-		this.require("}");
+      final GQLParameterableFieldDeclaration.Builder fb = GQLParameterableFieldDeclaration.builder();
 
-		return b.build();
-	}
+      fb.name(this.require(TokenType.NAME));
 
-	/**
-	 *
-	 * @return
-	 */
+      if (this.is("(")) {
+        fb.args(this.parseArgumentDefinitions());
+      }
 
-	private GQLObjectTypeDeclaration parseObjectTypeDefinition() {
+      this.require(":");
 
-		final GQLObjectTypeDeclaration.Builder b = GQLObjectTypeDeclaration.builder();
+      fb.type(this.parseTypeRef());
 
-		this.require("type");
+      b.field(fb.build());
 
-		b.name(this.require(TokenType.NAME));
+    }
 
-		if (this.skip("implements")) {
-			do {
-				b.iface(GQLTypes.concreteTypeRef(this.require(TokenType.NAME)));
-			} while (this.is(","));
-		}
+    this.require("}");
 
-		this.require("{");
+    return b.build();
+  }
 
-		while (!this.is("}")) {
+  /**
+   *
+   * @return
+   */
 
-			final GQLParameterableFieldDeclaration.Builder fb = GQLParameterableFieldDeclaration.builder();
+  private GQLObjectTypeDeclaration parseObjectTypeDefinition() {
 
-			if (this.is(TokenType.COMMENT)) {
-				fb.description(this.require(TokenType.COMMENT));
-			}
+    final GQLObjectTypeDeclaration.Builder b = GQLObjectTypeDeclaration.builder();
 
-			fb.name(this.require(TokenType.NAME));
+    this.require("type");
 
-			if (this.is("(")) {
-				fb.args(this.parseArgumentDefinitions());
-			}
+    b.name(this.require(TokenType.NAME));
 
-			this.require(":");
+    if (this.skip("implements")) {
+      do {
+        b.iface(GQLTypes.concreteTypeRef(this.require(TokenType.NAME)));
+      } while (this.is(","));
+    }
 
-			final GQLTypeReference type = this.parseTypeRef();
+    this.require("{");
 
-			fb.type(type);
+    while (!this.is("}")) {
 
-			b.field(fb.build());
+      final GQLParameterableFieldDeclaration.Builder fb = GQLParameterableFieldDeclaration.builder();
 
-		}
+      if (this.is(TokenType.COMMENT)) {
+        fb.description(this.require(TokenType.COMMENT));
+      }
 
-		this.require("}");
+      fb.name(this.require(TokenType.NAME));
 
-		return b.build();
-	}
+      if (this.is("(")) {
+        fb.args(this.parseArgumentDefinitions());
+      }
 
-	/**
-	 * returns a field definition, e.g the name, type and optional default
-	 * value. Consumes start and end '(' ')'
-	 *
-	 * @return
-	 */
+      this.require(":");
 
-	private Collection<? extends GQLArgumentDefinition> parseArgumentDefinitions() {
-		final List<GQLArgumentDefinition> defs = new LinkedList<>();
+      final GQLTypeReference type = this.parseTypeRef();
 
-		this.require("(");
+      fb.type(type);
 
-		while (!this.is(")")) {
+      b.field(fb.build());
 
-			final GQLArgumentDefinition.Builder ab = GQLArgumentDefinition.builder();
+    }
 
-			ab.name(this.require(TokenType.NAME));
+    this.require("}");
 
-			this.require(":");
+    return b.build();
+  }
 
-			final GQLTypeReference tr = this.parseTypeRef();
+  /**
+   * returns a field definition, e.g the name, type and optional default value.
+   * Consumes start and end '(' ')'
+   *
+   * @return
+   */
 
-			ab.type(tr);
+  private Collection<? extends GQLArgumentDefinition> parseArgumentDefinitions() {
+    final List<GQLArgumentDefinition> defs = new LinkedList<>();
 
-			if (this.skip("=")) {
-				ab.defaultValue(this.parseValue());
-			}
+    this.require("(");
 
-			defs.add(ab.build());
+    while (!this.is(")")) {
 
-		}
-		this.require(")");
-		return defs;
-	}
+      final GQLArgumentDefinition.Builder ab = GQLArgumentDefinition.builder();
 
-	/**
-	 *
-	 * @return
-	 */
+      ab.name(this.require(TokenType.NAME));
 
-	private GQLEnumDeclaration parseEnumDefinition() {
-		final GQLEnumDeclaration.Builder b = GQLEnumDeclaration.builder();
-		this.require("enum");
-		b.name(this.require(TokenType.NAME));
-		this.require("{");
-		while (!this.is("}")) {
-			b.value(GQLEnumValue.builder().name(this.require(TokenType.NAME)).build());
-		}
-		this.require("}");
+      this.require(":");
 
-		return b.build();
-	}
+      final GQLTypeReference tr = this.parseTypeRef();
 
-	private GQLUnionTypeDeclaration parseUnionDefinition() {
+      ab.type(tr);
 
-		final GQLUnionTypeDeclaration.Builder b = GQLUnionTypeDeclaration.builder();
+      if (this.skip("=")) {
+        ab.defaultValue(this.parseValue());
+      }
 
-		this.require("union");
-		b.name(this.require(TokenType.NAME));
-		this.require("=");
+      defs.add(ab.build());
 
-		do {
-			b.type(GQLTypes.concreteTypeRef(this.require(TokenType.NAME)));
-		} while (this.lexer.isReadable() && this.skip("|"));
+    }
+    this.require(")");
+    return defs;
+  }
 
-		return b.build();
+  /**
+   *
+   * @return
+   */
 
-	}
+  private GQLEnumDeclaration parseEnumDefinition() {
+    final GQLEnumDeclaration.Builder b = GQLEnumDeclaration.builder();
+    this.require("enum");
+    b.name(this.require(TokenType.NAME));
+    this.require("{");
+    while (!this.is("}")) {
+      b.value(GQLEnumValue.builder().name(this.require(TokenType.NAME)).build());
+    }
+    this.require("}");
 
-	private GQLInputTypeDeclaration parseInputDefinition() {
+    return b.build();
+  }
 
-		this.require("input");
-		final String name = this.require(TokenType.NAME);
-		this.require("{");
+  private GQLUnionTypeDeclaration parseUnionDefinition() {
 
-		while (!this.is("}")) {
+    final GQLUnionTypeDeclaration.Builder b = GQLUnionTypeDeclaration.builder();
 
-			this.require(TokenType.NAME);
-			this.require(":");
+    this.require("union");
+    b.name(this.require(TokenType.NAME));
+    this.require("=");
 
-			this.parseTypeRef();
+    do {
+      b.type(GQLTypes.concreteTypeRef(this.require(TokenType.NAME)));
+    } while (this.lexer.isReadable() && this.skip("|"));
 
-			if (this.skip("=")) {
-				this.parseValue();
-			}
+    return b.build();
 
-		}
+  }
 
-		this.require("}");
+  private GQLSchemaDeclaration parseSchemaDefinition() {
 
-		
-		return GQLTypes.inputBuilder(name).build();
-	}
+    final GQLSchemaDeclaration.Builder builder = GQLTypes.schemaBuilder();
 
-	/**
-	 *
-	 * @return
-	 */
+    this.require("schema");
 
-	public GQLDocument parseDocument() {
+    if (!this.is("{")) {
+      builder.name(this.require(TokenType.NAME));
+    }
 
-		final GQLDocument.Builder b = GQLDocument.builder();
+    this.require("{");
 
-		while (this.lexer.isReadable()) {
-			GQLDefinition def = this.parseDefinition();
-			b.definition(def);
-		}
+    while (!this.is("}")) {
+      final String key = this.require(TokenType.NAME);
+      this.require(":");
+      builder.entry(key, GQLTypes.typeRef(this.next()));
+    }
 
-		return b.build();
+    this.require("}");
 
-	}
+    return builder.build();
+  }
 
-	/**
-	 * returns an operation or a fragment.
-	 */
+  private GQLInputTypeDeclaration parseInputDefinition() {
 
-	public GQLDefinition parseDefinition() {
+    this.require("input");
+    final String name = this.require(TokenType.NAME);
+    this.require("{");
 
-		if (this.skip("fragment")) {
-			return this.parseFragment();
-		}
+    final GQLInputTypeDeclaration.Builder b = GQLTypes.inputBuilder(name);
 
-		return this.parseOperation();
+    while (!this.is("}")) {
 
-	}
+      final GQLInputFieldDeclaration.Builder ib = GQLInputFieldDeclaration.builder();
 
-	/**
-	 * parses an operation, throwing if one is not found.
-	 *
-	 * @return
-	 */
+      ib.name(this.require(TokenType.NAME));
+      this.require(":");
 
-	GQLOperationDefinition parseOperation() {
+      ib.type(this.parseTypeRef());
 
-		if (this.is("{")) {
-			return GQLOperationDefinition.builder()
-					.selections(this.parseSelectionSet())
-					.build();
-		}
+      if (this.skip("=")) {
+        ib.defaultValue(this.parseValue());
+      }
 
-		final GQLOperationDefinition.Builder b = GQLOperationDefinition.builder();
+      b.field(ib.build());
 
-		if (this.skip("query")) {
-			b.type(GQLOpType.Query);
-		} else if (this.skip("mutation")) {
-			b.type(GQLOpType.Mutation);
-		} else if (this.skip("subscription")) {
-			b.type(GQLOpType.Subscription);
-		} else {
-			throw ParserExceptions.create(this, String.format("Unknown operation type: %s", this.next()));
-		}
+    }
 
-		if (this.lexer.peek().type() == TokenType.NAME) {
-			b.name(this.next());
-		}
+    this.require("}");
 
-		if (this.is("(")) {
-			b.vars(this.parseVariableDefinitions());
-		}
+    return b.build();
+  }
 
-		if (this.is("@")) {
-			b.directives(this.parseDirectives());
-		}
+  /**
+   *
+   * @return
+   */
 
-		b.selections(this.parseSelectionSet());
+  public GQLDocument parseDocument() {
 
-		return b.build();
-	}
+    final GQLDocument.Builder b = GQLDocument.builder();
 
-	private List<GQLVariableDefinition> parseVariableDefinitions() {
+    while (this.lexer.isReadable()) {
+      final GQLDefinition def = this.parseDefinition();
+      b.definition(def);
+    }
 
-		final List<GQLVariableDefinition> vars = new LinkedList<>();
+    return b.build();
 
-		this.require("(");
+  }
 
-		while (!this.is(")")) {
-			final GQLVariableDefinitionBuilder b = GQLVariableDefinition.builder();
-			this.require("$");
-			b.name(this.require(TokenType.NAME));
-			this.require(":");
+  /**
+   * returns an operation or a fragment.
+   */
 
-			//
-			b.type(this.parseTypeRef());
+  public GQLDefinition parseDefinition() {
 
-			if (this.skip("=")) {
-				b.defaultValue(this.parseValue());
-			}
+    if (this.skip("fragment")) {
+      return this.parseFragment();
+    }
 
-			vars.add(b.build());
+    return this.parseOperation();
 
-		}
+  }
 
-		this.require(")");
+  /**
+   * parses an operation, throwing if one is not found.
+   *
+   * @return
+   */
 
-		return vars;
+  GQLOperationDefinition parseOperation() {
 
-	}
+    if (this.is("{")) {
+      return GQLOperationDefinition.builder()
+          .selections(this.parseSelectionSet())
+          .build();
+    }
 
-	/**
-	 * parses a type reference, e.g MyType, Int, [Int!], MyType!, [[Int!]!]!
-	 */
+    final GQLOperationDefinition.Builder b = GQLOperationDefinition.builder();
 
-	private GQLTypeReference parseTypeRef() {
+    if (this.skip("query")) {
+      b.type(GQLOpType.Query);
+    } else if (this.skip("mutation")) {
+      b.type(GQLOpType.Mutation);
+    } else if (this.skip("subscription")) {
+      b.type(GQLOpType.Subscription);
+    } else {
+      throw ParserExceptions.create(this, String.format("Unknown operation type: %s", this.next()));
+    }
 
-		// GQLTypeReference
+    if (this.lexer.peek().type() == TokenType.NAME) {
+      b.name(this.next());
+    }
 
-		final GQLTypeReference type;
+    if (this.is("(")) {
+      b.vars(this.parseVariableDefinitions());
+    }
 
-		if (this.lexer.peek().type() == TokenType.NAME) {
-			type = GQLTypes.typeRef(this.next());
-		} else if (this.skip("[")) {
-			type = GQLTypes.listOf(this.parseTypeRef());
-			this.require("]");
-		} else {
-			throw new IllegalArgumentException(this.lexer.peek().toString());
-		}
+    if (this.is("@")) {
+      b.directives(this.parseDirectives());
+    }
 
-		if (this.skip("!")) {
-			return GQLTypes.nonNull(type);
-		}
+    b.selections(this.parseSelectionSet());
 
-		return type;
+    return b.build();
+  }
 
-	}
+  private List<GQLVariableDefinition> parseVariableDefinitions() {
 
-	/**
-	 *
-	 * @return
-	 */
+    final List<GQLVariableDefinition> vars = new LinkedList<>();
 
-	private GQLFragmentDefinition parseFragment() {
+    this.require("(");
 
-		final GQLFragmentDefinitionBuilder b = GQLFragmentDefinition.builder();
+    while (!this.is(")")) {
+      final GQLVariableDefinitionBuilder b = GQLVariableDefinition.builder();
+      this.require("$");
+      b.name(this.require(TokenType.NAME));
+      this.require(":");
 
-		final String fragmentName = this.next();
+      //
+      b.type(this.parseTypeRef());
 
-		if (fragmentName.equals("on")) {
-			throw ParserExceptions.create(this, "Fragment name must not be 'on'");
-		}
+      if (this.skip("=")) {
+        b.defaultValue(this.parseValue());
+      }
 
-		b.name(fragmentName);
+      vars.add(b.build());
 
-		this.require("on");
+    }
 
-		final String applyTo = this.parseName();
+    this.require(")");
 
-		b.namedType(GQLTypes.concreteTypeRef(applyTo));
+    return vars;
 
-		if (this.is("@")) {
-			b.directives(this.parseDirectives());
-		}
+  }
 
-		b.selections(this.parseSelectionSet());
+  /**
+   * parses a type reference, e.g MyType, Int, [Int!], MyType!, [[Int!]!]!
+   */
 
-		return b.build();
+  private GQLTypeReference parseTypeRef() {
 
-	}
+    // GQLTypeReference
 
-	/**
-	 * requires the next token to be '{'. Reads until the last (balanced) '}'.
-	 *
-	 * @return
-	 */
+    final GQLTypeReference type;
 
-	private List<GQLSelection> parseSelectionSet() {
+    if (this.lexer.peek().type() == TokenType.NAME) {
+      type = GQLTypes.typeRef(this.next());
+    } else if (this.skip("[")) {
+      type = GQLTypes.listOf(this.parseTypeRef());
+      this.require("]");
+    } else {
+      throw new IllegalArgumentException(this.lexer.peek().toString());
+    }
 
-		final List<GQLSelection> selections = new LinkedList<>();
+    if (this.skip("!")) {
+      return GQLTypes.nonNull(type);
+    }
 
-		final Token opening = this.require("{");
+    return type;
 
-		if (this.is("}")) {
-			throw ParserExceptions.expect(this, "Name", "found '}'");
-		}
+  }
 
-		while (!this.is("}")) {
+  /**
+   *
+   * @return
+   */
 
-			if (this.skip("...")) {
+  private GQLFragmentDefinition parseFragment() {
 
-				if (is("on") || is("@") || is("{")) {
+    final GQLFragmentDefinitionBuilder b = GQLFragmentDefinition.builder();
 
-					GQLInlineFragmentSelectionBuilder ifs = GQLInlineFragmentSelection.builder();
+    final String fragmentName = this.next();
 
-					if (skip("on")) {
-						ifs.typeCondition(GQLTypes.typeRef(require(TokenType.NAME)));
-					}
+    if (fragmentName.equals("on")) {
+      throw ParserExceptions.create(this, "Fragment name must not be 'on'");
+    }
 
-					if (is("@")) {
-						ifs.directives(parseDirectives());
-					}
+    b.name(fragmentName);
 
-					if (is("{")) {
-						ifs.selections(parseSelectionSet());
-					}
+    this.require("on");
 
-					selections.add(ifs.build());
+    final String applyTo = this.parseName();
 
-				} else {
+    b.namedType(GQLTypes.concreteTypeRef(applyTo));
 
-					Builder fsb = GQLFragmentSpreadSelection.builder();
+    if (this.is("@")) {
+      b.directives(this.parseDirectives());
+    }
 
-					fsb.name(require(TokenType.NAME));
+    b.selections(this.parseSelectionSet());
 
-					if (is("@")) {
-						fsb.directives(parseDirectives());
-					}
+    return b.build();
 
-					selections.add(fsb.build());
+  }
 
-				}
+  /**
+   * requires the next token to be '{'. Reads until the last (balanced) '}'.
+   *
+   * @return
+   */
 
-				continue;
+  private List<GQLSelection> parseSelectionSet() {
 
-			}
+    final List<GQLSelection> selections = new LinkedList<>();
 
-			final GQLFieldSelection.Builder fb = GQLFieldSelection.builder();
+    final Token opening = this.require("{");
 
-			final String name = this.require(TokenType.NAME,
-					"or '}' to match '{' defined at position " + opening.position().start());
+    if (this.is("}")) {
+      throw ParserExceptions.expect(this, "Name", "found '}'");
+    }
 
-			if (this.skip(":")) {
-				fb.alias(name);
-				fb.name(this.next());
-			} else {
-				fb.name(name);
-			}
+    while (!this.is("}")) {
 
-			if (this.is("(")) {
-				fb.args(this.parseArguments());
-			}
+      if (this.skip("...")) {
 
-			if (this.is("@")) {
-				fb.directives(this.parseDirectives());
-			}
+        if (this.is("on") || this.is("@") || this.is("{")) {
 
-			if (this.is("{")) {
-				fb.selections(this.parseSelectionSet());
-			}
+          final GQLInlineFragmentSelectionBuilder ifs = GQLInlineFragmentSelection.builder();
 
-			selections.add(fb.build());
+          if (this.skip("on")) {
+            ifs.typeCondition(GQLTypes.typeRef(this.require(TokenType.NAME)));
+          }
 
-		}
+          if (this.is("@")) {
+            ifs.directives(this.parseDirectives());
+          }
 
-		this.require("}");
+          if (this.is("{")) {
+            ifs.selections(this.parseSelectionSet());
+          }
 
-		return selections;
+          selections.add(ifs.build());
 
-	}
+        } else {
 
-	/**
-	 * Parses a set of arguments, starting and ending with '(' and ')'.
-	 *
-	 * @return
-	 */
+          final Builder fsb = GQLFragmentSpreadSelection.builder();
 
-	private List<GQLArgument> parseArguments() {
+          fsb.name(this.require(TokenType.NAME));
 
-		this.require("(");
+          if (this.is("@")) {
+            fsb.directives(this.parseDirectives());
+          }
 
-		final List<GQLArgument> args = new LinkedList<>();
+          selections.add(fsb.build());
 
-		while (!this.is(")")) {
-			final String name = this.require(TokenType.NAME);
-			this.require(":", "after argument name");
-			final GQLValue value = this.parseValue();
-			args.add(GQLArgument.builder().name(name).value(value).build());
-		}
+        }
 
-		this.require(")");
+        continue;
 
-		return args;
+      }
 
-	}
+      final GQLFieldSelection.Builder fb = GQLFieldSelection.builder();
 
-	GQLValue parseValue() {
-		if (this.skip("$")) {
-			return GQLValues.variable(this.require(TokenType.NAME));
-		} else if (this.skip("false")) {
-			return GQLValues.booleanFalse();
-		} else if (this.skip("true")) {
-			return GQLValues.booleanTrue();
-		} else if (this.lexer.peek().type() == TokenType.INT) {
-			return GQLValues.intValue(Long.parseLong(this.next()));
-		} else if (this.lexer.peek().type() == TokenType.FLOAT) {
-			return GQLValues.floatValue(Double.parseDouble(this.next()));
-		} else if (this.lexer.peek().type() == TokenType.STRING) {
-			return GQLValues.stringValue(this.next());
-		} else if (this.is("[")) {
-			return this.parseArray();
-		} else if (this.is("{")) {
-			return this.parseObject();
-		} else {
-			if (this.is("null")) {
-				throw ParserExceptions.create(this, "Invalid ENUM name");
-			}
-			return GQLValues.enumValueRef(this.next());
-		}
-	}
+      final String name = this.require(TokenType.NAME,
+          "or '}' to match '{' defined at position " + opening.position().start());
 
-	private GQLListValue parseArray() {
+      if (this.skip(":")) {
+        fb.alias(name);
+        fb.name(this.next());
+      } else {
+        fb.name(name);
+      }
 
-		final GQLListValue.Builder b = GQLListValue.builder();
+      if (this.is("(")) {
+        fb.args(this.parseArguments());
+      }
 
-		this.require("[");
+      if (this.is("@")) {
+        fb.directives(this.parseDirectives());
+      }
 
-		while (!this.is("]")) {
-			b.value(this.parseValue());
-		}
+      if (this.is("{")) {
+        fb.selections(this.parseSelectionSet());
+      }
 
-		this.require("]");
+      selections.add(fb.build());
 
-		return b.build();
+    }
 
-	}
+    this.require("}");
 
-	private GQLValue parseObject() {
+    return selections;
 
-		final GQLObjectValue.Builder b = GQLObjectValue.builder();
+  }
 
-		this.require("{");
+  /**
+   * Parses a set of arguments, starting and ending with '(' and ')'.
+   *
+   * @return
+   */
 
-		while (!this.is("}")) {
-			final String name = this.parseName();
-			this.require(":");
-			b.value(name, this.parseValue());
-		}
+  private List<GQLArgument> parseArguments() {
 
-		this.require("}");
+    this.require("(");
 
-		return b.build();
+    final List<GQLArgument> args = new LinkedList<>();
 
-	}
+    while (!this.is(")")) {
+      final String name = this.require(TokenType.NAME);
+      this.require(":", "after argument name");
+      final GQLValue value = this.parseValue();
+      args.add(GQLArgument.builder().name(name).value(value).build());
+    }
 
-	private List<GQLDirective> parseDirectives() {
+    this.require(")");
 
-		if (!this.is("@")) {
-			throw new IllegalStateException();
-		}
+    return args;
 
-		final List<GQLDirective> items = new LinkedList<>();
+  }
 
-		while (this.skip("@")) {
-			final GQLDirectiveBuilder b = GQLDirective.builder();
-			b.name(this.next());
-			if (this.is("(")) {
-				b.args(this.parseArguments());
-			}
-			items.add(b.build());
-		}
+  GQLValue parseValue() {
+    if (this.skip("$")) {
+      return GQLValues.variable(this.require(TokenType.NAME));
+    } else if (this.skip("false")) {
+      return GQLValues.booleanFalse();
+    } else if (this.skip("true")) {
+      return GQLValues.booleanTrue();
+    } else if (this.lexer.peek().type() == TokenType.INT) {
+      return GQLValues.intValue(Long.parseLong(this.next()));
+    } else if (this.lexer.peek().type() == TokenType.FLOAT) {
+      return GQLValues.floatValue(Double.parseDouble(this.next()));
+    } else if (this.lexer.peek().type() == TokenType.STRING) {
+      return GQLValues.stringValue(this.next());
+    } else if (this.is("[")) {
+      return this.parseArray();
+    } else if (this.is("{")) {
+      return this.parseObject();
+    } else {
+      if (this.is("null")) {
+        throw ParserExceptions.create(this, "Invalid ENUM name");
+      }
+      return GQLValues.enumValueRef(this.next());
+    }
+  }
 
-		return items;
+  private GQLListValue parseArray() {
 
-	}
+    final GQLListValue.Builder b = GQLListValue.builder();
 
-	private String parseName() {
-		return this.require(TokenType.NAME);
-	}
+    this.require("[");
 
-	private Token require(final String string) {
-		return this.require(string, null);
-	}
+    while (!this.is("]")) {
+      b.value(this.parseValue());
+    }
 
-	private Token require(final String string, final String message) {
-		if (!this.is(string)) {
-			throw ParserExceptions.expect(this, string, message);
+    this.require("]");
 
-		}
+    return b.build();
 
-		final Token next = this.lexer.next();
+  }
 
-		if (next == null) {
-			throw ParserExceptions.endOfStream();
-		}
+  private GQLValue parseObject() {
 
-		return next;
-	}
+    final GQLObjectValue.Builder b = GQLObjectValue.builder();
 
-	private String require(final TokenType type) {
-		return this.require(type, null);
-	}
+    this.require("{");
 
-	private String require(final TokenType type, final String message) {
-		if (this.lexer.peek() == null) {
-			throw ParserExceptions.expect(this, type.toString(), message);
-		}
-		if (this.lexer.peek().type() != type) {
-			throw ParserExceptions.expect(this, type.toString(), message);
-		}
-		return this.next();
-	}
+    while (!this.is("}")) {
+      final String name = this.parseName();
+      this.require(":");
+      b.value(name, this.parseValue());
+    }
 
-	private boolean skip(final String string) {
-		if (this.is(string)) {
-			this.next();
-			return true;
-		}
-		return false;
-	}
+    this.require("}");
 
-	private String next() {
-		final Token next = this.lexer.next();
-		if (next == null) {
-			throw ParserExceptions.endOfStream();
-		}
-		return next.value();
-	}
+    return b.build();
 
-	private boolean is(final String value) {
-		if (this.lexer.peek() == null) {
-			return false;
-		}
-		return this.lexer.peek().value().equals(value);
-	}
+  }
 
-	private boolean is(final TokenType type) {
-		if (this.lexer.peek() == null) {
-			return false;
-		}
-		return this.lexer.peek().type() == type;
-	}
+  private List<GQLDirective> parseDirectives() {
 
-	public Lexer lexer() {
-		return this.lexer;
-	}
+    if (!this.is("@")) {
+      throw new IllegalStateException();
+    }
+
+    final List<GQLDirective> items = new LinkedList<>();
+
+    while (this.skip("@")) {
+      final GQLDirectiveBuilder b = GQLDirective.builder();
+      b.name(this.next());
+      if (this.is("(")) {
+        b.args(this.parseArguments());
+      }
+      items.add(b.build());
+    }
+
+    return items;
+
+  }
+
+  private String parseName() {
+    return this.require(TokenType.NAME);
+  }
+
+  private Token require(final String string) {
+    return this.require(string, null);
+  }
+
+  private Token require(final String string, final String message) {
+    if (!this.is(string)) {
+      throw ParserExceptions.expect(this, string, message);
+
+    }
+
+    final Token next = this.lexer.next();
+
+    if (next == null) {
+      throw ParserExceptions.endOfStream();
+    }
+
+    return next;
+  }
+
+  private String require(final TokenType type) {
+    return this.require(type, null);
+  }
+
+  private String require(final TokenType type, final String message) {
+    if (this.lexer.peek() == null) {
+      throw ParserExceptions.expect(this, type.toString(), message);
+    }
+    if (this.lexer.peek().type() != type) {
+      throw ParserExceptions.expect(this, type.toString(), message);
+    }
+    return this.next();
+  }
+
+  private boolean skip(final String string) {
+    if (this.is(string)) {
+      this.next();
+      return true;
+    }
+    return false;
+  }
+
+  private String next() {
+    final Token next = this.lexer.next();
+    if (next == null) {
+      throw ParserExceptions.endOfStream();
+    }
+    return next.value();
+  }
+
+  private boolean is(final String value) {
+    if (this.lexer.peek() == null) {
+      return false;
+    }
+    return this.lexer.peek().value().equals(value);
+  }
+
+  private boolean is(final TokenType type) {
+    if (this.lexer.peek() == null) {
+      return false;
+    }
+    return this.lexer.peek().type() == type;
+  }
+
+  public Lexer lexer() {
+    return this.lexer;
+  }
 
 }

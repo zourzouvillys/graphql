@@ -1,6 +1,6 @@
 package io.joss.graphql.core.decl;
 
-import io.joss.graphql.core.doc.DefaultDeclarationVisitor;
+import io.joss.graphql.core.utils.DefaultTypeDeclarationVisitor;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -13,10 +13,10 @@ public class GQLDeclarationVisitors
    * @return
    */
 
-  public static GQLDeclarationVisitor<Boolean> isRelayNode()
+  public static GQLTypeDeclarationVisitor<Boolean> isRelayNode()
   {
 
-    return new DefaultDeclarationVisitor<Boolean>(false) {
+    return new DefaultTypeDeclarationVisitor<Boolean>(false) {
 
       @Override
       public Boolean visitObject(GQLObjectTypeDeclaration type)

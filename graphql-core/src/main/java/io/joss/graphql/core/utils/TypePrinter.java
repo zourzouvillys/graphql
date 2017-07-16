@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import io.joss.graphql.core.decl.GQLArgumentDefinition;
-import io.joss.graphql.core.decl.GQLDeclarationVisitor;
 import io.joss.graphql.core.decl.GQLEnumDeclaration;
 import io.joss.graphql.core.decl.GQLInputFieldDeclaration;
 import io.joss.graphql.core.decl.GQLInputTypeDeclaration;
@@ -14,6 +13,7 @@ import io.joss.graphql.core.decl.GQLInterfaceTypeDeclaration;
 import io.joss.graphql.core.decl.GQLObjectTypeDeclaration;
 import io.joss.graphql.core.decl.GQLParameterableFieldDeclaration;
 import io.joss.graphql.core.decl.GQLScalarTypeDeclaration;
+import io.joss.graphql.core.decl.GQLTypeDeclarationVisitor;
 import io.joss.graphql.core.decl.GQLUnionTypeDeclaration;
 import io.joss.graphql.core.lang.GQLTypeVisitor;
 import io.joss.graphql.core.types.GQLDeclarationRef;
@@ -30,231 +30,201 @@ import io.joss.graphql.core.value.GQLValue;
 import io.joss.graphql.core.value.GQLValueVisitor;
 import io.joss.graphql.core.value.GQLVariableRef;
 
-public class TypePrinter implements GQLTypeVisitor<Void>, GQLValueVisitor<Void>, GQLDeclarationVisitor<Void>
-{
+public class TypePrinter implements GQLTypeVisitor<Void>, GQLValueVisitor<Void>, GQLTypeDeclarationVisitor<Void> {
 
-  private PrintStream out;
+  private final PrintStream out;
 
-  public TypePrinter(PrintStream out)
-  {
+  public TypePrinter(PrintStream out) {
     this.out = out;
   }
 
-  private void printComment(String description, String pfx)
-  {
-    if (description != null && !description.isEmpty())
-    {
-      out.println();
-      out.print(pfx);
-      out.println("/**");
-      out.print(pfx);
-      out.print(" * ");
-      out.println(description.replace("\n$",""));
-      out.print(pfx);
-      out.print(" */");
-      out.println();
-      out.println();
+  private void printComment(String description, String pfx) {
+    if (description != null && !description.isEmpty()) {
+      this.out.println();
+      this.out.print(pfx);
+      this.out.println("/**");
+      this.out.print(pfx);
+      this.out.print(" * ");
+      this.out.println(description.replace("\n$", ""));
+      this.out.print(pfx);
+      this.out.print(" */");
+      this.out.println();
+      this.out.println();
     }
   }
 
   @Override
-  public Void visitUnion(GQLUnionTypeDeclaration type)
-  {
-    printComment(type.description(), "");
-    out.print("union ");
-    out.print(type.name());
-    out.print(" = ");
-    out.println(type.types().stream().map(t -> t.name()).collect(Collectors.joining(" | ")));
+  public Void visitUnion(GQLUnionTypeDeclaration type) {
+    this.printComment(type.description(), "");
+    this.out.print("union ");
+    this.out.print(type.name());
+    this.out.print(" = ");
+    this.out.println(type.types().stream().map(t -> t.name()).collect(Collectors.joining(" | ")));
     return null;
   }
 
   @Override
-  public Void visitScalar(GQLScalarTypeDeclaration type)
-  {
-    if (!type.isPrimitive())
-    {
-      printComment(type.description(), "");
-      out.print("scalar ");
-      out.println(type.name());
+  public Void visitScalar(GQLScalarTypeDeclaration type) {
+    if (!type.isPrimitive()) {
+      this.printComment(type.description(), "");
+      this.out.print("scalar ");
+      this.out.println(type.name());
     }
     return null;
   }
 
   @Override
-  public Void visitObject(GQLObjectTypeDeclaration type)
-  {
+  public Void visitObject(GQLObjectTypeDeclaration type) {
 
-    printComment(type.description(), "");
+    this.printComment(type.description(), "");
 
-    out.print("type ");
-    out.print(type.name());
+    this.out.print("type ");
+    this.out.print(type.name());
 
-    if (type.ifaces().size() > 0)
-    {
-      out.print(" implements ");
-      out.println(type.ifaces().stream().map(t -> t.name()).collect(Collectors.joining(", ")));
+    if (type.ifaces().size() > 0) {
+      this.out.print(" implements ");
+      this.out.println(type.ifaces().stream().map(t -> t.name()).collect(Collectors.joining(", ")));
     }
 
-    out.println(" {");
-    printFields(type.fields());
-    out.println("}\n");
+    this.out.println(" {");
+    this.printFields(type.fields());
+    this.out.println("}\n");
     return null;
   }
 
-  private void printFields(List<GQLParameterableFieldDeclaration> fields)
-  {
+  private void printFields(List<GQLParameterableFieldDeclaration> fields) {
     fields.forEach(field -> {
-      printComment(field.description(), "  ");
-      out.print("  ");
-      out.print(field.name());
-      printArgumentDefinitions(field.args());
-      out.print(": ");
+      this.printComment(field.description(), "  ");
+      this.out.print("  ");
+      this.out.print(field.name());
+      this.printArgumentDefinitions(field.args());
+      this.out.print(": ");
       field.type().apply(new TypeRefPrinter(this.out));
-      out.println();
+      this.out.println();
     });
   }
 
-  private void printInputFields(List<GQLInputFieldDeclaration> fields)
-  {
+  private void printInputFields(List<GQLInputFieldDeclaration> fields) {
     fields.forEach(field -> {
-      printComment(field.description(), "  ");
-      out.print("  ");
-      out.print(field.name());
-      out.print(": ");
+      this.printComment(field.description(), "  ");
+      this.out.print("  ");
+      this.out.print(field.name());
+      this.out.print(": ");
       field.type().apply(new TypeRefPrinter(this.out));
-      out.println();
+      this.out.println();
     });
   }
 
-  private void printArgumentDefinitions(List<GQLArgumentDefinition> args)
-  {
-    if (!args.isEmpty())
-    {
-      out.print("(");
+  private void printArgumentDefinitions(List<GQLArgumentDefinition> args) {
+    if (!args.isEmpty()) {
+      this.out.print("(");
       int c = 0;
-      for (GQLArgumentDefinition arg : args)
-      {
-        if (c++ > 0)
-        {
-          out.print(", ");
+      for (final GQLArgumentDefinition arg : args) {
+        if (c++ > 0) {
+          this.out.print(", ");
         }
-        out.print(arg.name());
-        out.print(": ");
+        this.out.print(arg.name());
+        this.out.print(": ");
         arg.type().apply(new TypeRefPrinter(this.out));
-        if (arg.defaultValue() != null)
-        {
-          out.print(" = ");
+        if (arg.defaultValue() != null) {
+          this.out.print(" = ");
           arg.defaultValue().apply(this);
         }
       }
-      out.print(")");
+      this.out.print(")");
     }
 
   }
 
   @Override
-  public Void visitNonNull(GQLNonNullType type)
-  {
+  public Void visitNonNull(GQLNonNullType type) {
     type.type().apply(this);
-    out.print("!");
+    this.out.print("!");
     return null;
   }
 
   @Override
-  public Void visitList(GQLListType type)
-  {
+  public Void visitList(GQLListType type) {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public Void visitInterface(GQLInterfaceTypeDeclaration type)
-  {
-    out.print("interface ");
-    out.print(type.name());
+  public Void visitInterface(GQLInterfaceTypeDeclaration type) {
+    this.out.print("interface ");
+    this.out.print(type.name());
 
-    if (type.ifaces().size() > 0)
-    {
-      out.print(" implements ");
-      out.println(type.ifaces().stream().map(t -> t.name()).collect(Collectors.joining(", ")));
+    if (type.ifaces().size() > 0) {
+      this.out.print(" implements ");
+      this.out.println(type.ifaces().stream().map(t -> t.name()).collect(Collectors.joining(", ")));
     }
 
-    out.println(" {");
-    printFields(type.fields());
-    out.println("}");
+    this.out.println(" {");
+    this.printFields(type.fields());
+    this.out.println("}");
     return null;
 
   }
 
   @Override
-  public Void visitEnum(GQLEnumDeclaration type)
-  {
+  public Void visitEnum(GQLEnumDeclaration type) {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public Void visitDeclarationRef(GQLDeclarationRef type)
-  {
+  public Void visitDeclarationRef(GQLDeclarationRef type) {
     // TODO Auto-generated method stub
     return null;
   }
-  
-  
 
   @Override
-  public Void visitInput(GQLInputTypeDeclaration type)
-  {
+  public Void visitInput(GQLInputTypeDeclaration type) {
 
-    printComment(type.description(), "");
+    this.printComment(type.description(), "");
 
-    out.print("input ");
-    out.print(type.name());
-    out.println(" {");
-    printInputFields(type.fields());
-    out.println("}\n");
+    this.out.print("input ");
+    this.out.print(type.name());
+    this.out.println(" {");
+    this.printInputFields(type.fields());
+    this.out.println("}\n");
     return null;
   }
 
   ////
-  //// --------------------------------- Values ---------------------------------
+  //// --------------------------------- Values
+  //// ---------------------------------
   ////
 
   @Override
-  public Void visitVarValue(GQLVariableRef value)
-  {
-    out.print("$");
-    out.print(value.name());
+  public Void visitVarValue(GQLVariableRef value) {
+    this.out.print("$");
+    this.out.print(value.name());
     return null;
   }
 
   @Override
-  public Void visitListValue(GQLListValue value)
-  {
-    out.print("[ ");
+  public Void visitListValue(GQLListValue value) {
+    this.out.print("[ ");
     int c = 0;
-    for (GQLValue val : value.values())
-    {
-      if (c++ > 0)
-      {
-        out.print(", ");
+    for (final GQLValue val : value.values()) {
+      if (c++ > 0) {
+        this.out.print(", ");
       }
       val.apply(this);
     }
-    out.print(" ]");
+    this.out.print(" ]");
     return null;
   }
 
   @Override
-  public Void visitBooleanValue(GQLBooleanValue value)
-  {
-    switch (value)
-    {
+  public Void visitBooleanValue(GQLBooleanValue value) {
+    switch (value) {
       case FALSE:
-        out.print("false");
+        this.out.print("false");
         break;
       case TRUE:
-        out.print("trie");
+        this.out.print("trie");
         break;
       default:
         throw new RuntimeException("tri-boolean?");
@@ -264,51 +234,44 @@ public class TypePrinter implements GQLTypeVisitor<Void>, GQLValueVisitor<Void>,
   }
 
   @Override
-  public Void visitIntValue(GQLIntValue value)
-  {
-    out.print(value.value());
+  public Void visitIntValue(GQLIntValue value) {
+    this.out.print(value.value());
     return null;
   }
 
   @Override
-  public Void visitStringValue(GQLStringValue value)
-  {
-    out.print('"');
-    out.print(value.value().replaceAll("\"", "\\\""));
-    out.print('"');
+  public Void visitStringValue(GQLStringValue value) {
+    this.out.print('"');
+    this.out.print(value.value().replaceAll("\"", "\\\""));
+    this.out.print('"');
     return null;
   }
 
   @Override
-  public Void visitFloatValue(GQLFloatValue value)
-  {
+  public Void visitFloatValue(GQLFloatValue value) {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public Void visitEnumValueRef(GQLEnumValueRef value)
-  {
+  public Void visitEnumValueRef(GQLEnumValueRef value) {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public Void visitObjectValue(GQLObjectValue value)
-  {
-    out.print("{ ");
+  public Void visitObjectValue(GQLObjectValue value) {
+    this.out.print("{ ");
     int c = 0;
-    for (Map.Entry<String, GQLValue> val : value.entries().entrySet())
-    {
-      if (c++ > 0)
-      {
-        out.print(", ");
+    for (final Map.Entry<String, GQLValue> val : value.entries().entrySet()) {
+      if (c++ > 0) {
+        this.out.print(", ");
       }
-      out.print(val.getKey());
-      out.print(": ");
+      this.out.print(val.getKey());
+      this.out.print(": ");
       val.getValue().apply(this);
     }
-    out.print(" }");
+    this.out.print(" }");
     return null;
   }
 

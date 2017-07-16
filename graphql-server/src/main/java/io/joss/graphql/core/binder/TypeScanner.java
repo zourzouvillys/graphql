@@ -21,7 +21,7 @@ import io.joss.graphql.core.binder.reflect.SimpleTypedClass;
 import io.joss.graphql.core.binder.reflect.TypedClass;
 import io.joss.graphql.core.binder.reflect.TypedGetter;
 import io.joss.graphql.core.decl.GQLArgumentDefinition;
-import io.joss.graphql.core.decl.GQLDeclaration;
+import io.joss.graphql.core.decl.GQLTypeDeclaration;
 import io.joss.graphql.core.decl.GQLInputFieldDeclaration;
 import io.joss.graphql.core.decl.GQLInputTypeDeclaration;
 import io.joss.graphql.core.decl.GQLObjectTypeDeclaration;
@@ -45,13 +45,13 @@ public class TypeScanner implements BindingProvider
 {
 
   private GQLSchemaBuilder builder;
-  private Map<String, GQLDeclaration> decls = new HashMap<>();
+  private Map<String, GQLTypeDeclaration> decls = new HashMap<>();
 
   // references we have seen but not directly registered.
   private Set<Type> refs = new HashSet<>();
 
   private Map<Class<?>, OutputClassBinding> meta = new HashMap<>();
-  private Map<GQLDeclaration, OutputClassBinding> bindings = new HashMap<>();
+  private Map<GQLTypeDeclaration, OutputClassBinding> bindings = new HashMap<>();
 
   public TypeScanner(GQLSchemaBuilder builder)
   {
@@ -89,7 +89,7 @@ public class TypeScanner implements BindingProvider
    *
    */
 
-  public GQLDeclaration add(Class<?> type)
+  public GQLTypeDeclaration add(Class<?> type)
   {
 
     String name = calculateName(type);
@@ -174,7 +174,7 @@ public class TypeScanner implements BindingProvider
    * @return
    */
 
-  private GQLDeclaration add(OutputClassBinding binding, String name)
+  private GQLTypeDeclaration add(OutputClassBinding binding, String name)
   {
 
     if (decls.containsKey(name))
@@ -394,7 +394,7 @@ public class TypeScanner implements BindingProvider
    * @return
    */
 
-  public OutputClassBinding meta(GQLDeclaration type)
+  public OutputClassBinding meta(GQLTypeDeclaration type)
   {
 
     for (OutputClassBinding decl : bindings.values())

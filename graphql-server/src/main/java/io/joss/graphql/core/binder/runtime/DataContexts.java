@@ -1,6 +1,6 @@
 package io.joss.graphql.core.binder.runtime;
 
-import io.joss.graphql.core.decl.GQLDeclaration;
+import io.joss.graphql.core.decl.GQLTypeDeclaration;
 import io.joss.graphql.core.doc.GQLSelectedOperation;
 import io.joss.graphql.core.lang.GQLTypeRegistry;
 import lombok.experimental.UtilityClass;
@@ -22,7 +22,7 @@ public class DataContexts
    * @return
    */
 
-  public static DataContext build(GQLTypeRegistry registry, GQLDeclaration root, GQLSelectedOperation op)
+  public static DataContext build(GQLTypeRegistry registry, GQLTypeDeclaration root, GQLSelectedOperation op)
   {
     DataContext parent = new DataContext(registry, root, op.doc());
     op.operation().selections().forEach(s -> s.apply(parent));

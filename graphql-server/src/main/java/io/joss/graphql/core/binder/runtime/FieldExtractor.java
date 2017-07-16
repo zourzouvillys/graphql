@@ -1,6 +1,6 @@
 package io.joss.graphql.core.binder.runtime;
 
-import io.joss.graphql.core.decl.GQLDeclarationVisitor;
+import io.joss.graphql.core.decl.GQLTypeDeclarationVisitor;
 import io.joss.graphql.core.decl.GQLEnumDeclaration;
 import io.joss.graphql.core.decl.GQLInputTypeDeclaration;
 import io.joss.graphql.core.decl.GQLInterfaceTypeDeclaration;
@@ -23,7 +23,7 @@ import io.joss.graphql.core.types.GQLTypes;
  *
  */
 
-public class FieldExtractor implements GQLTypeVisitor<GQLParameterableFieldDeclaration>, GQLDeclarationVisitor<GQLParameterableFieldDeclaration>
+public class FieldExtractor implements GQLTypeVisitor<GQLParameterableFieldDeclaration>, GQLTypeDeclarationVisitor<GQLParameterableFieldDeclaration>
 {
 
   private GQLFieldSelection field;

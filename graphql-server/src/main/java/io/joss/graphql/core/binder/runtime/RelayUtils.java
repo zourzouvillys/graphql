@@ -1,6 +1,6 @@
 package io.joss.graphql.core.binder.runtime;
 
-import io.joss.graphql.core.decl.GQLDeclaration;
+import io.joss.graphql.core.decl.GQLTypeDeclaration;
 import io.joss.graphql.core.decl.GQLDeclarationVisitors;
 import io.joss.graphql.core.decl.GQLObjectTypeDeclaration;
 import io.joss.graphql.core.doc.GQLDocument;
@@ -70,7 +70,7 @@ public class RelayUtils
       return this.ctx;
     }
 
-    public GQLDeclaration edgeType()
+    public GQLTypeDeclaration edgeType()
     {
       return nodeCtx.declaration();
     }
@@ -80,7 +80,7 @@ public class RelayUtils
       return ctx.type();
     }
 
-    public GQLDeclaration decl()
+    public GQLTypeDeclaration decl()
     {
       return ctx.declaration();
     }

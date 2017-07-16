@@ -1,15 +1,15 @@
 package io.joss.graphql.generator.java;
 
-import io.joss.graphql.core.decl.GQLDeclaration;
-import io.joss.graphql.core.decl.GQLDeclarationVisitor;
+import io.joss.graphql.core.decl.GQLTypeDeclaration;
+import io.joss.graphql.core.decl.GQLTypeDeclarationVisitor;
 import io.joss.graphql.core.decl.GQLScalarTypeDeclaration;
-import io.joss.graphql.core.doc.DefaultDeclarationVisitor;
 import io.joss.graphql.core.lang.GQLTypeVisitor;
 import io.joss.graphql.core.types.GQLDeclarationRef;
 import io.joss.graphql.core.types.GQLListType;
 import io.joss.graphql.core.types.GQLNonNullType;
+import io.joss.graphql.core.utils.DefaultTypeDeclarationVisitor;
 
-public class MethodReturnVisitor extends DefaultDeclarationVisitor<String> implements GQLTypeVisitor<String>
+public class MethodReturnVisitor extends DefaultTypeDeclarationVisitor<String> implements GQLTypeVisitor<String>
 {
 
   private JavaClientGenerator gen;
@@ -44,10 +44,10 @@ public class MethodReturnVisitor extends DefaultDeclarationVisitor<String> imple
   @Override
   public String visitDeclarationRef(GQLDeclarationRef type)
   {
-    return type.apply((GQLDeclarationVisitor<String>) this);
+    return type.apply((GQLTypeDeclarationVisitor<String>) this);
   }
 
-  protected String visitDefault(GQLDeclaration type)
+  protected String visitDefault(GQLTypeDeclaration type)
   {
     return type.name();
   }

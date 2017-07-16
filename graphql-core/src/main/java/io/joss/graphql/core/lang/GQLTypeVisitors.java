@@ -1,6 +1,6 @@
 package io.joss.graphql.core.lang;
 
-import io.joss.graphql.core.decl.GQLDeclaration;
+import io.joss.graphql.core.decl.GQLTypeDeclaration;
 import io.joss.graphql.core.types.GQLDeclarationRef;
 import io.joss.graphql.core.types.GQLListType;
 import io.joss.graphql.core.types.GQLNonNullType;
@@ -51,22 +51,22 @@ public class GQLTypeVisitors {
 	 * if it's a non null, then it's the actual type
 	 */
 
-	public static GQLTypeVisitor<GQLDeclaration> rootType() {
+	public static GQLTypeVisitor<GQLTypeDeclaration> rootType() {
 
-		return new GQLTypeVisitor<GQLDeclaration>() {
+		return new GQLTypeVisitor<GQLTypeDeclaration>() {
 
 			@Override
-			public GQLDeclaration visitNonNull(GQLNonNullType type) {
+			public GQLTypeDeclaration visitNonNull(GQLNonNullType type) {
 				return type.type().apply(this);
 			}
 
 			@Override
-			public GQLDeclaration visitList(GQLListType type) {
+			public GQLTypeDeclaration visitList(GQLListType type) {
 				return type.type().apply(this);
 			}
 
 			@Override
-			public GQLDeclaration visitDeclarationRef(GQLDeclarationRef type) {
+			public GQLTypeDeclaration visitDeclarationRef(GQLDeclarationRef type) {
 				return type;
 			}
 
