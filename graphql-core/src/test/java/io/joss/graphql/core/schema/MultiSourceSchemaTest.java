@@ -1,5 +1,7 @@
 package io.joss.graphql.core.schema;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.FileNotFoundException;
 import java.nio.file.Paths;
 
@@ -43,6 +45,17 @@ public class MultiSourceSchemaTest {
   @Test
   public void checkLoopReferences() throws FileNotFoundException {
     final Model res = SchemaCompiler.compile("input Hello {}", "extend input Hello { field: Hello }");
+  }
+
+  @Test
+  public void checkTypeHandling() throws FileNotFoundException {
+    final Model m = SchemaCompiler.compile("input Hello { a: Hello, b: [Hello], c: Hello!, d: [Hello]!, e: [Hello!]!, f: [[Hello!]!]! }");
+    assertEquals("Hello", m.getInputType("Hello").getField("a").getType().toString());
+    assertEquals("[Hello]", m.getInputType("Hello").getField("b").getType().toString());
+    assertEquals("Hello!", m.getInputType("Hello").getField("c").getType().toString());
+    assertEquals("[Hello]!", m.getInputType("Hello").getField("d").getType().toString());
+    assertEquals("[Hello!]!", m.getInputType("Hello").getField("e").getType().toString());
+    assertEquals("[[Hello!]!]!", m.getInputType("Hello").getField("f").getType().toString());
   }
 
   @Test

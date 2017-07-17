@@ -12,10 +12,11 @@ public class ObjectField {
   private final Model model;
   private final GQLFieldDeclaration decl;
   private final ObjectType objectType;
+  private final AbstractType fieldType;
 
   public ObjectField(TypeBuilder builder, ObjectType object, Model model, GQLParameterableFieldDeclaration decl) {
     this.objectType = object;
-    builder.lookup(decl.type().apply(GQLTypeVisitors.rootType()).name());
+    this.fieldType = builder.lookup(decl.type().apply(GQLTypeVisitors.rootType()).name());
     this.model = model;
     this.decl = decl;
   }

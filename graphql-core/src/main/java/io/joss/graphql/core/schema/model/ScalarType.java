@@ -3,7 +3,7 @@ package io.joss.graphql.core.schema.model;
 import io.joss.graphql.core.schema.TypeVisitors;
 import io.joss.graphql.core.schema.TypeVisitors.NoReturnVisitor;
 
-public class ScalarType extends AbstractType {
+public class ScalarType extends AbstractType implements InputCompatibleType {
 
   ScalarType(TypeBuilder typebuilder, Model model, String name) {
     super(typebuilder, model, name);

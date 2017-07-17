@@ -36,7 +36,7 @@ public class TypeBuilder {
    * needed to handle loops in type references.
    */
 
-  AbstractType lookup(String name) {
+  <T extends Type> T lookup(String name) {
 
     final AbstractType ref = this.registered.get(name);
 
@@ -50,10 +50,10 @@ public class TypeBuilder {
         throw new TypeRefNotFoundException(name, this.current);
       }
 
-      return this.build(name, register);
+      return (T) this.build(name, register);
 
     }
-    return ref;
+    return (T) ref;
   }
 
   /**
@@ -66,7 +66,10 @@ public class TypeBuilder {
    */
 
   void register(AbstractType type, String name) {
-    Preconditions.checkState(!this.registered.containsKey(name), "Type '%s' alreay declared, stack %s", name, this.registered.get(name), this.current);
+    if (this.registered.containsKey(name)) {
+      // shouldn't ever happen, as we check duplicates on registration
+      throw new RuntimeException(name);
+    }
     this.registered.put(name, type);
   }
 
@@ -128,6 +131,10 @@ public class TypeBuilder {
     }
 
     return this.registered;
+  }
+
+  public Model getModel() {
+    return this.model;
   }
 
 }

@@ -72,6 +72,10 @@ public class Model {
     return (ObjectType) lookup;
   }
 
+  public InputType getInputType(String name) {
+    return (InputType) this.types.get(name);
+  }
+
   public InputType getInputType(GQLDeclarationRef value) {
     return (InputType) this.types.get(value.name());
   }

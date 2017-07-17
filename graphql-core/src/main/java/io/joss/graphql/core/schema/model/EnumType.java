@@ -3,7 +3,7 @@ package io.joss.graphql.core.schema.model;
 import io.joss.graphql.core.schema.TypeVisitors;
 import io.joss.graphql.core.schema.TypeVisitors.NoReturnVisitor;
 
-public class EnumType extends AbstractType {
+public class EnumType extends AbstractType implements InputCompatibleType {
 
   protected EnumType(TypeBuilder typebuilder, Model model, String name) {
     super(typebuilder, model, name);
