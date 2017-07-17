@@ -99,28 +99,28 @@ public class ParseContext {
         throw ParserExceptions.expect(this, "unsupported extend", null);
 
       case "schema":
-        return this.parseSchemaDefinition();
+        return this.parseSchemaDefinition().withDirectives(directives);
 
       case "interface":
-        return this.parseInterfaceDefinition();
+        return this.parseInterfaceDefinition().withDirectives(directives);
 
       case "type":
         return this.parseObjectTypeDefinition().withDescription(comment).withDirectives(directives);
 
       case "enum":
-        return this.parseEnumDefinition().withDescription(comment);
+        return this.parseEnumDefinition().withDescription(comment).withDirectives(directives);
 
       case "union":
-        return this.parseUnionDefinition().withDescription(comment);
+        return this.parseUnionDefinition().withDescription(comment).withDirectives(directives);
 
       case "input":
-        return this.parseInputDefinition().withDescription(comment);
+        return this.parseInputDefinition().withDescription(comment).withDirectives(directives);
 
       case "scalar":
-        return this.parseScalarDefinition().withDescription(comment);
+        return this.parseScalarDefinition().withDescription(comment).withDirectives(directives);
 
       case "directive":
-        return this.parseDirectiveDefinition().withDescription(comment);
+        return this.parseDirectiveDefinition().withDescription(comment).withDirectives(directives);
 
       default:
         throw ParserExceptions.expect(this, "type definition", null);
@@ -129,11 +129,8 @@ public class ParseContext {
   }
 
   private GQLScalarTypeDeclaration parseDirectiveDefinition() {
-
     this.require("directive");
-
     return GQLTypes.scalar(this.require(TokenType.NAME));
-
   }
 
   private GQLScalarTypeDeclaration parseScalarDefinition() {

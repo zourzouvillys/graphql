@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import org.junit.Test;
 
 import io.joss.graphql.core.schema.model.Model;
+import io.joss.graphql.core.schema.model.Schema;
 
 public class MultiSourceSchemaTest {
 
@@ -37,7 +38,11 @@ public class MultiSourceSchemaTest {
   @Test
   public void test1() throws FileNotFoundException {
     final Model res = SchemaCompiler.compile("input Hello {}", "extend input Hello {}");
-    res.process(new MySchemaProcessor());
+  }
+
+  @Test
+  public void checkLoopReferences() throws FileNotFoundException {
+    final Model res = SchemaCompiler.compile("input Hello {}", "extend input Hello { field: Hello }");
   }
 
   @Test
@@ -51,8 +56,13 @@ public class MultiSourceSchemaTest {
     @Override
     public void process(Model tree) {
 
-      tree.exports().stream()
-          .forEach(schema -> System.err.println(schema.query()));
+      System.err.println(tree.getType("AdminQueryRoot"));
+
+      tree.getSchemas().stream()
+          .forEach(schema -> {
+            System.err.println(schema.directives());
+            System.err.println(tree.getType(schema.value(Schema.QUERY)));
+          });
 
     }
 

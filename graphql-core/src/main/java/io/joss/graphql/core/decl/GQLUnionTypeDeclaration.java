@@ -2,6 +2,7 @@ package io.joss.graphql.core.decl;
 
 import java.util.List;
 
+import io.joss.graphql.core.doc.GQLDirective;
 import io.joss.graphql.core.types.GQLDeclarationRef;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -21,6 +22,9 @@ public final class GQLUnionTypeDeclaration implements GQLExtendableTypeDeclarati
 
   @Singular
   private final List<GQLDeclarationRef> types;
+
+  @Singular
+  private final List<GQLDirective> directives;
 
   @Override
   public String name() {

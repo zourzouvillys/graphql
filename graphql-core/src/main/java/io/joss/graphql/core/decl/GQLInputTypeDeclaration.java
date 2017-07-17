@@ -2,6 +2,7 @@ package io.joss.graphql.core.decl;
 
 import java.util.List;
 
+import io.joss.graphql.core.doc.GQLDirective;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.ToString;
@@ -18,6 +19,8 @@ public class GQLInputTypeDeclaration implements GQLExtendableTypeDeclaration {
 
   @Singular
   private final List<GQLInputFieldDeclaration> fields;
+  @Singular
+  private final List<GQLDirective> directives;
 
   public static class Builder {
   }

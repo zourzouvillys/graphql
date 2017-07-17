@@ -5,6 +5,7 @@ import java.util.function.Function;
 import io.joss.graphql.core.decl.GQLEnumDeclaration;
 import io.joss.graphql.core.decl.GQLInputTypeDeclaration;
 import io.joss.graphql.core.decl.GQLObjectTypeDeclaration;
+import io.joss.graphql.core.decl.GQLScalarTypeDeclaration;
 import io.joss.graphql.core.decl.GQLTypeDeclaration;
 import io.joss.graphql.core.decl.GQLTypeDeclarationVisitor;
 
@@ -52,6 +53,24 @@ public class FunctionalTypeDeclVisitor {
 
       @Override
       public R visitEnum(GQLEnumDeclaration type) {
+        return found.apply(type);
+      }
+
+      @Override
+      protected R visitDefault(GQLTypeDeclaration type) {
+        return other.apply(type);
+      }
+
+    };
+
+  }
+
+  public static <R> GQLTypeDeclarationVisitor<R> scalarType(Function<GQLScalarTypeDeclaration, R> found, Function<GQLTypeDeclaration, R> other) {
+
+    return new AbstractDefaultTypeDeclarationVisitor<R>() {
+
+      @Override
+      public R visitScalar(GQLScalarTypeDeclaration type) {
         return found.apply(type);
       }
 

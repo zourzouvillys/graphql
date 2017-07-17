@@ -2,6 +2,7 @@ package io.joss.graphql.core.decl;
 
 import java.util.List;
 
+import io.joss.graphql.core.doc.GQLDirective;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Singular;
@@ -20,6 +21,9 @@ public final class GQLEnumDeclaration implements GQLExtendableTypeDeclaration {
 
   @Singular
   private final List<GQLEnumValue> values;
+
+  @Singular
+  private final List<GQLDirective> directives;
 
   @Override
   public String name() {

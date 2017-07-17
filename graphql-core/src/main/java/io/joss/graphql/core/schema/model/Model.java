@@ -1,15 +1,17 @@
 package io.joss.graphql.core.schema.model;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import io.joss.graphql.core.decl.GQLTypeDeclaration;
+import com.google.common.base.Preconditions;
+
 import io.joss.graphql.core.schema.InputUnit;
 import io.joss.graphql.core.schema.SchemaProcessor;
-import io.joss.graphql.core.schema.TypeUtils;
+import io.joss.graphql.core.types.GQLDeclarationRef;
+import lombok.Getter;
 
 /**
  * a fully resolved schema.
@@ -20,66 +22,58 @@ import io.joss.graphql.core.schema.TypeUtils;
 
 public class Model {
 
-  private final Set<Type> types;
+  @Getter
+  private final Map<String, ? extends Type> types;
+
+  @Getter
   private final Set<Schema> schemas;
 
-  public Model(Set<Type> types, Set<Schema> schemas) {
-    this.types = types;
-    this.schemas = schemas;
+  public Model(List<InputUnit> inputs) {
+
+    final TypeBuilder b = new TypeBuilder(this, inputs);
+
+    this.types = b.build();
+
+    this.schemas = inputs.stream()
+        .flatMap(in -> in.schemas().stream())
+        .map(Schema::new)
+        .collect(Collectors.toSet());
+
+    // final NoObjectsInInputCheck checks = new NoObjectsInInputCheck();
+    // this.types.forEach(type -> type.apply(checks));
+
   }
 
   public void process(SchemaProcessor processor) {
     processor.process(this);
   }
 
-  /**
-   * The exposed schemas.
-   *
-   * deviation from standard GraphQL schema IDL: a schema may have a name.
-   *
-   */
-
-  public Set<Schema> exports() {
-    return this.schemas;
-  }
-
   public static Model build(List<InputUnit> inputs) {
-
-    final Set<Type> types = declaredSymbols(inputs).entrySet().stream()
-        .map(e -> TypeUtils.build(e.getKey(), e.getValue()))
-        .collect(Collectors.toSet());
-
-    final Set<Schema> schemas = inputs.stream()
-        .flatMap(in -> in.schemas().stream())
-        .map(Schema::new)
-        .collect(Collectors.toSet());
-
-    return new Model(types, schemas);
-
+    return new Model(inputs);
   }
 
-  /**
-   * complete list of declared symbols (including extensions). not checked for
-   * duplicates.
-   */
-
-  private static Map<String, Set<GQLTypeDeclaration>> declaredSymbols(List<InputUnit> inputs) {
-    return inputs.stream()
-        .flatMap(in -> in.types().entrySet().stream())
-        .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue(), Model::merge));
+  public Collection<InputType> getInputTypes() {
+    return this.types.entrySet().stream().filter(type -> type.getValue().getClass().isAssignableFrom(InputType.class))
+        .map(in -> InputType.class.cast(in.getValue()))
+        .collect(Collectors.toList());
   }
 
-  /**
-   * merge when we have a conflict.
-   *
-   * @param a
-   * @param b
-   * @return
-   */
+  public Type getType(String name) {
+    return this.types.get(name);
+  }
 
-  private static Set<GQLTypeDeclaration> merge(Set<GQLTypeDeclaration> a, Set<GQLTypeDeclaration> b) {
-    return Stream.concat(a.stream(), b.stream())
-        .collect(Collectors.toSet());
+  public Type getType(GQLDeclarationRef value) {
+    return this.getType(value.name());
+  }
+
+  public ObjectType getObjectType(GQLDeclarationRef value) {
+    final Type lookup = this.types.get(value.name());
+    Preconditions.checkNotNull(lookup, value.name());
+    return (ObjectType) lookup;
+  }
+
+  public InputType getInputType(GQLDeclarationRef value) {
+    return (InputType) this.types.get(value.name());
   }
 
 }

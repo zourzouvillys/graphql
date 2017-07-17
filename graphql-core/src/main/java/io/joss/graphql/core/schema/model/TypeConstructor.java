@@ -1,34 +1,38 @@
-package io.joss.graphql.core.schema;
+package io.joss.graphql.core.schema.model;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-
-import com.google.common.base.Strings;
 
 import io.joss.graphql.core.decl.GQLEnumDeclaration;
 import io.joss.graphql.core.decl.GQLExtendableTypeDeclaration;
 import io.joss.graphql.core.decl.GQLInputTypeDeclaration;
 import io.joss.graphql.core.decl.GQLObjectTypeDeclaration;
+import io.joss.graphql.core.decl.GQLScalarTypeDeclaration;
 import io.joss.graphql.core.decl.GQLTypeDeclaration;
 import io.joss.graphql.core.decl.GQLTypeDeclarationVisitor;
-import io.joss.graphql.core.schema.model.EnumType;
-import io.joss.graphql.core.schema.model.InputField;
-import io.joss.graphql.core.schema.model.InputType;
-import io.joss.graphql.core.schema.model.ObjectField;
-import io.joss.graphql.core.schema.model.ObjectType;
-import io.joss.graphql.core.schema.model.Type;
+import io.joss.graphql.core.schema.DiffereringTypeException;
+import io.joss.graphql.core.schema.DuplicateDeclarationException;
+import io.joss.graphql.core.schema.MissingTypeToExtendException;
+import io.joss.graphql.core.schema.NotImplementedException;
 import io.joss.graphql.core.utils.AbstractDefaultTypeDeclarationVisitor;
 import io.joss.graphql.core.utils.FunctionalTypeDeclVisitor;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 
-public class TypeBuilder extends AbstractDefaultTypeDeclarationVisitor<Void> {
+public class TypeConstructor extends AbstractDefaultTypeDeclarationVisitor<Void> {
 
   private final String name;
+  private final Model model;
+  private final TypeBuilder typebuilder;
 
-  public TypeBuilder(String name) {
+  public TypeConstructor(TypeBuilder builder, Model model, String name) {
+    this.typebuilder = builder;
     this.name = name;
+    this.model = model;
   }
 
   private static Void mixedTypeException(Collector<? extends GQLTypeDeclaration> collector, GQLTypeDeclaration type) {
@@ -37,66 +41,36 @@ public class TypeBuilder extends AbstractDefaultTypeDeclarationVisitor<Void> {
         String.format("Mixed Types while processing %s: %s", collector, type.getClass().getSimpleName()));
   }
 
+  private static Void unsupportedException(GQLScalarTypeDeclaration decl, GQLTypeDeclaration type) {
+    throw new DiffereringTypeException(
+        type.name(),
+        String.format("Can't extend type %s: %s", decl, type.getClass().getSimpleName()));
+  }
+
   //
   // --------------------------------
   //
 
   private InputType buildInputType(Collector<GQLInputTypeDeclaration> collector) {
-
     if (collector.decl == null) {
       throw new MissingTypeToExtendException(this.name, String.format("missing main decl of extended type '%s'", this.name));
     }
-
-    final InputType.InputTypeBuilder b = InputType.builder();
-
-    if (collector.decl.description() != null) {
-      b.description(Strings.emptyToNull(collector.decl.description()));
-    }
-
-    collector.decl.fields().stream().map(InputField::new).forEach(b::field);
-
-    for (final GQLInputTypeDeclaration ext : collector.extensions) {
-      if (ext.description() != null) {
-        b.description(Strings.emptyToNull(ext.description()));
-      }
-      ext.fields().stream().map(InputField::new).forEach(b::field);
-    }
-
-    b.name(this.name);
-
-    return b.build();
-
+    return new InputType(this.typebuilder, this.model, this.name, collector.decl, collector.extensions);
   }
 
   public ObjectType buildObjectType(Collector<GQLObjectTypeDeclaration> collector) {
-
     if (collector.decl == null) {
       throw new MissingTypeToExtendException(this.name, String.format("missing main decl of extended type '%s'", this.name));
     }
-
-    final ObjectType.ObjectTypeBuilder b = ObjectType.builder();
-
-    if (collector.decl.description() != null) {
-      b.description(Strings.emptyToNull(collector.decl.description()));
-    }
-
-    collector.decl.fields().stream().map(ObjectField::new).forEach(b::field);
-
-    for (final GQLObjectTypeDeclaration ext : collector.extensions) {
-      if (ext.description() != null) {
-        b.description(Strings.emptyToNull(ext.description()));
-      }
-      ext.fields().stream().map(ObjectField::new).forEach(b::field);
-    }
-
-    b.name(this.name);
-
-    return b.build();
-
+    return new ObjectType(this.typebuilder, this.model, this.name, collector.decl, collector.extensions);
   }
 
   public EnumType buildEnumType(Collector<GQLEnumDeclaration> collector) {
-    return new EnumType(this.name);
+    return new EnumType(this.typebuilder, this.model, this.name);
+  }
+
+  public ScalarType buildScalarType(GQLScalarTypeDeclaration collector) {
+    return new ScalarType(this.typebuilder, this.model, this.name);
   }
 
   //
@@ -130,7 +104,7 @@ public class TypeBuilder extends AbstractDefaultTypeDeclarationVisitor<Void> {
   private class Builder {
 
     GQLTypeDeclarationVisitor<Void> visitor;
-    Supplier<Type> apply;
+    Supplier<AbstractType> apply;
 
   }
 
@@ -141,7 +115,7 @@ public class TypeBuilder extends AbstractDefaultTypeDeclarationVisitor<Void> {
       final Collector<GQLInputTypeDeclaration> collector = new Collector<>();
       return new Builder(
           FunctionalTypeDeclVisitor.inputType(in -> collector.add(in), in -> mixedTypeException(collector, in)),
-          () -> TypeBuilder.this.buildInputType(collector));
+          () -> TypeConstructor.this.buildInputType(collector));
     }
 
     @Override
@@ -149,7 +123,7 @@ public class TypeBuilder extends AbstractDefaultTypeDeclarationVisitor<Void> {
       final Collector<GQLObjectTypeDeclaration> collector = new Collector<>();
       return new Builder(
           FunctionalTypeDeclVisitor.objectType(in -> collector.add(in), in -> mixedTypeException(collector, in)),
-          () -> TypeBuilder.this.buildObjectType(collector));
+          () -> TypeConstructor.this.buildObjectType(collector));
     }
 
     @Override
@@ -157,12 +131,25 @@ public class TypeBuilder extends AbstractDefaultTypeDeclarationVisitor<Void> {
       final Collector<GQLEnumDeclaration> collector = new Collector<>();
       return new Builder(
           FunctionalTypeDeclVisitor.enumType(in -> collector.add(in), in -> mixedTypeException(collector, in)),
-          () -> TypeBuilder.this.buildEnumType(collector));
+          () -> TypeConstructor.this.buildEnumType(collector));
+    }
+
+    @Override
+    public Builder visitScalar(GQLScalarTypeDeclaration type) {
+      final AtomicReference<GQLScalarTypeDeclaration> ref = new AtomicReference<>();
+      return new Builder(
+          FunctionalTypeDeclVisitor.scalarType(in -> {
+            ref.set(in);
+            return null;
+          }, in -> unsupportedException(ref.get(), in)),
+          () -> TypeConstructor.this.buildScalarType(ref.get()));
     }
 
     @Override
     protected Builder visitDefault(GQLTypeDeclaration type) {
+
       throw new NotImplementedException(String.format("Unsupported type '%s'", type.getClass().getSimpleName()));
+
     }
 
   }
@@ -175,8 +162,14 @@ public class TypeBuilder extends AbstractDefaultTypeDeclarationVisitor<Void> {
     return type.apply(this.builder.visitor);
   }
 
-  public Type build() {
+  public AbstractType build() {
     return this.builder.apply.get();
+  }
+
+  private final Map<String, AbstractType> registered = new HashMap<>();
+
+  void register(AbstractType type, String name) {
+    this.registered.put(name, type);
   }
 
 }

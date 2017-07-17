@@ -2,6 +2,7 @@ package io.joss.graphql.core.decl;
 
 import java.util.List;
 
+import io.joss.graphql.core.doc.GQLDirective;
 import io.joss.graphql.core.types.GQLDeclarationRef;
 import io.joss.graphql.core.types.GQLTypeReference;
 import lombok.Builder;
@@ -23,6 +24,9 @@ public final class GQLInterfaceTypeDeclaration implements GQLExtendableTypeDecla
 
   @Singular
   private final List<GQLParameterableFieldDeclaration> fields;
+
+  @Singular
+  private final List<GQLDirective> directives;
 
   public static class Builder {
 

@@ -3,20 +3,20 @@ package io.joss.graphql.core.schema.model;
 import io.joss.graphql.core.schema.TypeVisitors;
 import io.joss.graphql.core.schema.TypeVisitors.NoReturnVisitor;
 
-public class EnumType extends AbstractType {
+public class InterfaceType extends AbstractType {
 
-  protected EnumType(TypeBuilder typebuilder, Model model, String name) {
+  InterfaceType(TypeBuilder typebuilder, Model model, String name) {
     super(typebuilder, model, name);
   }
 
   @Override
   public <R> R apply(TypeVisitors.GenericReturnVisitor<R> visitor) {
-    return visitor.visitEnumType(this);
+    return visitor.visitInterfaceType(this);
   }
 
   @Override
   public void apply(NoReturnVisitor visitor) {
-    visitor.visitEnumType(this);
+    visitor.visitInterfaceType(this);
   }
 
 }

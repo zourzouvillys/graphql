@@ -1,5 +1,7 @@
 package io.joss.graphql.core.schema.model;
 
+import io.joss.graphql.core.schema.TypeVisitors;
+
 /**
  * base type for input, type, enum, union and scalar.
  *
@@ -10,5 +12,9 @@ package io.joss.graphql.core.schema.model;
 public interface Type {
 
   String getName();
+
+  <R> R apply(TypeVisitors.GenericReturnVisitor<R> visitor);
+
+  void apply(TypeVisitors.NoReturnVisitor visitor);
 
 }
