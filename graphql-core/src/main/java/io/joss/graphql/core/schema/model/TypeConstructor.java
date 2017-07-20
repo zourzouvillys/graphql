@@ -66,11 +66,11 @@ public class TypeConstructor extends AbstractDefaultTypeDeclarationVisitor<Void>
   }
 
   public EnumType buildEnumType(Collector<GQLEnumDeclaration> collector) {
-    return new EnumType(this.typebuilder, this.model, this.name);
+    return new EnumType(this.typebuilder, this.model, this.name, collector.decl, collector.extensions);
   }
 
   public ScalarType buildScalarType(GQLScalarTypeDeclaration collector) {
-    return new ScalarType(this.typebuilder, this.model, this.name);
+    return new ScalarType(this.typebuilder, this.model, this.name, collector);
   }
 
   //

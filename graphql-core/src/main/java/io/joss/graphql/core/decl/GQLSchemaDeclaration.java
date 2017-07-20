@@ -1,5 +1,6 @@
 package io.joss.graphql.core.decl;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +13,7 @@ import lombok.experimental.Wither;
 
 @Value
 @Wither
-final @Builder(builderClassName = "Builder") public class GQLSchemaDeclaration implements GQLDeclaration {
+ @Builder(builderClassName = "Builder") public class GQLSchemaDeclaration implements GQLDeclaration {
 
   private final String name;
   private final String description;
@@ -40,7 +41,11 @@ final @Builder(builderClassName = "Builder") public class GQLSchemaDeclaration i
     return visitor.visitSchemaDeclaration(this);
   }
 
+  @Override
   public List<GQLDirective> directives() {
+    if (this.directives == null) {
+      return Collections.emptyList();
+    }
     return this.directives;
   }
 

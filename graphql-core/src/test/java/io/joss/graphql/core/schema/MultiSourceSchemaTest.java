@@ -69,11 +69,9 @@ public class MultiSourceSchemaTest {
     @Override
     public void process(Model tree) {
 
-      System.err.println(tree.getType("AdminQueryRoot"));
-
       tree.getSchemas().stream()
+          .filter(schema -> schema.value(Schema.QUERY) != null)
           .forEach(schema -> {
-            System.err.println(schema.directives());
             System.err.println(tree.getType(schema.value(Schema.QUERY)));
           });
 

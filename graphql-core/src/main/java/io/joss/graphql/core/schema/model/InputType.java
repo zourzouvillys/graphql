@@ -20,7 +20,7 @@ public class InputType extends AbstractType implements InputCompatibleType {
 
   protected InputType(TypeBuilder typebuilder, Model model, String name, GQLInputTypeDeclaration decl, List<GQLInputTypeDeclaration> extensions) {
 
-    super(typebuilder, model, name);
+    super(typebuilder, model, name, decl, extensions);
 
     final List<String> descriptions = new LinkedList<>();
 

@@ -22,18 +22,18 @@ import io.joss.graphql.core.doc.GQLOpType;
 import io.joss.graphql.core.doc.GQLOperationDefinition;
 import io.joss.graphql.core.lang.GQLTypeRegistry;
 import io.joss.graphql.core.parser.GQLParser;
+import io.joss.graphql.core.parser.GQLSourceInput;
 import io.joss.graphql.core.utils.TypePrinter;
 
-public class GQLParserTest
-{
+public class GQLParserTest {
 
   private final GQLParser PARSER = new GQLParser();
 
   @Test
-  public void testParseQuery()
-  {
+  public void testParseQuery() {
 
-    final GQLOperationDefinition q = this.PARSER.parseQuery("query A ($input: Int = 1) @if(condition: true) { moo (test: \"hello\") @include(if: $something) }");
+    final GQLOperationDefinition q = this.PARSER
+        .parseQuery("query A ($input: Int = 1) @if(condition: true) { moo (test: \"hello\") @include(if: $something) }");
 
     assertNotNull(q);
 
@@ -56,40 +56,32 @@ public class GQLParserTest
                 .withArgs(newArrayList(stringArg("test", "hello"))));
 
   }
-  
 
   @Test
-  public void testParseInvalidQuery()
-  {
+  public void testParseInvalidQuery() {
 
-    GQLParser.parseDocument("{ d }");
-    
+    GQLParser.parseDocument("{ d }", GQLSourceInput.emptySource());
+
   }
 
-
   @Test
-  public void testParseSchema() throws Exception
-  {
+  public void testParseSchema() throws Exception {
 
-    GQLTypeRegistry schema = PARSER.parseSchema(streamToString(getClass().getResourceAsStream("/test.schema")));
+    final GQLTypeRegistry schema = this.PARSER.parseSchema(streamToString(this.getClass().getResourceAsStream("/test.schema")), GQLSourceInput.emptySource());
 
     schema.types().forEach(type -> {
-     
+
       type.apply(new TypePrinter(System.out));
       System.out.println();
-      
+
     });
 
   }
 
-  public static String streamToString(final InputStream inputStream) throws Exception
-  {
-    try (final BufferedReader br = new BufferedReader(new InputStreamReader(inputStream)))
-    {
+  public static String streamToString(final InputStream inputStream) throws Exception {
+    try (final BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
       return br.lines().collect(Collectors.joining("\n"));
-    }
-    catch (final IOException e)
-    {
+    } catch (final IOException e) {
       throw new RuntimeException(e);
     }
   }

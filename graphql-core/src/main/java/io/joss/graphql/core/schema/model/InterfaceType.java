@@ -1,12 +1,15 @@
 package io.joss.graphql.core.schema.model;
 
+import java.util.Collection;
+
+import io.joss.graphql.core.decl.GQLInterfaceTypeDeclaration;
 import io.joss.graphql.core.schema.TypeVisitors;
 import io.joss.graphql.core.schema.TypeVisitors.NoReturnVisitor;
 
 public class InterfaceType extends AbstractType {
 
-  InterfaceType(TypeBuilder typebuilder, Model model, String name) {
-    super(typebuilder, model, name);
+  InterfaceType(TypeBuilder typebuilder, Model model, String name, GQLInterfaceTypeDeclaration decl, Collection<GQLInterfaceTypeDeclaration> exts) {
+    super(typebuilder, model, name, decl, exts);
   }
 
   @Override

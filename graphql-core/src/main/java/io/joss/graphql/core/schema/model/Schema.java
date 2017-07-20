@@ -2,6 +2,7 @@ package io.joss.graphql.core.schema.model;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import io.joss.graphql.core.decl.GQLSchemaDeclaration;
 import io.joss.graphql.core.doc.GQLDirective;
@@ -26,8 +27,12 @@ public class Schema {
     return this.decl.entries().get(key);
   }
 
-  public List<GQLDirective> directives() {
+  public List<GQLDirective> getDirectives() {
     return this.decl.directives();
+  }
+
+  public Optional<GQLDirective> getDirective(String name) {
+    return this.decl.directives().stream().filter(p -> p.name().equals(name)).findAny();
   }
 
   public boolean hasKey(String key) {

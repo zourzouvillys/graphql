@@ -1,11 +1,14 @@
 package io.joss.graphql.core.types;
 
+import java.util.Collections;
+import java.util.List;
+
 import io.joss.graphql.core.decl.GQLTypeDeclaration;
 import io.joss.graphql.core.decl.GQLTypeDeclarationVisitor;
+import io.joss.graphql.core.doc.GQLDirective;
 import io.joss.graphql.core.lang.GQLTypeVisitor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 import lombok.experimental.Wither;
 
 /**
@@ -19,10 +22,8 @@ import lombok.experimental.Wither;
 
 @Wither
 @EqualsAndHashCode
-@ToString
 @Builder(builderClassName = "Builder")
-public final class GQLDeclarationRef implements GQLTypeReference, GQLTypeDeclaration
-{
+public final class GQLDeclarationRef implements GQLTypeReference, GQLTypeDeclaration {
 
   private final String name;
 
@@ -30,43 +31,41 @@ public final class GQLDeclarationRef implements GQLTypeReference, GQLTypeDeclara
   private final GQLTypeDeclaration ref;
 
   @Override
-  public String name()
-  {
+  public String name() {
     return this.name;
   }
 
   @Override
-  public <R> R apply(final GQLTypeVisitor<R> visitor)
-  {
+  public <R> R apply(final GQLTypeVisitor<R> visitor) {
     return visitor.visitDeclarationRef(this);
   }
 
   @Override
-  public <R> R apply(final GQLTypeDeclarationVisitor<R> visitor)
-  {
-    if (visitor == null)
-    {
+  public <R> R apply(final GQLTypeDeclarationVisitor<R> visitor) {
+    if (visitor == null) {
       throw new IllegalStateException();
     }
-    return ref.apply(visitor);
+    return this.ref.apply(visitor);
   }
 
-  public GQLTypeDeclaration ref()
-  {
+  public GQLTypeDeclaration ref() {
     return this.ref;
   }
 
   @Override
-  public String description()
-  {
+  public String description() {
     return this.ref.description();
   }
 
   // toString only ever used for diagnostics!
   @Override
-  public String toString()
-  {
-    return String.format("*%s", name);
+  public String toString() {
+    return String.format("*%s", this.name);
+  }
+
+  @Override
+  public List<GQLDirective> directives() {
+    return Collections.emptyList();
   }
 
 }

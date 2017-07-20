@@ -49,4 +49,9 @@ public final class GQLEnumDeclaration implements GQLExtendableTypeDeclaration {
     return this.extension;
   }
 
+  @Override
+  public List<GQLDirective> directives() {
+    return this.directives;
+  }
+
 }

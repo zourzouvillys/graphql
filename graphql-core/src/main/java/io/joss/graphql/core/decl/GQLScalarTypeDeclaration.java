@@ -75,4 +75,8 @@ public final class GQLScalarTypeDeclaration implements GQLTypeDeclaration {
     return false;
   }
 
+  public List<GQLDirective> directives() {
+    return this.directives;
+  }
+
 }

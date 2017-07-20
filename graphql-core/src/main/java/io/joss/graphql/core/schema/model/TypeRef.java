@@ -5,6 +5,8 @@ import io.joss.graphql.core.types.GQLTypeReference;
 
 public interface TypeRef<T extends Type> {
 
+  boolean isNullable();
+
   public static TypeRef<InputCompatibleType> createInputCompatible(TypeBuilder builder, GQLTypeReference type) {
     return create(builder, type, TypeRefOption.InputCompatible);
   }
@@ -14,5 +16,12 @@ public interface TypeRef<T extends Type> {
   }
 
   <R> R apply(TypeRefVisitors.GenericTypRefReturnVisitor<T, R> visitor);
+
+  /**
+   * For a simpletyperef, returns the type. for a Generic, returns the inner
+   * type.
+   */
+
+  Type getRawType();
 
 }

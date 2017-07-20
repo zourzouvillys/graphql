@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 
 import io.joss.graphql.core.decl.GQLDeclaration;
 import io.joss.graphql.core.parser.GQLParser;
+import io.joss.graphql.core.parser.GQLSourceInput;
 import io.joss.graphql.core.schema.model.Model;
 import lombok.SneakyThrows;
 
@@ -37,7 +38,11 @@ public class SchemaCompiler {
    */
 
   public static Model compile(String... strings) {
-    return new SchemaCompiler().add(strings).compile();
+    return compile(GQLSourceInput.emptySource(), strings);
+  }
+
+  public static Model compile(GQLSourceInput source, String... strings) {
+    return new SchemaCompiler().add(source, strings).compile();
   }
 
   /**
@@ -59,8 +64,8 @@ public class SchemaCompiler {
    * @throws FileNotFoundException
    */
 
-  public SchemaCompiler add(String... strings) {
-    Arrays.stream(strings).forEach(this::add);
+  public SchemaCompiler add(GQLSourceInput source, String... strings) {
+    Arrays.stream(strings).forEach(e -> this.add(source, e));
     return this;
   }
 
@@ -84,7 +89,7 @@ public class SchemaCompiler {
   @SneakyThrows
   public SchemaCompiler addFile(Path path) {
     try {
-      final List<GQLDeclaration> decls = this.parser.readSchema(new FileInputStream(path.toFile()));
+      final List<GQLDeclaration> decls = this.parser.readSchema(new FileInputStream(path.toFile()), new GQLSourceInput(path.toFile().toString()));
       final InputUnit input = new InputUnit(path.toString(), decls);
       return this.add(input);
     } catch (final Exception ex) {
@@ -105,9 +110,9 @@ public class SchemaCompiler {
    */
 
   @SneakyThrows
-  public SchemaCompiler add(String string) {
-    final List<GQLDeclaration> decls = this.parser.readSchema(string);
-    final InputUnit input = new InputUnit("[no-location]", decls);
+  public SchemaCompiler add(GQLSourceInput source, String string) {
+    final List<GQLDeclaration> decls = this.parser.readSchema(string, source);
+    final InputUnit input = new InputUnit(source.getName(), decls);
     return this.add(input);
   }
 

@@ -3,6 +3,7 @@ package io.joss.graphql.core.schema.model;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -63,6 +64,7 @@ public class Model {
   }
 
   public Type getType(GQLDeclarationRef value) {
+    Objects.requireNonNull(value);
     return this.getType(value.name());
   }
 
@@ -78,6 +80,12 @@ public class Model {
 
   public InputType getInputType(GQLDeclarationRef value) {
     return (InputType) this.types.get(value.name());
+  }
+
+  public Collection<ObjectType> getObjectTypes() {
+    return this.types.entrySet().stream().filter(type -> type.getValue().getClass().isAssignableFrom(ObjectType.class))
+        .map(in -> ObjectType.class.cast(in.getValue()))
+        .collect(Collectors.toList());
   }
 
 }

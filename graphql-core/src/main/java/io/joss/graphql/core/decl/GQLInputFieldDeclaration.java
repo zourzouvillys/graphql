@@ -1,8 +1,12 @@
 package io.joss.graphql.core.decl;
 
+import java.util.List;
+
+import io.joss.graphql.core.doc.GQLDirective;
 import io.joss.graphql.core.types.GQLTypeReference;
 import io.joss.graphql.core.value.GQLValue;
 import lombok.Builder;
+import lombok.Singular;
 import lombok.experimental.Wither;
 
 @Wither
@@ -17,6 +21,9 @@ public class GQLInputFieldDeclaration implements GQLFieldDeclaration {
   private final String deprecationReason;
 
   private final GQLValue defaultValue;
+
+  @Singular
+  private final List<GQLDirective> directives;
 
   @Override
   public String name() {
@@ -53,6 +60,11 @@ public class GQLInputFieldDeclaration implements GQLFieldDeclaration {
     }
     return sb.toString();
 
+  }
+
+  @Override
+  public List<GQLDirective> directives() {
+    return this.directives;
   }
 
 }

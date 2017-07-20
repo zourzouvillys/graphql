@@ -2,6 +2,7 @@ package io.joss.graphql.core.decl;
 
 import java.util.List;
 
+import io.joss.graphql.core.doc.GQLDirective;
 import io.joss.graphql.core.types.GQLTypeReference;
 import lombok.Builder;
 import lombok.Singular;
@@ -9,8 +10,7 @@ import lombok.experimental.Wither;
 
 @Wither
 @Builder(builderClassName = "Builder")
-public final class GQLParameterableFieldDeclaration implements GQLFieldDeclaration
-{
+public final class GQLParameterableFieldDeclaration implements GQLFieldDeclaration {
 
   private final String name;
   private final String description;
@@ -22,44 +22,46 @@ public final class GQLParameterableFieldDeclaration implements GQLFieldDeclarati
   @Singular
   private final List<GQLArgumentDefinition> args;
 
+  @Singular
+  private final List<GQLDirective> directives;
 
-  public String name()
-  {
+  @Override
+  public String name() {
     return this.name;
   }
 
-  public String description()
-  {
+  @Override
+  public String description() {
     return this.description;
   }
 
-  public GQLTypeReference type()
-  {
+  @Override
+  public GQLTypeReference type() {
     return this.type;
   }
 
-  public String deprecationReason()
-  {
+  @Override
+  public String deprecationReason() {
     return this.deprecationReason;
   }
 
-
-  public List<GQLArgumentDefinition> args()
-  {
+  public List<GQLArgumentDefinition> args() {
     return this.args;
   }
 
+  public List<GQLDirective> directives() {
+    return this.directives;
+  }
+
   @Override
-  public String toString()
-  {
+  public String toString() {
     final StringBuilder sb = new StringBuilder("GQLField(");
     sb.append(this.name()).append(": ").append(this.type());
     return sb.append(')').toString();
 
   }
 
-  public GQLArgumentDefinition arg(String name)
-  {
+  public GQLArgumentDefinition arg(String name) {
     return this.args.stream().filter(arg -> name.equals(arg.name())).findAny().orElse(null);
   }
 

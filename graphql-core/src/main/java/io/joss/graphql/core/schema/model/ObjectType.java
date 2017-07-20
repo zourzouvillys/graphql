@@ -15,7 +15,7 @@ public class ObjectType extends AbstractType {
 
   ObjectType(TypeBuilder typebuilder, Model model, String name, GQLObjectTypeDeclaration decl, List<GQLObjectTypeDeclaration> extensions) {
 
-    super(typebuilder, model, name);
+    super(typebuilder, model, name, decl, extensions);
 
     final List<String> descriptions = new LinkedList<>();
 

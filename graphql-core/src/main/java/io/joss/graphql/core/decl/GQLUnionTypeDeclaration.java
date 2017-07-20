@@ -50,4 +50,9 @@ public final class GQLUnionTypeDeclaration implements GQLExtendableTypeDeclarati
     return this.extension;
   }
 
+  @Override
+  public List<GQLDirective> directives() {
+    return this.directives;
+  }
+
 }

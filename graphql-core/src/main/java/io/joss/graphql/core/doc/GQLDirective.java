@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import io.joss.graphql.core.value.GQLValueConverters;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Singular;
@@ -34,8 +33,8 @@ public final class GQLDirective {
     return builder().name(name).args(Arrays.asList(args)).build();
   }
 
-  public Optional<String> arg(String string) {
-    return this.args.stream().filter(c -> c.name().equals(string)).findAny().map(x -> x.value().apply(GQLValueConverters.stringConverter()));
+  public Optional<GQLArgument> arg(String string) {
+    return this.args.stream().filter(c -> c.name().equals(string)).findAny();
   }
 
 }

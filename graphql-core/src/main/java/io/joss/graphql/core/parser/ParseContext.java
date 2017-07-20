@@ -8,6 +8,7 @@ import io.joss.graphql.core.decl.GQLArgumentDefinition;
 import io.joss.graphql.core.decl.GQLDeclaration;
 import io.joss.graphql.core.decl.GQLEnumDeclaration;
 import io.joss.graphql.core.decl.GQLEnumValue;
+import io.joss.graphql.core.decl.GQLEnumValue.GQLEnumValueBuilder;
 import io.joss.graphql.core.decl.GQLInputFieldDeclaration;
 import io.joss.graphql.core.decl.GQLInputTypeDeclaration;
 import io.joss.graphql.core.decl.GQLInterfaceTypeDeclaration;
@@ -45,8 +46,8 @@ public class ParseContext {
 
   private final Lexer lexer;
 
-  public ParseContext(final String doc) {
-    this.lexer = new Lexer(doc);
+  public ParseContext(final String doc, GQLSourceInput source) {
+    this.lexer = new Lexer(doc, source);
   }
 
   /**
@@ -165,6 +166,10 @@ public class ParseContext {
 
       final GQLParameterableFieldDeclaration.Builder fb = GQLParameterableFieldDeclaration.builder();
 
+      if (this.is("@")) {
+        fb.directives(this.parseDirectives());
+      }
+
       fb.name(this.require(TokenType.NAME));
 
       if (this.is("(")) {
@@ -213,6 +218,10 @@ public class ParseContext {
         fb.description(this.require(TokenType.COMMENT));
       }
 
+      if (this.is("@")) {
+        fb.directives(this.parseDirectives());
+      }
+
       fb.name(this.require(TokenType.NAME));
 
       if (this.is("(")) {
@@ -250,6 +259,10 @@ public class ParseContext {
 
       final GQLArgumentDefinition.Builder ab = GQLArgumentDefinition.builder();
 
+      if (this.is("@")) {
+        ab.directives(this.parseDirectives());
+      }
+
       ab.name(this.require(TokenType.NAME));
 
       this.require(":");
@@ -280,7 +293,14 @@ public class ParseContext {
     b.name(this.require(TokenType.NAME));
     this.require("{");
     while (!this.is("}")) {
-      b.value(GQLEnumValue.builder().name(this.require(TokenType.NAME)).build());
+
+      final GQLEnumValueBuilder eb = GQLEnumValue.builder();
+
+      if (this.is("@")) {
+        eb.directives(this.parseDirectives());
+      }
+
+      b.value(eb.name(this.require(TokenType.NAME)).build());
     }
     this.require("}");
 
@@ -337,6 +357,10 @@ public class ParseContext {
     while (!this.is("}")) {
 
       final GQLInputFieldDeclaration.Builder ib = GQLInputFieldDeclaration.builder();
+
+      if (this.is("@")) {
+        ib.directives(this.parseDirectives());
+      }
 
       ib.name(this.require(TokenType.NAME));
       this.require(":");
@@ -476,7 +500,7 @@ public class ParseContext {
       type = GQLTypes.listOf(this.parseTypeRef());
       this.require("]");
     } else {
-      throw new IllegalArgumentException(this.lexer.peek().toString());
+      throw ParserExceptions.create(this, "unexpected input");
     }
 
     if (this.skip("!")) {

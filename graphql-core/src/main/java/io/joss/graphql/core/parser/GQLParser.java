@@ -25,8 +25,8 @@ import io.joss.graphql.core.value.GQLValue;
 
 public class GQLParser {
 
-  public GQLValue parseValue(String value) {
-    final ParseContext ctx = new ParseContext(value);
+  public GQLValue parseValue(String value, GQLSourceInput source) {
+    final ParseContext ctx = new ParseContext(value, source);
     return ctx.parseValue();
   }
 
@@ -40,10 +40,15 @@ public class GQLParser {
    */
 
   public GQLDocument parse(final String doc) {
+    return this.parse(doc, GQLSourceInput.emptySource());
+
+  }
+
+  public GQLDocument parse(final String doc, GQLSourceInput source) {
     if (doc == null || doc.trim().length() == 0) {
       throw ParserExceptions.endOfStream();
     }
-    final ParseContext ctx = new ParseContext(doc);
+    final ParseContext ctx = new ParseContext(doc, source);
     final GQLDocument mdoc = ctx.parseDocument();
     return this.validate(mdoc);
   }
@@ -71,7 +76,12 @@ public class GQLParser {
    */
 
   public GQLOperationDefinition parseQuery(final String doc) {
-    final ParseContext ctx = new ParseContext(doc);
+    return this.parseQuery(doc, GQLSourceInput.emptySource());
+
+  }
+
+  public GQLOperationDefinition parseQuery(final String doc, GQLSourceInput source) {
+    final ParseContext ctx = new ParseContext(doc, source);
     return ctx.parseOperation();
   }
 
@@ -85,12 +95,12 @@ public class GQLParser {
    * @return A list of schema declarations encountered.
    */
 
-  public List<GQLDeclaration> readSchema(String schema) {
-    return new ParseContext(schema).parseSchema();
+  public List<GQLDeclaration> readSchema(String schema, GQLSourceInput source) {
+    return new ParseContext(schema, source).parseSchema();
   }
 
-  public List<GQLDeclaration> readSchema(InputStream schema) {
-    return this.readSchema(streamToString(schema));
+  public List<GQLDeclaration> readSchema(InputStream schema, GQLSourceInput source) {
+    return this.readSchema(streamToString(schema), source);
   }
 
   /**
@@ -101,9 +111,13 @@ public class GQLParser {
    */
 
   public GQLTypeRegistry parseSchema(String schema) {
+    return this.parseSchema(schema, GQLSourceInput.emptySource());
+  }
+
+  public GQLTypeRegistry parseSchema(String schema, GQLSourceInput source) {
     return new GQLSchemaBuilder()
         .add(GQLTypes.builtins())
-        .add(new ParseContext(schema).parseSchema())
+        .add(new ParseContext(schema, source).parseSchema())
         .build();
   }
 
@@ -115,8 +129,12 @@ public class GQLParser {
    */
 
   public GQLTypeRegistry parseSchema(InputStream schema) {
+    return this.parseSchema(schema, GQLSourceInput.emptySource());
+  }
+
+  public GQLTypeRegistry parseSchema(InputStream schema, GQLSourceInput source) {
     return new GQLSchemaBuilder().add(GQLTypes.builtins())
-        .add(new ParseContext(streamToString(schema)).parseSchema()).build();
+        .add(new ParseContext(streamToString(schema), source).parseSchema()).build();
   }
 
   private static String streamToString(final InputStream inputStream) {
@@ -128,14 +146,22 @@ public class GQLParser {
   }
 
   public static GQLDocument parseDocument(String input) {
-    return new GQLParser().parse(input);
+    return new GQLParser().parse(input, GQLSourceInput.emptySource());
+  }
+
+  public static GQLDocument parseDocument(String input, GQLSourceInput source) {
+    return new GQLParser().parse(input, source);
   }
 
   public static GQLDocument parseDocument(InputStream input) {
+    return parseDocument(input, GQLSourceInput.emptySource());
+  }
+
+  public static GQLDocument parseDocument(InputStream input, GQLSourceInput source) {
     if (input == null) {
       throw new IllegalArgumentException("input");
     }
-    return parseDocument(streamToString(input));
+    return parseDocument(streamToString(input), source);
   }
 
 }

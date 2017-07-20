@@ -68,4 +68,9 @@ public final class GQLInterfaceTypeDeclaration implements GQLExtendableTypeDecla
     return this.extension;
   }
 
+  @Override
+  public List<GQLDirective> directives() {
+    return this.directives;
+  }
+
 }

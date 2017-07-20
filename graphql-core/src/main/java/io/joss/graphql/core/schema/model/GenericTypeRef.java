@@ -1,14 +1,17 @@
 package io.joss.graphql.core.schema.model;
 
 import io.joss.graphql.core.schema.TypeRefVisitors.GenericTypRefReturnVisitor;
+import lombok.Getter;
 
 public class GenericTypeRef<T extends Type> implements TypeRef<T> {
 
-  private final TypeRef<T> type;
+  @Getter
+  private final TypeRef<T> typeRef;
+  @Getter
   private final boolean nullable;
 
   GenericTypeRef(TypeRef<T> type, boolean nullable) {
-    this.type = type;
+    this.typeRef = type;
     this.nullable = nullable;
   }
 
@@ -16,7 +19,7 @@ public class GenericTypeRef<T extends Type> implements TypeRef<T> {
   public String toString() {
     final StringBuilder sb = new StringBuilder();
     sb.append("[");
-    sb.append(this.type.toString());
+    sb.append(this.typeRef.toString());
     sb.append("]");
     if (!this.nullable) {
       sb.append("!");
@@ -27,6 +30,11 @@ public class GenericTypeRef<T extends Type> implements TypeRef<T> {
   @Override
   public <R> R apply(GenericTypRefReturnVisitor<T, R> visitor) {
     return visitor.visitGenericTypeRef(this);
+  }
+
+  @Override
+  public Type getRawType() {
+    return this.typeRef.getRawType();
   }
 
 }

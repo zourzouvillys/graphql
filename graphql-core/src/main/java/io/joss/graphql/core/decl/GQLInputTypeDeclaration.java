@@ -19,6 +19,7 @@ public class GQLInputTypeDeclaration implements GQLExtendableTypeDeclaration {
 
   @Singular
   private final List<GQLInputFieldDeclaration> fields;
+
   @Singular
   private final List<GQLDirective> directives;
 
@@ -47,6 +48,11 @@ public class GQLInputTypeDeclaration implements GQLExtendableTypeDeclaration {
   @Override
   public boolean isExtension() {
     return this.extension;
+  }
+
+  @Override
+  public List<GQLDirective> directives() {
+    return this.directives;
   }
 
 }

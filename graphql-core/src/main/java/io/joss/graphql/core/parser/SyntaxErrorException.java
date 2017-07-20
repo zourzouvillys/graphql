@@ -1,60 +1,65 @@
 package io.joss.graphql.core.parser;
 
-public class SyntaxErrorException extends GQLException
-{
+import io.joss.graphql.core.parser.Lexer.LineInfo;
+
+public class SyntaxErrorException extends GQLException {
 
   private static final long serialVersionUID = 1L;
 
-  private ParseContext ctx;
+  private final ParseContext ctx;
   private String expected;
-  private String message;
+  private final String message;
 
-  public SyntaxErrorException(ParseContext ctx, String expected, String message)
-  {
-    super(String.format("syntax error at or near '%s': expected '%s' %s", (ctx.lexer().peek() == null) ? "EOF" : ctx.lexer().peek().toString(), expected, message));
+  public SyntaxErrorException(ParseContext ctx, String expected, String message) {
+    super(String.format("syntax error on %s at or near '%s': expected '%s' %s", calculateLine(ctx),
+        (ctx.lexer().peek() == null) ? "EOF" : ctx.lexer().peek().toString(), expected, message));
     this.ctx = ctx;
     this.expected = expected;
     this.message = message;
   }
 
-  public SyntaxErrorException(ParseContext ctx, String message)
-  {
-    super(String.format("syntax error at or near '%s': %s", (ctx.lexer().peek() == null) ? "EOF" : ctx.lexer().peek().toString(), message));
+  public SyntaxErrorException(ParseContext ctx, String message) {
+    super(String.format("syntax error on %s at or near '%s': %s", calculateLine(ctx), (ctx.lexer().peek() == null) ? "EOF" : ctx.lexer().peek().toString(),
+        message));
     this.ctx = ctx;
     this.message = message;
   }
 
+  private static LineInfo calculateLine(ParseContext ctx) {
+    if (ctx.lexer().peek() == null) {
+      return null;
+    }
+    final SourcePosition pos = ctx.lexer().peek().position();
+    return ctx.lexer().lineNumberAtOffset(pos.start());
+  }
+
   /**
    * returns the line (or a bunch of context) related to this error.
-   * 
+   *
    * @return
    */
 
-  public String line()
-  {
-    return ctx.lexer().input();
+  public String line() {
+    return this.ctx.lexer().input();
   }
 
-  public int position()
-  {
-    if (ctx.lexer().peek() == null)
-      return ctx.lexer().input().length();
+  public int position() {
+    if (this.ctx.lexer().peek() == null) {
+      return this.ctx.lexer().input().length();
+    }
     return this.ctx.lexer().peek().position().start();
   }
 
-  public int lineNumber()
-  {
+  public int lineNumber() {
     return 1;
   }
 
-  public String expected()
-  {
-    return expected;
+  public String expected() {
+    return this.expected;
   }
 
-  public String message()
-  {
-    return message;
+  public String message() {
+    return this.message;
   }
 
 }

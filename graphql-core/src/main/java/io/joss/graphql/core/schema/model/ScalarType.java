@@ -1,12 +1,13 @@
 package io.joss.graphql.core.schema.model;
 
+import io.joss.graphql.core.decl.GQLScalarTypeDeclaration;
 import io.joss.graphql.core.schema.TypeVisitors;
 import io.joss.graphql.core.schema.TypeVisitors.NoReturnVisitor;
 
-public class ScalarType extends AbstractType implements InputCompatibleType {
+public final class ScalarType extends AbstractType implements InputCompatibleType {
 
-  ScalarType(TypeBuilder typebuilder, Model model, String name) {
-    super(typebuilder, model, name);
+  ScalarType(TypeBuilder typebuilder, Model model, String name, GQLScalarTypeDeclaration decl) {
+    super(typebuilder, model, name, decl);
   }
 
   @Override
