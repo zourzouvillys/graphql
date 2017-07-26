@@ -1,7 +1,11 @@
 package io.joss.graphql.core.value;
 
-public interface GQLValueVisitor<R>
-{
+/**
+ * pass an instance of this to {@link GQLValue#apply(GQLValueVisitor)} to get to
+ * the typed instance.
+ */
+
+public interface GQLValueVisitor<R> {
 
   /**
    * a reference to a named variable.
@@ -10,7 +14,7 @@ public interface GQLValueVisitor<R>
   R visitVarValue(GQLVariableRef value);
 
   /**
-   * A (possible untyped) set of key/values.
+   * A (possibly untyped) set of key/values.
    */
 
   R visitObjectValue(GQLObjectValue value);

@@ -1,8 +1,5 @@
 /**
- * The various parts of a GQL query document.
- * 
- * @author theo
- *
+ * model that represents a GraphQL query.
  */
 
 package io.joss.graphql.core.doc;

@@ -1,4 +1,11 @@
 
+apply plugin: 'java-library'
+
 dependencies {
-    compile group: project.group, name: "graphql-core", version: project.version
+	compileOnly 'org.projectlombok:lombok:1.16.18'
+    implementation 'com.google.guava:guava:22.0'
+    compile project(':graphql-core')
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.assertj:assertj-core:3.6.1'
 }
+

@@ -1,8 +1,15 @@
 
+apply plugin: 'java-library'
+
 dependencies {
-    compile libraries.lombok
-	compile libraries.guava
-    testCompile libraries.junit
-	testCompile libraries.jackson.databind
+	compileOnly 'org.projectlombok:lombok:1.16.18'
+    implementation 'com.google.guava:guava:22.0'
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.8.9'
+    testImplementation 'org.assertj:assertj-core:3.6.1'
+}
+
+repositories {
+    jcenter()
 }
 

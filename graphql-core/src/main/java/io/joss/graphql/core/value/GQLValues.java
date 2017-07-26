@@ -7,26 +7,23 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 
-public class GQLValues
-{
+public class GQLValues {
 
   /**
    * Returns a reference to the given variable.
    */
 
-  public static GQLVariableRef variable(final String name)
-  {
+  public static GQLVariableRef variable(final String name) {
     return GQLVariableRef.builder().name(name).build();
   }
 
   /**
-   * 
+   *
    * @param values
    * @return
    */
 
-  public static GQLObjectValue objectValue(Map<String, GQLValue> values)
-  {
+  public static GQLObjectValue objectValue(Map<String, GQLValue> values) {
     return GQLObjectValue.builder().values(values).build();
   }
 
@@ -34,8 +31,7 @@ public class GQLValues
    * The boolean false value.
    */
 
-  public static GQLBooleanValue booleanFalse()
-  {
+  public static GQLBooleanValue booleanFalse() {
     return GQLBooleanValue.FALSE;
   }
 
@@ -43,8 +39,7 @@ public class GQLValues
    * The boolean true value.
    */
 
-  public static GQLBooleanValue booleanTrue()
-  {
+  public static GQLBooleanValue booleanTrue() {
     return GQLBooleanValue.TRUE;
   }
 
@@ -52,29 +47,26 @@ public class GQLValues
    * Provides the boolean value representation of the java value.
    */
 
-  public static GQLBooleanValue booleanValue(final boolean value)
-  {
+  public static GQLBooleanValue booleanValue(final boolean value) {
     return value ? GQLBooleanValue.TRUE : GQLBooleanValue.FALSE;
   }
 
-  public static GQLIntValue intValue(final long value)
-  {
+  public static GQLIntValue intValue(final long value) {
     return GQLIntValue.from(value);
   }
 
-  public static GQLStringValue stringValue(final String value)
-  {
+  public static GQLStringValue stringValue(final String value) {
     return GQLStringValue.from(value);
   }
 
   /**
-   * Note: the float value is actually a double in java (like an int is actually a ong). sorry for the confusion.
+   * Note: the float value is actually a double in java (like an int is actually
+   * a ong). sorry for the confusion.
    *
    * @return
    */
 
-  public static GQLValue floatValue(final double value)
-  {
+  public static GQLValue floatValue(final double value) {
     return GQLFloatValue.from(value);
   }
 
@@ -82,18 +74,15 @@ public class GQLValues
    * an empty list.
    */
 
-  public static GQLListValue listValue()
-  {
+  public static GQLListValue listValue() {
     return GQLListValue.emptyListValue();
   }
 
-  public static GQLValue listValue(List<GQLValue> values)
-  {
+  public static GQLValue listValue(List<GQLValue> values) {
     return GQLListValue.builder().values(values).build();
   }
 
-  public static GQLValue listValue(GQLValue... values)
-  {
+  public static GQLValue listValue(GQLValue... values) {
     return GQLListValue.newValueList(values);
   }
 
@@ -101,8 +90,7 @@ public class GQLValues
    * An object of keys/values.
    */
 
-  public static GQLObjectValue objectValue()
-  {
+  public static GQLObjectValue objectValue() {
     return GQLObjectValue.emptyObjectValue();
   }
 
@@ -110,8 +98,7 @@ public class GQLValues
    * A reference to an enum value.
    */
 
-  public static GQLValue enumValueRef(final String value)
-  {
+  public static GQLValue enumValueRef(final String value) {
     return GQLEnumValueRef.from(value);
   }
 

@@ -11,64 +11,65 @@ import lombok.ToString;
 import lombok.experimental.Wither;
 
 /**
- * A list of {@link GQLValue} instances. A list value doesn't have a type itself, and attempting to get it will throw an exception.
+ * A list of {@link GQLValue} instances. A list value doesn't have a type
+ * itself, and attempting to get it will throw an exception.
  */
 
 @EqualsAndHashCode
 @ToString
 @Wither
 @Builder(builderClassName = "Builder")
-public final class GQLListValue implements GQLValue
-{
+public final class GQLListValue implements GQLValue {
 
   private static final GQLListValue EMPTY = builder().build();
 
   @Singular
   private final List<GQLValue> values;
 
-  public List<GQLValue> values()
-  {
+  public List<GQLValue> values() {
     return this.values;
   }
 
   @Override
-  public <R> R apply(final GQLValueVisitor<R> visitor)
-  {
+  public <R> R apply(final GQLValueVisitor<R> visitor) {
     return visitor.visitListValue(this);
   }
 
   /**
-   * 
+   *
    */
 
-  public static GQLListValue emptyListValue()
-  {
+  public static GQLListValue emptyListValue() {
     return EMPTY;
   }
 
   /**
-   * 
+   *
    */
 
-  public static GQLListValue newValueList(GQLValue... values)
-  {
+  public static GQLListValue newValueList(GQLValue... values) {
     return builder().values(Arrays.asList(values)).build();
   }
 
   /**
-   * Note: toStrings are never used for output to clients. Only degbugging/logging.
+   * Note: toStrings are never used for output to clients. Only
+   * degbugging/logging.
    */
 
   @Override
-  public String toString()
-  {
-    StringBuilder sb = new StringBuilder();
+  public String toString() {
+    final StringBuilder sb = new StringBuilder();
     sb.append("[ ");
-    sb.append(values().stream()
+    sb.append(this.values().stream()
         .map(e -> e == null ? "null" : e.toString())
         .collect(Collectors.joining(", ")));
     sb.append(" ]");
     return sb.toString();
+  }
+
+  @Override
+  public GQLValueType type() {
+    return GQLValueType.List;
   }
 
 }

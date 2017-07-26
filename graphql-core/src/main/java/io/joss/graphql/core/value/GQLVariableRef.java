@@ -16,8 +16,7 @@ import lombok.experimental.Wither;
 @ToString
 @Builder
 @Wither
-public final class GQLVariableRef implements GQLValue
-{
+public final class GQLVariableRef implements GQLValue {
 
   private final String name;
 
@@ -27,16 +26,18 @@ public final class GQLVariableRef implements GQLValue
    * @return
    */
 
-  public String name()
-  {
+  public String name() {
     return this.name;
   }
 
+  @Override
+  public <R> R apply(final GQLValueVisitor<R> visitor) {
+    return visitor.visitVarValue(this);
+  }
 
   @Override
-  public <R> R apply(final GQLValueVisitor<R> visitor)
-  {
-    return visitor.visitVarValue(this);
+  public GQLValueType type() {
+    return GQLValueType.VariableRef;
   }
 
 }

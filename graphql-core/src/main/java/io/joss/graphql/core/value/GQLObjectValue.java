@@ -12,8 +12,7 @@ import lombok.experimental.Wither;
 @EqualsAndHashCode
 @Wither
 @Builder(builderClassName = "Builder")
-public final class GQLObjectValue implements GQLValue
-{
+public final class GQLObjectValue implements GQLValue {
 
   private static final GQLObjectValue EMPTY = builder().build();
 
@@ -21,78 +20,75 @@ public final class GQLObjectValue implements GQLValue
   private final Map<String, GQLValue> values;
 
   @Override
-  public <R> R apply(final GQLValueVisitor<R> visitor)
-  {
+  public <R> R apply(final GQLValueVisitor<R> visitor) {
     return visitor.visitObjectValue(this);
   }
 
-  public Map<String, GQLValue> entries()
-  {
+  public Map<String, GQLValue> entries() {
     return this.values;
   }
 
-  public Optional<GQLValue> entry(String key)
-  {
-    return Optional.ofNullable(values.get(key));
+  public Optional<GQLValue> entry(String key) {
+    return Optional.ofNullable(this.values.get(key));
   }
 
   /**
-   * Note: toStrings are never used for output to clients. Only degbugging/logging.
+   * Note: toStrings are never used for output to clients. Only
+   * degbugging/logging.
    */
 
   @Override
-  public String toString()
-  {
-    StringBuilder sb = new StringBuilder();
+  public String toString() {
+    final StringBuilder sb = new StringBuilder();
     sb.append("{");
-    sb.append(entries().entrySet().stream()
+    sb.append(this.entries().entrySet().stream()
         .map(e -> String.format(" %s: %s", e.getKey(), e.getValue()))
         .collect(Collectors.joining(",")));
     sb.append(" }");
     return sb.toString();
   }
 
-  public static GQLObjectValue emptyObjectValue()
-  {
+  public static GQLObjectValue emptyObjectValue() {
     return EMPTY;
   }
 
-  public static GQLObjectValue singleValue(String key, String value)
-  {
+  public static GQLObjectValue singleValue(String key, String value) {
     return GQLObjectValue.builder().value(key, GQLValues.stringValue(value)).build();
   }
 
-  public static GQLObjectValue singleValue(String key, GQLValue value)
-  {
+  public static GQLObjectValue singleValue(String key, GQLValue value) {
     return GQLObjectValue.builder().value(key, value).build();
   }
 
   /**
-   * Creates a visitor which when applied to a gQLValue will return the specified field name, if it exists. Otherwise returens null.
-   * 
+   * Creates a visitor which when applied to a gQLValue will return the
+   * specified field name, if it exists. Otherwise returens null.
+   *
    * @param fieldName
    * @return
    */
 
-  public static GQLValueVisitor<GQLValue> fieldExtractor(String fieldName)
-  {
+  public static GQLValueVisitor<GQLValue> fieldExtractor(String fieldName) {
 
     return new DefaultValueVisitor<GQLValue>() {
 
       @Override
-      public GQLValue visitDefaultValue(GQLValue value)
-      {
+      public GQLValue visitDefaultValue(GQLValue value) {
         return null;
       }
 
       @Override
-      public GQLValue visitObjectValue(GQLObjectValue value)
-      {
+      public GQLValue visitObjectValue(GQLObjectValue value) {
         return value.entry(fieldName).orElse(null);
       }
 
     };
 
+  }
+
+  @Override
+  public GQLValueType type() {
+    return GQLValueType.Object;
   }
 
 }
