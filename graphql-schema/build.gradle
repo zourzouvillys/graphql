@@ -1,0 +1,4 @@
+
+dependencies {
+    compile group: project.group, name: "graphql-core", version: project.version
+}

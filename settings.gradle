@@ -1,5 +1,14 @@
 
-[ 'graphql-core', 'graphql-server', 'graphql-generator', 'graphql-cli', 'graphql-client', 'graphql-jersey', 'graphql-grpc' ].each { _ ->
+[
+ 'graphql-core',
+ 'graphql-server', 
+ 'graphql-generator', 
+ 'graphql-cli', 
+ 'graphql-client', 
+ 'graphql-jersey', 
+ 'graphql-grpc',
+ 'graphql-schema'
+ ].each { _ ->
 
 
   include _

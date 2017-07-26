@@ -5,16 +5,6 @@ import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-import io.joss.graphql.core.schema.TypeVisitors;
-import io.joss.graphql.core.schema.TypeVisitors.GenericReturnVisitor;
-import io.joss.graphql.core.schema.model.EnumType;
-import io.joss.graphql.core.schema.model.InputCompatibleType;
-import io.joss.graphql.core.schema.model.InputType;
-import io.joss.graphql.core.schema.model.InterfaceType;
-import io.joss.graphql.core.schema.model.ObjectType;
-import io.joss.graphql.core.schema.model.ScalarType;
-import io.joss.graphql.core.schema.model.UnionType;
-
 public class TypeUtils {
 
   /**
@@ -100,42 +90,6 @@ public class TypeUtils {
       return wanted.isAssignableFrom((Class<?>) ptype.getRawType());
     }
     return false;
-  }
-
-  public static TypeVisitors.GenericReturnVisitor<InputCompatibleType> inputCompatibleTypeExtractor() {
-    return new GenericReturnVisitor<InputCompatibleType>() {
-
-      @Override
-      public InputCompatibleType visitUnionType(UnionType value) {
-        return null;
-      }
-
-      @Override
-      public InputCompatibleType visitScalarType(ScalarType value) {
-        return value;
-      }
-
-      @Override
-      public InputCompatibleType visitObjectType(ObjectType value) {
-        return null;
-      }
-
-      @Override
-      public InputCompatibleType visitInterfaceType(InterfaceType value) {
-        return null;
-      }
-
-      @Override
-      public InputCompatibleType visitInputType(InputType value) {
-        return value;
-      }
-
-      @Override
-      public InputCompatibleType visitEnumType(EnumType value) {
-        return value;
-      }
-
-    };
   }
 
 }
