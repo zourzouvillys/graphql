@@ -1,6 +1,7 @@
 package io.joss.graphql.core.parser;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -87,41 +88,41 @@ public class ParseContext {
       case "extend":
         this.require("extend");
         if (this.is("input")) {
-          return this.parseInputDefinition().withExtension(true).withDescription(comment);
+          return this.parseInputDefinition().withExtension(true).withDescription(comment).withLocation(this.lexer.position());
         } else if (this.is("type")) {
-          return this.parseObjectTypeDefinition().withExtension(true).withDescription(comment);
+          return this.parseObjectTypeDefinition().withExtension(true).withDescription(comment).withLocation(this.lexer.position());
         } else if (this.is("union")) {
-          return this.parseUnionDefinition().withExtension(true).withDescription(comment);
+          return this.parseUnionDefinition().withExtension(true).withDescription(comment).withLocation(this.lexer.position());
         } else if (this.is("enum")) {
-          return this.parseEnumDefinition().withExtension(true).withDescription(comment);
+          return this.parseEnumDefinition().withExtension(true).withDescription(comment).withLocation(this.lexer.position());
         } else if (this.is("interface")) {
-          return this.parseInterfaceDefinition().withExtension(true).withDescription(comment);
+          return this.parseInterfaceDefinition().withExtension(true).withDescription(comment).withLocation(this.lexer.position());
         }
         throw ParserExceptions.expect(this, "unsupported extend", null);
 
       case "schema":
-        return this.parseSchemaDefinition().withDirectives(directives);
+        return this.parseSchemaDefinition().withDirectives(directives).withLocation(this.lexer.position());
 
       case "interface":
-        return this.parseInterfaceDefinition().withDirectives(directives);
+        return this.parseInterfaceDefinition().withDirectives(directives).withLocation(this.lexer.position());
 
       case "type":
-        return this.parseObjectTypeDefinition().withDescription(comment).withDirectives(directives);
+        return this.parseObjectTypeDefinition().withDescription(comment).withDirectives(directives).withLocation(this.lexer.position());
 
       case "enum":
-        return this.parseEnumDefinition().withDescription(comment).withDirectives(directives);
+        return this.parseEnumDefinition().withDescription(comment).withDirectives(directives).withLocation(this.lexer.position());
 
       case "union":
-        return this.parseUnionDefinition().withDescription(comment).withDirectives(directives);
+        return this.parseUnionDefinition().withDescription(comment).withDirectives(directives).withLocation(this.lexer.position());
 
       case "input":
-        return this.parseInputDefinition().withDescription(comment).withDirectives(directives);
+        return this.parseInputDefinition().withDescription(comment).withDirectives(directives).withLocation(this.lexer.position());
 
       case "scalar":
-        return this.parseScalarDefinition().withDescription(comment).withDirectives(directives);
+        return this.parseScalarDefinition().withDescription(comment).withDirectives(directives).withLocation(this.lexer.position());
 
       case "directive":
-        return this.parseDirectiveDefinition().withDescription(comment).withDirectives(directives);
+        return this.parseDirectiveDefinition().withDescription(comment).withDirectives(directives).withLocation(this.lexer.position());
 
       default:
         throw ParserExceptions.expect(this, "type definition", null);
@@ -488,23 +489,25 @@ public class ParseContext {
    * parses a type reference, e.g MyType, Int, [Int!], MyType!, [[Int!]!]!
    */
 
-  private GQLTypeReference parseTypeRef() {
+  GQLTypeReference parseTypeRef() {
 
     // GQLTypeReference
 
     final GQLTypeReference type;
 
+    final List<GQLDirective> directives = this.is("@") ? this.parseDirectives() : Collections.emptyList();
+
     if (this.lexer.peek().type() == TokenType.NAME) {
-      type = GQLTypes.typeRef(this.next());
+      type = GQLTypes.typeRef(this.next(), directives);
     } else if (this.skip("[")) {
-      type = GQLTypes.listOf(this.parseTypeRef());
+      type = GQLTypes.listOf(this.parseTypeRef(), directives);
       this.require("]");
     } else {
       throw ParserExceptions.create(this, "unexpected input");
     }
 
     if (this.skip("!")) {
-      return GQLTypes.nonNull(type);
+      return GQLTypes.nonNull(type, directives);
     }
 
     return type;
@@ -568,6 +571,8 @@ public class ParseContext {
 
           final GQLInlineFragmentSelectionBuilder ifs = GQLInlineFragmentSelection.builder();
 
+          ifs.location(this.lexer.position());
+
           if (this.skip("on")) {
             ifs.typeCondition(GQLTypes.typeRef(this.require(TokenType.NAME)));
           }
@@ -585,6 +590,8 @@ public class ParseContext {
         } else {
 
           final Builder fsb = GQLFragmentSpreadSelection.builder();
+
+          fsb.location(this.lexer.position());
 
           fsb.name(this.require(TokenType.NAME));
 
@@ -605,9 +612,11 @@ public class ParseContext {
       final String name = this.require(TokenType.NAME,
           "or '}' to match '{' defined at position " + opening.position().start());
 
+      fb.location(this.lexer.position());
+
       if (this.skip(":")) {
         fb.alias(name);
-        fb.name(this.next());
+        fb.name(this.require(TokenType.NAME, "field name expected after alias"));
       } else {
         fb.name(name);
       }

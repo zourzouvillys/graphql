@@ -7,8 +7,10 @@ import io.joss.graphql.core.decl.GQLTypeDeclaration;
 import io.joss.graphql.core.decl.GQLTypeDeclarationVisitor;
 import io.joss.graphql.core.doc.GQLDirective;
 import io.joss.graphql.core.lang.GQLTypeVisitor;
+import io.joss.graphql.core.parser.GQLSourceLocation;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Singular;
 import lombok.experimental.Wither;
 
 /**
@@ -29,6 +31,9 @@ public final class GQLDeclarationRef implements GQLTypeReference, GQLTypeDeclara
 
   // the reference, set in the schema builder when resolving types.
   private final GQLTypeDeclaration ref;
+
+  @Singular
+  private final List<GQLDirective> directives;
 
   @Override
   public String name() {
@@ -66,6 +71,13 @@ public final class GQLDeclarationRef implements GQLTypeReference, GQLTypeDeclara
   @Override
   public List<GQLDirective> directives() {
     return Collections.emptyList();
+  }
+
+  private final GQLSourceLocation location;
+
+  @Override
+  public GQLSourceLocation location() {
+    return this.location;
   }
 
 }

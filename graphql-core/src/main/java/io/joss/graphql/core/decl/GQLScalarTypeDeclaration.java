@@ -3,6 +3,7 @@ package io.joss.graphql.core.decl;
 import java.util.List;
 
 import io.joss.graphql.core.doc.GQLDirective;
+import io.joss.graphql.core.parser.GQLSourceLocation;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.ToString;
@@ -75,8 +76,16 @@ public final class GQLScalarTypeDeclaration implements GQLTypeDeclaration {
     return false;
   }
 
+  @Override
   public List<GQLDirective> directives() {
     return this.directives;
+  }
+
+  private final GQLSourceLocation location;
+
+  @Override
+  public GQLSourceLocation location() {
+    return this.location;
   }
 
 }

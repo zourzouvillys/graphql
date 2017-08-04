@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 import io.joss.graphql.core.doc.GQLDirective;
+import io.joss.graphql.core.parser.GQLSourceLocation;
 import io.joss.graphql.core.schema.TypeVisitors;
 
 /**
@@ -30,5 +31,7 @@ public interface Type {
   default boolean hasDirective(String name) {
     return getDirectives().stream().filter(d -> d.name().equals(name)).findAny().isPresent();
   }
+
+  GQLSourceLocation getLocation();
 
 }

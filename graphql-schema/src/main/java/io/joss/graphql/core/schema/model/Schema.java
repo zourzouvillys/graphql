@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import io.joss.graphql.core.decl.GQLSchemaDeclaration;
 import io.joss.graphql.core.doc.GQLDirective;
+import io.joss.graphql.core.parser.GQLSourceLocation;
 import io.joss.graphql.core.types.GQLDeclarationRef;
 import lombok.Value;
 
@@ -37,6 +38,10 @@ public class Schema {
 
   public boolean hasKey(String key) {
     return this.decl.entries().containsKey(key);
+  }
+
+  public GQLSourceLocation getLocation() {
+    return this.decl.location();
   }
 
 }

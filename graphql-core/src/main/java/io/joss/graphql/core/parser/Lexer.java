@@ -117,14 +117,40 @@ public final class Lexer {
 
       final char term = this.input.charAt(this.pos);
 
+      final StringBuilder sb = new StringBuilder();
+
       for (int i = this.pos + 1; i < this.input.length(); ++i) {
 
-        if (this.input.charAt(i) == term) {
+        if (this.input.charAt(i) == '\\') {
+
+          if (this.input.charAt(i + 1) == term) {
+            ++i;
+            sb.append(term);
+          } else {
+
+            switch (this.input.charAt(i + 1)) {
+              case 'n':
+                ++i;
+                sb.append("\n");
+                break;
+              case '\\':
+                ++i;
+                sb.append("\\");
+                break;
+              default:
+                throw new IllegalArgumentException("Illegal escape: \\" + this.input.charAt(i + 1));
+            }
+
+          }
+
+        } else if (this.input.charAt(i) == term) {
           try {
-            return new Token(TokenType.STRING, this.input.substring(this.pos + 1, i), this.createPosition(this.pos + 1, i));
+            return new Token(TokenType.STRING, sb.toString(), this.createPosition(this.pos + 1, i));
           } finally {
             this.pos = i + 1;
           }
+        } else {
+          sb.append(this.input.charAt(i));
         }
 
       }
@@ -243,12 +269,13 @@ public final class Lexer {
 
   @Value
   public static class LineInfo {
+    private GQLSourceInput source;
     private int lineNumber;
     private int lineOffset;
 
     @Override
     public String toString() {
-      return String.format("line %d (offset %d)", this.lineNumber, this.lineOffset);
+      return String.format("%s line %d (offset %d)", this.source, this.lineNumber, this.lineOffset);
     }
 
   }
@@ -259,10 +286,15 @@ public final class Lexer {
     for (int i = 0; i < start; ++i) {
       if (this.input.charAt(i) == '\n') {
         ++lines;
+        lineStartAt = i;
       }
-      lineStartAt = i;
     }
-    return new LineInfo(lines + 1, start - lineStartAt);
+    return new LineInfo(this.source, lines + 1, start - lineStartAt);
+  }
+
+  public GQLSourceLocation position() {
+    final LineInfo current = this.lineNumberAtOffset(this.pos);
+    return GQLSourceLocation.of(this.source, this.pos, current.lineNumber, current.lineOffset);
   }
 
 }

@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import io.joss.graphql.core.doc.GQLDirective;
+import io.joss.graphql.core.parser.GQLSourceLocation;
 import io.joss.graphql.core.types.GQLDeclarationRef;
 import io.joss.graphql.core.types.GQLTypeReference;
 import lombok.Builder;
@@ -55,6 +56,7 @@ public final class GQLObjectTypeDeclaration implements GQLExtendableTypeDeclarat
     return this.ifaces;
   }
 
+  @Override
   public List<GQLDirective> directives() {
     if (this.directives == null) {
       return Collections.emptyList();
@@ -74,6 +76,13 @@ public final class GQLObjectTypeDeclaration implements GQLExtendableTypeDeclarat
   @Override
   public boolean isExtension() {
     return this.extension;
+  }
+
+  private final GQLSourceLocation location;
+
+  @Override
+  public GQLSourceLocation location() {
+    return this.location;
   }
 
 }

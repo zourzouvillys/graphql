@@ -52,7 +52,8 @@ public final class GQLSelectedOperation {
   }
 
   public static GQLSelectedOperation defaultQuery(GQLDocument doc) {
-    return query(doc, doc.operations().iterator().next());
+    final GQLOperationDefinition opdef = doc.operations().iterator().next();
+    return query(doc, opdef);
   }
 
   public static GQLSelectedOperation defaultQuery(String doc) {

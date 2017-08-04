@@ -3,6 +3,7 @@ package io.joss.graphql.core.decl;
 import java.util.List;
 
 import io.joss.graphql.core.doc.GQLDirective;
+import io.joss.graphql.core.parser.GQLSourceLocation;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.ToString;
@@ -16,6 +17,13 @@ public class GQLInputTypeDeclaration implements GQLExtendableTypeDeclaration {
   private final String name;
   private final String description;
   private final boolean extension;
+
+  private final GQLSourceLocation location;
+
+  @Override
+  public GQLSourceLocation location() {
+    return this.location;
+  }
 
   @Singular
   private final List<GQLInputFieldDeclaration> fields;

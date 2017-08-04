@@ -1,8 +1,11 @@
 package io.joss.graphql.core.doc;
 
-public interface GQLSelection
-{
+import io.joss.graphql.core.parser.GQLSourceLocation;
+
+public interface GQLSelection {
 
   <R> R apply(GQLSelectionVisitor<R> visitor);
-  
+
+  GQLSourceLocation location();
+
 }

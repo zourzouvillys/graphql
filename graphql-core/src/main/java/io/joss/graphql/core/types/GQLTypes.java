@@ -1,21 +1,22 @@
 package io.joss.graphql.core.types;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import io.joss.graphql.core.decl.GQLTypeDeclaration;
 import io.joss.graphql.core.decl.GQLInputTypeDeclaration;
 import io.joss.graphql.core.decl.GQLInterfaceTypeDeclaration;
 import io.joss.graphql.core.decl.GQLObjectTypeDeclaration;
 import io.joss.graphql.core.decl.GQLScalarTypeDeclaration;
 import io.joss.graphql.core.decl.GQLSchemaDeclaration;
+import io.joss.graphql.core.decl.GQLTypeDeclaration;
 import io.joss.graphql.core.decl.GQLUnionTypeDeclaration;
+import io.joss.graphql.core.doc.GQLDirective;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-
 public class GQLTypes {
 
   public static GQLTypeReference ref(GQLTypeDeclaration type) {
@@ -91,6 +92,18 @@ public class GQLTypes {
     return GQLNonNullType.builder().wrappedType(typeRef(name)).build();
   }
 
+  public static GQLTypeReference nonNull(GQLTypeReference type, Collection<GQLDirective> directives) {
+    return GQLNonNullType.builder().wrappedType(type).directives(directives).build();
+  }
+
+  public static GQLNonNullType nonNull(final GQLTypeReference type) {
+    return GQLNonNullType.builder().wrappedType(type).build();
+  }
+
+  public static GQLDeclarationRef typeRef(final String name, Collection<GQLDirective> directives) {
+    return GQLDeclarationRef.builder().name(name).directives(directives).build();
+  }
+
   public static GQLDeclarationRef typeRef(final String name) {
     return GQLDeclarationRef.builder().name(name).build();
   }
@@ -107,12 +120,12 @@ public class GQLTypes {
     return GQLObjectTypeDeclaration.builder().name(name);
   }
 
-  public static GQLNonNullType nonNull(final GQLTypeReference type) {
-    return GQLNonNullType.builder().wrappedType(type).build();
-  }
-
   public static GQLTypeReference listOf(GQLTypeReference type) {
     return GQLListType.builder().wrappedType(type).build();
+  }
+
+  public static GQLTypeReference listOf(GQLTypeReference type, Collection<GQLDirective> directives) {
+    return GQLListType.builder().wrappedType(type).directives(directives).build();
   }
 
 }

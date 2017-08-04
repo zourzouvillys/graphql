@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -33,6 +34,10 @@ public class SchemaCompiler {
     return new SchemaCompiler().add(paths).compile();
   }
 
+  public static Model compile(Collection<Path> paths) {
+    return new SchemaCompiler().addAll(paths).compile();
+  }
+
   /**
    * compile and return the resolved schema
    */
@@ -54,6 +59,11 @@ public class SchemaCompiler {
 
   public SchemaCompiler add(Path... paths) {
     Arrays.stream(paths).forEach(this::add);
+    return this;
+  }
+
+  public SchemaCompiler addAll(Collection<Path> paths) {
+    paths.forEach(this::add);
     return this;
   }
 
@@ -125,12 +135,6 @@ public class SchemaCompiler {
    */
 
   public Model compile() {
-
-    // pass 1: merge types. for each type, generate a list of decls and
-    // extensions.
-
-    // must be no extensions without the declared type
-
     return Model.build(this.inputs);
 
   }

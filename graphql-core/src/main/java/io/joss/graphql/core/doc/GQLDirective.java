@@ -3,6 +3,7 @@ package io.joss.graphql.core.doc;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -37,4 +38,16 @@ public final class GQLDirective {
     return this.args.stream().filter(c -> c.name().equals(string)).findAny();
   }
 
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder();
+    sb.append("@").append(this.name);
+    if (!this.args.isEmpty()) {
+      sb.append("(");
+      sb.append(this.args.stream().map(arg -> new StringBuilder().append(arg.name()).append(": ").append(arg.value())).collect(Collectors.joining(", ")));
+      sb.append(")");
+    }
+    return sb.toString();
+
+  }
 }

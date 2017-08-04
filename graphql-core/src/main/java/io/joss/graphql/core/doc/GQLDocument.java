@@ -15,15 +15,13 @@ import lombok.experimental.Wither;
 @EqualsAndHashCode
 @ToString
 @Builder(builderClassName = "Builder")
-public final class GQLDocument
-{
+public final class GQLDocument {
 
   @NonNull
   @Singular
   private final List<GQLDefinition> definitions;
 
-  public List<GQLDefinition> definitions()
-  {
+  public List<GQLDefinition> definitions() {
     return this.definitions;
   }
 
@@ -34,9 +32,8 @@ public final class GQLDocument
    * @return
    */
 
-  public GQLOperationDefinition named(String name)
-  {
-    return definitions()
+  public GQLOperationDefinition named(String name) {
+    return this.definitions()
         .stream()
         .map(def -> def.apply(GQLDefinitionVisitors.operationExtractor()))
         .filter(p -> p != null)
@@ -45,10 +42,9 @@ public final class GQLDocument
         .orElse(null);
   }
 
-  public GQLFragmentDefinition fragment(String name)
-  {
+  public GQLFragmentDefinition fragment(String name) {
 
-    GQLFragmentDefinition ret = definitions()
+    final GQLFragmentDefinition ret = this.definitions()
         .stream()
         .map(def -> def.apply(GQLDefinitionVisitors.fragmentExtractor()))
         .filter(p -> p != null)
@@ -56,34 +52,36 @@ public final class GQLDocument
         .findAny()
         .orElse(null);
 
-    if (ret == null)
+    if (ret == null) {
       throw new IllegalStateException(String.format("Unknown fragment '%s'", name));
+    }
 
     return ret;
 
   }
 
-  public Collection<GQLOperationDefinition> operations()
-  {
-    return definitions()
+  public Collection<GQLOperationDefinition> operations() {
+    return this.definitions()
         .stream()
         .map(def -> def.apply(GQLDefinitionVisitors.operationExtractor()))
         .filter(p -> p != null)
         .collect(Collectors.toList());
   }
 
-  public Collection<GQLFragmentDefinition> fragments()
-  {
-    return definitions()
+  public Collection<GQLFragmentDefinition> fragments() {
+    return this.definitions()
         .stream()
         .map(def -> def.apply(GQLDefinitionVisitors.fragmentExtractor()))
         .filter(p -> p != null)
         .collect(Collectors.toList());
   }
 
-  public GQLSelectedOperation select(String namedQuery)
-  {
+  public GQLSelectedOperation select(String namedQuery) {
     return GQLSelectedOperation.namedQuery(this, namedQuery);
+  }
+
+  public GQLSelectedOperation defaultOperation() {
+    return GQLSelectedOperation.defaultQuery(this);
   }
 
 }

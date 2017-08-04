@@ -12,6 +12,7 @@ import io.joss.graphql.core.doc.GQLDocument;
 import io.joss.graphql.core.doc.GQLOperationDefinition;
 import io.joss.graphql.core.lang.GQLSchemaBuilder;
 import io.joss.graphql.core.lang.GQLTypeRegistry;
+import io.joss.graphql.core.types.GQLTypeReference;
 import io.joss.graphql.core.types.GQLTypes;
 import io.joss.graphql.core.value.GQLValue;
 
@@ -28,6 +29,11 @@ public class GQLParser {
   public GQLValue parseValue(String value, GQLSourceInput source) {
     final ParseContext ctx = new ParseContext(value, source);
     return ctx.parseValue();
+  }
+
+  public static GQLTypeReference parseTypeRef(String value, GQLSourceInput source) {
+    final ParseContext ctx = new ParseContext(value, source);
+    return ctx.parseTypeRef();
   }
 
   /**

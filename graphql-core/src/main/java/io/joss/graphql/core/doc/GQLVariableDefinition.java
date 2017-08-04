@@ -13,8 +13,7 @@ import lombok.experimental.Wither;
 @EqualsAndHashCode
 @ToString
 @Builder
-public final class GQLVariableDefinition
-{
+public final class GQLVariableDefinition {
 
   /**
    * The name of this variable, without the leading '$'.
@@ -38,8 +37,7 @@ public final class GQLVariableDefinition
    * the defined name for this variable definition.
    */
 
-  public String name()
-  {
+  public String name() {
     return this.name;
   }
 
@@ -47,8 +45,7 @@ public final class GQLVariableDefinition
    * the declared type of this variable.
    */
 
-  public GQLTypeReference type()
-  {
+  public GQLTypeReference type() {
     return this.type;
   }
 
@@ -56,8 +53,7 @@ public final class GQLVariableDefinition
    * The default value declared for this variable.
    */
 
-  public GQLValue defaultValue()
-  {
+  public GQLValue defaultValue() {
     return this.defaultValue;
   }
 
@@ -65,8 +61,7 @@ public final class GQLVariableDefinition
    * Creates an integer variable definition.
    */
 
-  public static GQLVariableDefinition intVar(final String name, final long value)
-  {
+  public static GQLVariableDefinition intVar(final String name, final long value) {
     return builder().name(name).type(GQLTypes.intType()).defaultValue(GQLValues.intValue(value)).build();
   }
 
