@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import io.joss.graphql.core.decl.GQLEnumDeclaration;
 import io.joss.graphql.core.decl.GQLExtendableTypeDeclaration;
 import io.joss.graphql.core.decl.GQLInputTypeDeclaration;
+import io.joss.graphql.core.decl.GQLInterfaceTypeDeclaration;
 import io.joss.graphql.core.decl.GQLObjectTypeDeclaration;
 import io.joss.graphql.core.decl.GQLScalarTypeDeclaration;
 import io.joss.graphql.core.decl.GQLTypeDeclaration;
@@ -63,6 +64,13 @@ public class TypeConstructor extends AbstractDefaultTypeDeclarationVisitor<Void>
       throw new MissingTypeToExtendException(this.name, String.format("missing main decl of extended type '%s'", this.name));
     }
     return new ObjectType(this.typebuilder, this.model, this.name, collector.decl, collector.extensions);
+  }
+
+  public InterfaceType buildInterfaceType(Collector<GQLInterfaceTypeDeclaration> collector) {
+    if (collector.decl == null) {
+      throw new MissingTypeToExtendException(this.name, String.format("missing main decl of extended type '%s'", this.name));
+    }
+    return new InterfaceType(this.typebuilder, this.model, this.name, collector.decl, collector.extensions);
   }
 
   public EnumType buildEnumType(Collector<GQLEnumDeclaration> collector) {
@@ -124,6 +132,14 @@ public class TypeConstructor extends AbstractDefaultTypeDeclarationVisitor<Void>
       return new Builder(
           FunctionalTypeDeclVisitor.objectType(in -> collector.add(in), in -> mixedTypeException(collector, in)),
           () -> TypeConstructor.this.buildObjectType(collector));
+    }
+
+    @Override
+    public Builder visitInterface(GQLInterfaceTypeDeclaration type) {
+      final Collector<GQLInterfaceTypeDeclaration> collector = new Collector<>();
+      return new Builder(
+          FunctionalTypeDeclVisitor.interfaceType(in -> collector.add(in), in -> mixedTypeException(collector, in)),
+          () -> TypeConstructor.this.buildInterfaceType(collector));
     }
 
     @Override

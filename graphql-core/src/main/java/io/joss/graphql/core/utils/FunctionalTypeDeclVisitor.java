@@ -4,6 +4,7 @@ import java.util.function.Function;
 
 import io.joss.graphql.core.decl.GQLEnumDeclaration;
 import io.joss.graphql.core.decl.GQLInputTypeDeclaration;
+import io.joss.graphql.core.decl.GQLInterfaceTypeDeclaration;
 import io.joss.graphql.core.decl.GQLObjectTypeDeclaration;
 import io.joss.graphql.core.decl.GQLScalarTypeDeclaration;
 import io.joss.graphql.core.decl.GQLTypeDeclaration;
@@ -35,6 +36,24 @@ public class FunctionalTypeDeclVisitor {
 
       @Override
       public R visitObject(GQLObjectTypeDeclaration type) {
+        return found.apply(type);
+      }
+
+      @Override
+      protected R visitDefault(GQLTypeDeclaration type) {
+        return other.apply(type);
+      }
+
+    };
+
+  }
+
+  public static <R> GQLTypeDeclarationVisitor<R> interfaceType(Function<GQLInterfaceTypeDeclaration, R> found, Function<GQLTypeDeclaration, R> other) {
+
+    return new AbstractDefaultTypeDeclarationVisitor<R>() {
+
+      @Override
+      public R visitInterface(GQLInterfaceTypeDeclaration type) {
         return found.apply(type);
       }
 
