@@ -8,7 +8,7 @@ import io.joss.graphql.core.decl.GQLObjectTypeDeclaration;
 import io.joss.graphql.core.schema.TypeVisitors;
 import io.joss.graphql.core.schema.TypeVisitors.NoReturnVisitor;
 
-public class ObjectType extends AbstractType {
+public class ObjectType extends AbstractType implements FieldContainerType {
 
   private final List<String> descriptions;
   private final List<ObjectField> fields;

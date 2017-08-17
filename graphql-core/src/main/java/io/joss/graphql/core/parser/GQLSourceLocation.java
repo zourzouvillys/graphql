@@ -11,4 +11,11 @@ public class GQLSourceLocation {
   private final int lineNumber;
   private final int lineOffset;
 
+  @Override
+  public String toString() {
+
+    return String.format("%s (line %d col %d)", this.input, this.lineNumber, this.lineOffset);
+
+  }
+
 }

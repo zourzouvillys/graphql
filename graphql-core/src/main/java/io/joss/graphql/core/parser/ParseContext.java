@@ -205,8 +205,10 @@ public class ParseContext {
 
     if (this.skip("implements")) {
       do {
-        b.iface(GQLTypes.concreteTypeRef(this.require(TokenType.NAME)));
-      } while (this.is(","));
+        final String name = this.require(TokenType.NAME);
+        b.iface(GQLTypes.concreteTypeRef(name));
+        // note: parser skips over comma.
+      } while (this.is(TokenType.NAME));
     }
 
     this.require("{");

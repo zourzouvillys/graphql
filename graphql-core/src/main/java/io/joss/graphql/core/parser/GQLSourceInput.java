@@ -13,4 +13,9 @@ public class GQLSourceInput {
     return EMPTY;
   }
 
+  @Override
+  public String toString() {
+    return this.name;
+  }
+
 }

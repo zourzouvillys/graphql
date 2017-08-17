@@ -11,8 +11,11 @@ public class SyntaxErrorException extends GQLException {
   private final String message;
 
   public SyntaxErrorException(ParseContext ctx, String expected, String message) {
-    super(String.format("syntax error on %s at or near '%s': expected '%s' %s", calculateLine(ctx),
-        (ctx.lexer().peek() == null) ? "EOF" : ctx.lexer().peek().toString(), expected, message));
+    super(String.format("syntax error in %s at '%s': expected '%s' %s",
+        calculateLine(ctx),
+        (ctx.lexer().peek() == null) ? "EOF" : ctx.lexer().peek().value(),
+        expected,
+        message != null ? message : ""));
     this.ctx = ctx;
     this.expected = expected;
     this.message = message;

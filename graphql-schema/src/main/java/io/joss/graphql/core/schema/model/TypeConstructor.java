@@ -94,7 +94,10 @@ public class TypeConstructor extends AbstractDefaultTypeDeclarationVisitor<Void>
       if (item.isExtension()) {
         this.extensions.add(item);
       } else if (this.decl != null) {
-        throw new DuplicateDeclarationException(this.decl.name(), String.format("duplicate decl of %s", this.decl.name()));
+        throw new DuplicateDeclarationException(this.decl.name(), String.format("duplicate decl of %s (%s and %s)",
+            this.decl.name(),
+            this.decl.location(),
+            item.location()));
       } else {
         this.decl = item;
       }

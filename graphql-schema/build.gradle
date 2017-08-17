@@ -1,11 +1,19 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.prezi.pride:gradle-pride-plugin:0.11"
+    }
+}
 
+apply plugin: "pride"
 apply plugin: 'java-library'
 
 dependencies {
 	compileOnly 'org.projectlombok:lombok:1.16.18'
     implementation 'com.google.guava:guava:22.0'
-    compile project(':graphql-core')
+    api group: project.group, name: "graphql-core", version: project.version
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.assertj:assertj-core:3.6.1'
 }
-

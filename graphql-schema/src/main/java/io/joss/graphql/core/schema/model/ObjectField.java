@@ -17,14 +17,14 @@ public class ObjectField {
   private final Model model;
   private final GQLFieldDeclaration decl;
   @Getter
-  private final ObjectType objectType;
+  private final FieldContainerType objectType;
   @Getter
   private final String name;
   private final List<ObjectFieldParam> fieldArgs;
   @Getter
   private final TypeRef<Type> fieldType;
 
-  public ObjectField(TypeBuilder builder, ObjectType object, Model model, GQLParameterableFieldDeclaration decl) {
+  public ObjectField(TypeBuilder builder, FieldContainerType object, Model model, GQLParameterableFieldDeclaration decl) {
     this.objectType = object;
     this.model = model;
     this.decl = decl;
