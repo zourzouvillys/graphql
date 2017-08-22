@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import io.joss.graphql.core.decl.GQLDeclaration;
 import io.joss.graphql.core.doc.GQLDocument;
 import io.joss.graphql.core.doc.GQLOperationDefinition;
+import io.joss.graphql.core.doc.GQLSelection;
 import io.joss.graphql.core.lang.GQLSchemaBuilder;
 import io.joss.graphql.core.lang.GQLTypeRegistry;
 import io.joss.graphql.core.types.GQLTypeReference;
@@ -75,9 +76,8 @@ public class GQLParser {
   /**
    * Parses a query, which must begin with 'query' or '{'.
    *
-   * Note that this is only useful for diagnostics and debugging, as the
-   * returned query is not validated and any references to fragments will not be
-   * available.
+   * Note that this is only useful for diagnostics and debugging, as the returned
+   * query is not validated and any references to fragments will not be available.
    *
    */
 
@@ -92,8 +92,8 @@ public class GQLParser {
   }
 
   /**
-   * read the given input string and convert into GQL schema declarations,
-   * without performing and processing logic on it.
+   * read the given input string and convert into GQL schema declarations, without
+   * performing and processing logic on it.
    *
    * @param schema
    *          The input string to process
@@ -149,6 +149,11 @@ public class GQLParser {
     } catch (final IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public static List<GQLSelection> parseSelection(String input) {
+    final ParseContext ctx = new ParseContext(input, GQLSourceInput.emptySource());
+    return ctx.parseSelectionSet();
   }
 
   public static GQLDocument parseDocument(String input) {

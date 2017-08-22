@@ -456,6 +456,7 @@ public class ParseContext {
     b.selections(this.parseSelectionSet());
 
     return b.build();
+
   }
 
   private List<GQLVariableDefinition> parseVariableDefinitions() {
@@ -555,7 +556,7 @@ public class ParseContext {
    * @return
    */
 
-  private List<GQLSelection> parseSelectionSet() {
+  List<GQLSelection> parseSelectionSet() {
 
     final List<GQLSelection> selections = new LinkedList<>();
 
