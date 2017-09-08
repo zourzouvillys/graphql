@@ -1,6 +1,5 @@
 package io.joss.graphql.jersey;
 
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -22,48 +21,45 @@ import io.joss.graphql.jersey.mutations.Mutation;
 
 /**
  * Registry/dictionary of available mutations.
- * 
- * Different dictionary instances can be returned for different users, based on their permissions etc.
- * 
+ *
+ * Different dictionary instances can be returned for different users, based on
+ * their permissions etc.
+ *
  * @author theo
  *
  */
 
-public class MutationRegistry
-{
+public class MutationRegistry {
 
-  private List<MutationHandler> handlers = new LinkedList<>();
+  private final List<MutationHandler> handlers = new LinkedList<>();
 
   /**
    * scan for @Mutation methods.
-   * 
-   * The methods should take @GQLContext parameters and a single value based @GQLType object named $input.
-   * 
-   * 
+   *
+   * The methods should take @GQLContext parameters and a single value
+   * based @GQLType object named $input.
+   *
+   *
    * @param instance
    */
 
-  public void register(Object instance)
-  {
+  public void register(Object instance) {
 
-    Class<?> klass = instance.getClass();
+    final Class<?> klass = instance.getClass();
 
-    for (Method method : klass.getDeclaredMethods())
-    {
+    for (final Method method : klass.getDeclaredMethods()) {
 
-      MutationHandler.Builder mhb = MutationHandler.builder();
+      final MutationHandler.Builder mhb = MutationHandler.builder();
 
-      Mutation m = method.getAnnotation(Mutation.class);
+      final Mutation m = method.getAnnotation(Mutation.class);
 
-      if (m == null)
-      {
+      if (m == null) {
         continue;
       }
 
-      Class<?> returnType = method.getReturnType();
+      final Class<?> returnType = method.getReturnType();
 
-      if (!returnType.isAnnotationPresent(GQLType.class))
-      {
+      if (!returnType.isAnnotationPresent(GQLType.class)) {
         throw new IllegalArgumentException(String.format("%s must be annotated with @GQLType", method.getReturnType()));
       }
 
@@ -74,20 +70,15 @@ public class MutationRegistry
 
       mhb.returnType(returnType);
 
-      for (int i = 0; i < method.getParameterCount(); ++i)
-      {
+      for (int i = 0; i < method.getParameterCount(); ++i) {
 
-        Annotation[] pats = method.getParameterAnnotations()[i];
-        Class<?> ptype = method.getParameterTypes()[i];
+        final Annotation[] pats = method.getParameterAnnotations()[i];
+        final Class<?> ptype = method.getParameterTypes()[i];
 
-        if (Arrays.stream(pats).filter(p -> p.equals(GQLContext.class)).findAny().isPresent())
-        {
-        }
-        else if (input == null)
-        {
+        if (Arrays.stream(pats).filter(p -> p.annotationType().equals(GQLContext.class)).findAny().isPresent()) {
+        } else if (input == null) {
 
-          if (!ptype.isAnnotationPresent(GQLType.class))
-          {
+          if (!ptype.isAnnotationPresent(GQLType.class)) {
             throw new IllegalArgumentException("parameter on mutation must be @GQLType");
           }
 
@@ -95,56 +86,53 @@ public class MutationRegistry
           input = i;
           mhb.inputType(ptype);
 
-        }
-        else
-        {
+        } else {
           throw new RuntimeException("Only @GQLContext and single @GQLType is allowed");
         }
 
       }
 
-      handlers.add(mhb.build());
+      this.handlers.add(mhb.build());
 
     }
 
   }
 
-  public List<MutationHandler> handlers()
-  {
-    return handlers;
+  public List<MutationHandler> handlers() {
+    return this.handlers;
   }
 
   /**
-   * applies the registered types to the scanner, and returns the {@link GQLObjectTypeDeclaration} that represents our root.
+   * applies the registered types to the scanner, and returns the
+   * {@link GQLObjectTypeDeclaration} that represents our root.
    */
 
-  public GQLObjectTypeDeclaration build(TypeScanner scanner)
-  {
+  public GQLObjectTypeDeclaration build(TypeScanner scanner) {
 
-    GQLObjectTypeDeclaration.Builder decl = GQLObjectTypeDeclaration.builder();
+    final GQLObjectTypeDeclaration.Builder decl = GQLObjectTypeDeclaration.builder();
 
     decl.name("MutationRoot");
 
-    for (MutationHandler handler : handlers())
-    {
+    for (final MutationHandler handler : this.handlers()) {
 
-      GQLParameterableFieldDeclaration.Builder field = GQLParameterableFieldDeclaration.builder();
+      final GQLParameterableFieldDeclaration.Builder field = GQLParameterableFieldDeclaration.builder();
 
       field.name(handler.name());
 
-      // we merge the returned object along with our clientMutationId value which we take care of.
-      
-      GQLObjectTypeDeclaration returnType = GQLObjectTypeDeclaration.builder()
-          .name(String.format("%sPayload", capitalize(handler.name())))
+      // we merge the returned object along with our clientMutationId value which we
+      // take care of.
+
+      final GQLObjectTypeDeclaration returnType = GQLObjectTypeDeclaration.builder()
+          .name(String.format("%sPayload", this.capitalize(handler.name())))
           .field(GQLParameterableFieldDeclaration.builder().name("result").type(GQLTypes.nonNull(scanner.ref(handler.returnType()))).build())
           .field(GQLParameterableFieldDeclaration.builder().name("clientMutationId").type(GQLTypes.nonNullStringType()).build())
           .build();
 
       field.type(scanner.add(returnType));
 
-      String commandName = scanner.calculateName(handler.inputType());
+      final String commandName = scanner.calculateName(handler.inputType());
 
-      GQLNonNullType inputType = GQLTypes.nonNull(GQLTypes.ref(scanner.add(InputClassBinding.bind(handler.inputType()), commandName)));
+      final GQLNonNullType inputType = GQLTypes.nonNull(GQLTypes.ref(scanner.add(InputClassBinding.bind(handler.inputType()), commandName)));
 
       field.arg(GQLArgumentDefinition.builder().name("$input").type(inputType).build());
 
@@ -156,8 +144,7 @@ public class MutationRegistry
 
   }
 
-  private String capitalize(String name)
-  {
+  private String capitalize(String name) {
     return StringUtils.capitalize(name);
   }
 

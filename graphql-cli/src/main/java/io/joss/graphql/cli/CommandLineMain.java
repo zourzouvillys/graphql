@@ -27,24 +27,22 @@ import io.joss.graphql.core.types.GQLTypes;
 import io.joss.graphql.core.utils.TypePrinter;
 import io.joss.graphql.generator.java.JavaClientGenerator;
 
-public class CommandLineMain
-{
+public class CommandLineMain {
 
-  public static void main(String[] args)
-  {
+  public static void main(String[] args) {
 
-    CliBuilder<Runnable> builder = Cli.builder("jgql");
+    final CliBuilder<Runnable> builder = Cli.builder("jgql");
 
     builder.withDescription("GraphQL Toolkit");
     builder.withDefaultCommand(Help.class);
 
-    List<Class<? extends Runnable>> cmds = new LinkedList<>();
+    final List<Class<? extends Runnable>> cmds = new LinkedList<>();
 
     cmds.add(Help.class);
 
     cmds.add(ExtractSchema.class);
     cmds.add(GenerateClientCode.class);
-    
+
     cmds.add(RegistryPush.class);
     cmds.add(RegistryGet.class);
     cmds.add(RegistryMonitor.class);
@@ -54,27 +52,22 @@ public class CommandLineMain
 
     builder.withCommands(cmds);
 
-    Cli<Runnable> parser = builder.build();
+    final Cli<Runnable> parser = builder.build();
 
-    try
-    {
+    try {
       parser.parse(args).run();
-    }
-    catch (ParseException e)
-    {
+    } catch (final ParseException e) {
       System.err.print(e.getMessage());
       System.err.println(String.format(".  See '%s help'.", self()));
     }
 
   }
 
-  private static Object self()
-  {
+  private static Object self() {
     return System.getProperty("argv0", "jgql");
   }
 
-  public abstract static class GitCommand implements Runnable
-  {
+  public abstract static class GitCommand implements Runnable {
 
     @Option(type = OptionType.GLOBAL, name = "-v", description = "Verbose mode")
     public boolean verbose;
@@ -82,8 +75,7 @@ public class CommandLineMain
   }
 
   @Command(name = "generate", description = "Generate client code")
-  public static class GenerateClientCode extends GitCommand
-  {
+  public static class GenerateClientCode extends GitCommand {
 
     @Option(name = { "-s", "--schema" }, type = OptionType.COMMAND, description = "Path to GraphQL schema", required = true)
     public String schema;
@@ -100,33 +92,27 @@ public class CommandLineMain
     @Arguments(description = "GraphQL Query File", required = true)
     public String queryFile;
 
-    public void run()
-    {
-      try
-      {
+    @Override
+    public void run() {
+      try {
 
-        GQLTypeRegistry ps = new GQLParser().parseSchema(schema.equals("-") ? System.in : new FileInputStream(Paths.get(schema).toFile()));
+        final GQLTypeRegistry ps = new GQLParser().parseSchema(this.schema.equals("-") ? System.in : new FileInputStream(Paths.get(this.schema).toFile()));
 
         // now, generate the queries.
-        GQLDocument doc = GQLParser.parseDocument(new FileInputStream(queryFile));
+        final GQLDocument doc = GQLParser.parseDocument(new FileInputStream(this.queryFile));
 
         // and generate the java code ...
-        JavaClientGenerator gen = new JavaClientGenerator(ps, ps.decl(rootQueryType), doc);
+        final JavaClientGenerator gen = new JavaClientGenerator(ps, ps.decl(this.rootQueryType), doc);
 
-        if (output == null || output.isEmpty() || output.equals('-'))
-        {
-          gen.generate(className, System.out);
-        }
-        else
-        {
-          FileOutputStream out = new FileOutputStream(output);
-          gen.generate(className, out);
+        if (this.output == null || this.output.isEmpty() || this.output.equals("-")) {
+          gen.generate(this.className, System.out);
+        } else {
+          final FileOutputStream out = new FileOutputStream(this.output);
+          gen.generate(this.className, out);
           out.flush();
           out.close();
         }
-      }
-      catch (Exception ex)
-      {
+      } catch (final Exception ex) {
         ex.printStackTrace(System.err);
         System.err.println("BOOM");
       }
@@ -135,8 +121,7 @@ public class CommandLineMain
   }
 
   @Command(name = "extract", description = "Extract schema from JAR")
-  public static class ExtractSchema extends GitCommand
-  {
+  public static class ExtractSchema extends GitCommand {
 
     @Option(name = { "-cp" }, type = OptionType.COMMAND, description = "Classpath", required = true)
     public List<String> classpath;
@@ -147,48 +132,41 @@ public class CommandLineMain
     @Arguments(description = "GraphQL root class", required = true)
     public List<String> classNames;
 
-    public void run()
-    {
+    @Override
+    public void run() {
 
-      URL[] urls = classpath.stream()
+      final URL[] urls = this.classpath.stream()
           .map(cp -> Splitter.on(':').omitEmptyStrings().trimResults().splitToList(cp))
           .flatMap(in -> in.stream())
           .map(cp -> {
-            try
-            {
+            try {
               return Paths.get(cp).toAbsolutePath().toUri().toURL();
-            }
-            catch (Exception ex)
-            {
+            } catch (final Exception ex) {
               throw new RuntimeException(ex);
             }
           })
           .toArray(len -> new URL[len]);
 
-      try (URLClassLoader cloader = new URLClassLoader(urls))
-      {
+      try (URLClassLoader cloader = new URLClassLoader(urls)) {
 
-        GQLSchemaBuilder builder = new GQLSchemaBuilder();
+        final GQLSchemaBuilder builder = new GQLSchemaBuilder();
 
-        TypeScanner scanner = new TypeScanner(builder);
+        final TypeScanner scanner = new TypeScanner(builder);
 
         builder.add(GQLTypes.builtins());
 
-        for (String className : classNames)
-        {
-          Class<?> klass = cloader.loadClass(className);
+        for (final String className : this.classNames) {
+          final Class<?> klass = cloader.loadClass(className);
           scanner.add(klass);
         }
 
         scanner.finish();
 
-        GQLTypeRegistry reg = builder.build();
+        final GQLTypeRegistry reg = builder.build();
 
         reg.apply(new TypePrinter(System.out));
 
-      }
-      catch (Exception e1)
-      {
+      } catch (final Exception e1) {
         // TODO Auto-generated catch block
         e1.printStackTrace();
       }
