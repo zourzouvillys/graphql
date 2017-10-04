@@ -1,6 +1,6 @@
 apply plugin: 'application'
 
-mainClassName = 'io.joss.graphql.cli.CommandLineMain'
+mainClassName = 'io.zrz.graphql.cli.CommandLineMain'
 
 dependencies {
     compile libraries.lombok

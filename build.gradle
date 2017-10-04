@@ -41,7 +41,7 @@ ext.libraries = [
 ]
 
 
-group = "io.joss.graphql"
+group = "io.zrz.graphql"
 version = '1.0-SNAPSHOT'
 
 import java.text.SimpleDateFormat
@@ -68,7 +68,7 @@ allprojects {
     }    
 	
 	version = globalVersion
-	group = 'io.joss.graphql'
+	group = 'io.zrz.graphql'
 	status = version.status
 
     ext.publish = true
@@ -81,7 +81,7 @@ allprojects {
         pkg {
             repo = 'graphql'
             name = project.name
-            websiteUrl = 'https://github.com/zourzouvillys/graphql'
+            websiteUrl = 'https://github.com/zourzouvillys/maven'
             issueTrackerUrl = 'https://github.com/zourzouvillys/graphql/issues'
             vcsUrl = 'git@github.com:zourzouvillys/graphql.git'
             licenses = ['Apache-2.0']
