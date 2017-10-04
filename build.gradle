@@ -13,22 +13,22 @@ buildscript {
 }
 
 ext.libraries = [
-  lombok: 'org.projectlombok:lombok:1.16.12',
+  lombok: 'org.projectlombok:lombok:1.16.18',
   junit: 'junit:junit:4.12',
-  guava: 'com.google.guava:guava:20.0',
+  guava: 'com.google.guava:guava:23.1-jre',
   slf4j: [
-    api: 'org.slf4j:slf4j-api:1.7.22'
+    api: 'org.slf4j:slf4j-api:1.7.25'
   ],
   logback: [
-    classic: 'ch.qos.logback:logback-classic:1.1.8'
+    classic: 'ch.qos.logback:logback-classic:1.2.3'
   ],
   jackson: [
-    databind: 'com.fasterxml.jackson.core:jackson-databind:2.8.5',
-    jaxrs_json_provider: 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.8.5'
+    databind: 'com.fasterxml.jackson.core:jackson-databind:2.9.1',
+    jaxrs_json_provider: 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.1'
   ],
   apache: [
     commons: [
-      lang3: 'org.apache.commons:commons-lang3:3.5'
+      lang3: 'org.apache.commons:commons-lang3:3.6'
     ]
   ],
   grpc: [
@@ -79,9 +79,9 @@ allprojects {
         configurations = ['published', 'archives']
         publish = project.publish
         pkg {
-            repo = 'graphql'
+            repo = 'maven'
             name = project.name
-            websiteUrl = 'https://github.com/zourzouvillys/maven'
+            websiteUrl = 'https://github.com/zourzouvillys/graphql'
             issueTrackerUrl = 'https://github.com/zourzouvillys/graphql/issues'
             vcsUrl = 'git@github.com:zourzouvillys/graphql.git'
             licenses = ['Apache-2.0']
