@@ -24,7 +24,7 @@ import io.zrz.graphql.core.utils.TypePrinter;
 
 public class GQLParserTest {
 
-  private final GQLParser PARSER = new GQLParser();
+  private final GQLParser PARSER = DefaultGQLParser.instance();
 
   @Test
   public void testParseQuery() {
@@ -57,7 +57,7 @@ public class GQLParserTest {
   @Test
   public void testParseInvalidQuery() {
 
-    GQLParser.parseDocument("{ d }", GQLSourceInput.emptySource());
+    DefaultGQLParser.parseDocument("{ d }", GQLSourceInput.emptySource());
 
   }
 
@@ -66,7 +66,7 @@ public class GQLParserTest {
 
     String input = streamToString(this.getClass().getResourceAsStream("/test.schema"));
 
-    final GQLTypeRegistry schema = this.PARSER.parseSchema(input, GQLSourceInput.emptySource());
+    final GQLTypeRegistry schema = PARSER.parseSchema(input, GQLSourceInput.emptySource());
 
     schema.types().forEach(type -> {
 

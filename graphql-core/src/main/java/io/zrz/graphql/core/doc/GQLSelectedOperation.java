@@ -1,6 +1,6 @@
 package io.zrz.graphql.core.doc;
 
-import io.zrz.graphql.core.parser.GQLParser;
+import io.zrz.graphql.core.parser.DefaultGQLParser;
 import io.zrz.graphql.core.parser.GQLSourceInput;
 
 public final class GQLSelectedOperation {
@@ -56,7 +56,7 @@ public final class GQLSelectedOperation {
   }
 
   public static GQLSelectedOperation defaultQuery(String doc) {
-    return defaultQuery(GQLParser.parseDocument(doc, GQLSourceInput.emptySource()));
+    return defaultQuery(DefaultGQLParser.parseDocument(doc, GQLSourceInput.emptySource()));
   }
 
 }

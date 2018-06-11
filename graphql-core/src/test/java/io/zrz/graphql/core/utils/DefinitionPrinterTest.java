@@ -8,7 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import io.zrz.graphql.core.doc.GQLDocument;
-import io.zrz.graphql.core.parser.GQLParser;
+import io.zrz.graphql.core.parser.DefaultGQLParser;
 import io.zrz.graphql.core.parser.GQLSourceInput;
 
 public class DefinitionPrinterTest {
@@ -43,7 +43,7 @@ public class DefinitionPrinterTest {
 
   public void checkEquality(String input) throws IOException {
 
-    final GQLDocument doc = GQLParser.parseDocument(input, GQLSourceInput.emptySource());
+    final GQLDocument doc = DefaultGQLParser.parseDocument(input, GQLSourceInput.emptySource());
 
     //
     final ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -54,7 +54,7 @@ public class DefinitionPrinterTest {
 
     System.err.println(os.toString());
 
-    final GQLDocument doc2 = GQLParser.parseDocument(os.toString(), GQLSourceInput.emptySource());
+    final GQLDocument doc2 = DefaultGQLParser.parseDocument(os.toString(), GQLSourceInput.emptySource());
 
     Assert.assertEquals(doc.defaultOperation().operationName(), doc2.defaultOperation().operationName());
     Assert.assertEquals(doc.fragments(), doc2.fragments());

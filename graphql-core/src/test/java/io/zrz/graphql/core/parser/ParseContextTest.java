@@ -3,23 +3,18 @@ package io.zrz.graphql.core.parser;
 import org.junit.Test;
 
 import io.zrz.graphql.core.doc.GQLDocument;
-import io.zrz.graphql.core.parser.GQLParser;
-import io.zrz.graphql.core.parser.SyntaxErrorException;
 
-public class ParseContextTest
-{
+public class ParseContextTest {
 
-  private final GQLParser PARSER = new GQLParser();
+  private final GQLParser PARSER = DefaultGQLParser.instance();
 
   @Test(expected = SyntaxErrorException.class)
-  public void testFail()
-  {
+  public void testFail() {
     this.PARSER.parse("fragment on on Moo {}");
   }
 
   @Test
-  public void test()
-  {    
+  public void test() {
     this.parse("fragment A on Moo { aa }");
     this.parse("fragment B on Moo { cows { moo }, meep(field: 1), cows: mooo { again { me } } }");
     this.parse("fragment C on Moo { bb }");
@@ -39,8 +34,7 @@ public class ParseContextTest
 
   }
 
-  private GQLDocument parse(final String string)
-  {
+  private GQLDocument parse(final String string) {
     return this.PARSER.parse(string);
   }
 
