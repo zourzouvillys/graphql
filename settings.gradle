@@ -1,14 +1,14 @@
 
 [
- 'graphql-core',
- 'graphql-converter',
- 'graphql-server', 
- 'graphql-generator', 
- 'graphql-cli', 
- 'graphql-client', 
- 'graphql-jersey', 
- 'graphql-grpc',
- 'graphql-schema'
+ 'graphql-core'
+// 'graphql-converter',
+// 'graphql-server',
+// 'graphql-generator',
+// 'graphql-cli',
+// 'graphql-client',
+// 'graphql-jersey',
+// 'graphql-grpc',
+// 'graphql-schema'
  ].each { _ ->
 
 
@@ -16,4 +16,3 @@
   project(':' + _).projectDir = file(_)
 
 }
-
