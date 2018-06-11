@@ -7,17 +7,37 @@ import org.immutables.value.Value;
 import io.zrz.graphql.core.types.GQLDeclarationRef;
 
 @Value.Immutable(copy = true)
-public abstract class GQLInlineFragmentSelection implements GQLSelection {
+public interface GQLInlineFragmentSelection extends GQLSelection {
 
-  public abstract GQLDeclarationRef typeCondition();
+  GQLDeclarationRef typeCondition();
 
-  public abstract List<GQLDirective> directives();
+  List<GQLDirective> directives();
 
-  public abstract List<GQLSelection> selections();
+  List<GQLSelection> selections();
 
   @Override
-  public <R> R apply(GQLSelectionVisitor<R> visitor) {
+  default GQLSelectionKind selectionKind() {
+    return GQLSelectionKind.INLINE_FRAGMENT;
+  }
+
+  @Override
+  default <R> R apply(GQLSelectionVisitor<R> visitor) {
     return visitor.visitInlineFragment(this);
+  }
+
+  @Override
+  default <T, R> R apply(FunctionVisitor<T, R> visitor, T value) {
+    return visitor.visitInlineFragment(this, value);
+  }
+
+  @Override
+  default <T> void apply(ConsumerVisitor<T> visitor, T value) {
+    visitor.visitInlineFragment(this, value);
+  }
+
+  @Override
+  default void apply(VoidVisitor visitor) {
+    visitor.visitInlineFragment(this);
   }
 
   public static ImmutableGQLInlineFragmentSelection.Builder builder() {

@@ -13,40 +13,61 @@ import org.immutables.value.Value;
  */
 
 @Value.Immutable(copy = true)
-public abstract class GQLFieldSelection implements GQLSelection {
+public interface GQLFieldSelection extends GQLSelection {
 
-  public abstract String name();
+  String name();
 
-  public abstract @Nullable String alias();
+  @Nullable
+  String alias();
 
-  public String outputName() {
+  default String outputName() {
     if (this.alias() == null) {
       return this.name();
     }
     return this.alias();
   }
 
-  public abstract List<GQLArgument> args();
+  List<GQLArgument> args();
 
-  public abstract List<GQLDirective> directives();
+  List<GQLDirective> directives();
 
-  public abstract List<GQLSelection> selections();
+  List<GQLSelection> selections();
 
-  public abstract GQLFieldSelection withDirectives(GQLDirective... value);
+  GQLFieldSelection withDirectives(GQLDirective... value);
 
-  public abstract GQLFieldSelection withArgs(GQLArgument... value);
+  GQLFieldSelection withArgs(GQLArgument... value);
 
   @Override
-  public <R> R apply(GQLSelectionVisitor<R> visitor) {
+  default GQLSelectionKind selectionKind() {
+    return GQLSelectionKind.FIELD;
+  }
+
+  @Override
+  default <R> R apply(GQLSelectionVisitor<R> visitor) {
     return visitor.visitFieldSelection(this);
+  }
+
+  @Override
+  default <T, R> R apply(FunctionVisitor<T, R> visitor, T value) {
+    return visitor.visitFieldSelection(this, value);
+  }
+
+  @Override
+  default <T> void apply(ConsumerVisitor<T> visitor, T value) {
+    visitor.visitFieldSelection(this, value);
+  }
+
+  @Override
+  default void apply(VoidVisitor visitor) {
+    visitor.visitFieldSelection(this);
+  }
+
+  default GQLArgument args(String name) {
+    return this.args().stream().filter(a -> a.name().equals(name)).findAny().orElse(null);
   }
 
   public static GQLFieldSelection fieldSelection(final String name) {
     return builder().name(name).build();
-  }
-
-  public GQLArgument args(String name) {
-    return this.args().stream().filter(a -> a.name().equals(name)).findAny().orElse(null);
   }
 
   public static ImmutableGQLFieldSelection.Builder builder() {
