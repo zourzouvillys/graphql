@@ -50,6 +50,10 @@ public final class GQLSelectedOperation {
     return query(doc, doc.named(name));
   }
 
+  /**
+   * provides the default query to execute if no other name has been provided.
+   */
+
   public static GQLSelectedOperation defaultQuery(GQLDocument doc) {
     final GQLOperationDefinition opdef = doc.operations().iterator().next();
     return query(doc, opdef);

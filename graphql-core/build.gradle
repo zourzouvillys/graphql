@@ -16,6 +16,9 @@ apply plugin: 'net.ltgt.apt-eclipse'
 
 dependencies {
 
+  implementation      'com.github.zourzouvillys:commons:b79f6d76f7'
+  
+
   compileOnly         'com.google.errorprone:error_prone_annotations:2.3.1'
   compileOnly         'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.100'
 
@@ -31,7 +34,8 @@ dependencies {
 }
 
 repositories {
-    jcenter()
+  jcenter()
+  maven { url 'https://jitpack.io' }
 }
 
 sourceCompatibility = 9

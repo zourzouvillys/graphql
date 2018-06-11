@@ -1,5 +1,7 @@
 package io.zrz.graphql.core.doc;
 
+import io.zrz.graphql.core.runtime.GQLOperationType;
+
 /**
  * The operation types.
  *
@@ -7,7 +9,15 @@ package io.zrz.graphql.core.doc;
  *
  */
 
-public enum GQLOpType
-{
-  Query, Mutation, Subscription
+public enum GQLOpType implements GQLOperationType {
+
+  Query,
+  Mutation,
+  Subscription;
+
+  @Override
+  public String operationName() {
+    return name().toLowerCase();
+  }
+
 }
