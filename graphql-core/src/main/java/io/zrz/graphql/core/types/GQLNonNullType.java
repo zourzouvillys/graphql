@@ -1,10 +1,9 @@
 package io.zrz.graphql.core.types;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import org.immutables.value.Value;
-
-import com.google.common.collect.ImmutableList;
 
 import io.zrz.graphql.core.doc.GQLDirective;
 import io.zrz.graphql.core.lang.GQLTypeVisitor;
@@ -16,7 +15,7 @@ public abstract class GQLNonNullType implements GQLTypeReference {
 
   @Value.Default
   public Collection<GQLDirective> directives() {
-    return ImmutableList.of();
+    return Collections.emptyList();
   }
 
   public abstract GQLNonNullType withType(GQLTypeReference value);
