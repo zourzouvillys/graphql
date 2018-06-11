@@ -1,32 +1,33 @@
 buildscript {
   repositories {
     maven {
-      url "https://plugins.gradle.org/m2/"
+      url 'https://plugins.gradle.org/m2/'
     }
   }
   dependencies {
-    classpath "net.ltgt.gradle:gradle-apt-plugin:0.15"
+    classpath 'net.ltgt.gradle:gradle-apt-plugin:0.15'
   }
 }
 
 apply plugin: 'java-library'
 apply plugin: 'eclipse'
-apply plugin: "net.ltgt.apt"
-apply plugin: "net.ltgt.apt-eclipse"
+apply plugin: 'net.ltgt.apt'
+apply plugin: 'net.ltgt.apt-eclipse'
 
 dependencies {
 
   compileOnly         'com.google.errorprone:error_prone_annotations:2.3.1'
-
-  
   compileOnly         'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.100'
+
   compileOnly         'org.immutables:builder:2.6.1'
-  compileOnly         "org.immutables:value:2.6.1:annotations"
-  annotationProcessor "org.immutables:value:2.6.1"
-  
-  testImplementation 'junit:junit:4.12'
-  testImplementation 'org.assertj:assertj-core:3.6.1'
-  
+  compileOnly         'org.immutables:value:2.6.1:annotations'
+
+  annotationProcessor 'org.immutables:builder:2.6.1'
+  annotationProcessor 'org.immutables:value:2.6.1'
+
+  testImplementation  'junit:junit:4.12'
+  testImplementation  'org.assertj:assertj-core:3.6.1'
+
 }
 
 repositories {
@@ -35,7 +36,3 @@ repositories {
 
 sourceCompatibility = 9
 targetCompatibility = 9
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.8'
-}
