@@ -2,23 +2,15 @@ package io.zrz.graphql.core.value;
 
 import java.util.function.Function;
 
-import lombok.EqualsAndHashCode;
-import lombok.experimental.Wither;
+import org.immutables.value.Value;
 
-@Wither
-@EqualsAndHashCode
-public final class GQLStringValue implements GQLScalarValue {
+@Value.Immutable
+public abstract class GQLStringValue implements GQLScalarValue {
 
   private static final Function<GQLValue, String> STRING_EXTRACTOR_INSTANCE = arg -> arg.apply(GQLValueConverters.stringConverter());
-  private final String value;
 
-  public GQLStringValue(final String value) {
-    this.value = value;
-  }
-
-  public String value() {
-    return this.value;
-  }
+  @Value.Parameter
+  public abstract String value();
 
   @Override
   public <R> R apply(final GQLValueVisitor<R> visitor) {
@@ -26,17 +18,16 @@ public final class GQLStringValue implements GQLScalarValue {
   }
 
   public static GQLStringValue from(final String value) {
-    return new GQLStringValue(value);
+    return ImmutableGQLStringValue.of(value);
   }
 
   /**
-   * Note: toStrings are never used for output to clients. Only
-   * degbugging/logging.
+   * Note: toStrings are never used for output to clients. Only degbugging/logging.
    */
 
   @Override
   public String toString() {
-    return String.format("\"%s\"", this.value);
+    return String.format("\"%s\"", this.value());
   }
 
   public static Function<GQLValue, String> stringExtractor() {

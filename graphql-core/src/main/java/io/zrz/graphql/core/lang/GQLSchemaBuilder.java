@@ -10,8 +10,7 @@ import io.zrz.graphql.core.decl.GQLSchemaDeclaration;
 import io.zrz.graphql.core.decl.GQLTypeDeclaration;
 
 /**
- * Provides utilities for building a schema. This involves resolving type
- * references, peforming type validations, etc.
+ * Provides utilities for building a schema. This involves resolving type references, peforming type validations, etc.
  *
  * @author theo
  *
@@ -44,9 +43,14 @@ public class GQLSchemaBuilder {
     type.apply(new ValidateDeclarationVisitor());
 
     if (type.name() == null || type.name().isEmpty()) {
+
       throw new IllegalArgumentException("empty name");
-    } else if (this.types.containsKey(type.name())) {
+
+    }
+    else if (this.types.containsKey(type.name())) {
+
       throw new DuplicateTypeNameException(type.name());
+
     }
 
     this.types.put(type.name(), type);

@@ -2,66 +2,39 @@ package io.zrz.graphql.core.doc;
 
 import java.util.List;
 
-import io.zrz.graphql.core.parser.GQLSourceLocation;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Singular;
-import lombok.ToString;
-import lombok.experimental.Wither;
+import org.eclipse.jdt.annotation.Nullable;
+import org.immutables.value.Value;
 
 /**
- * A single field selection, which can have arguments, directives, and sub
- * selections.
+ * A single field selection, which can have arguments, directives, and sub selections.
  *
  * @author theo
  *
  */
 
-@ToString
-@EqualsAndHashCode
-@Builder(builderClassName = "Builder")
-@Wither
-public final class GQLFieldSelection implements GQLSelection {
+@Value.Immutable(copy = true)
+public abstract class GQLFieldSelection implements GQLSelection {
 
-  private final String alias;
-  private final String name;
-  private final GQLSourceLocation location;
+  public abstract String name();
 
-  @Singular
-  private final List<GQLArgument> args;
-
-  @Singular
-  private final List<GQLDirective> directives;
-
-  @Singular
-  private final List<GQLSelection> selections;
-
-  public String name() {
-    return this.name;
-  }
-
-  public String alias() {
-    return this.alias;
-  }
+  public abstract @Nullable String alias();
 
   public String outputName() {
-    if (this.alias == null) {
+    if (this.alias() == null) {
       return this.name();
     }
-    return this.alias;
+    return this.alias();
   }
 
-  public List<GQLArgument> args() {
-    return this.args;
-  }
+  public abstract List<GQLArgument> args();
 
-  public List<GQLDirective> directives() {
-    return this.directives;
-  }
+  public abstract List<GQLDirective> directives();
 
-  public List<GQLSelection> selections() {
-    return this.selections;
-  }
+  public abstract List<GQLSelection> selections();
+
+  public abstract GQLFieldSelection withDirectives(GQLDirective... value);
+
+  public abstract GQLFieldSelection withArgs(GQLArgument... value);
 
   @Override
   public <R> R apply(GQLSelectionVisitor<R> visitor) {
@@ -73,12 +46,11 @@ public final class GQLFieldSelection implements GQLSelection {
   }
 
   public GQLArgument args(String name) {
-    return this.args.stream().filter(a -> a.name().equals(name)).findAny().orElse(null);
+    return this.args().stream().filter(a -> a.name().equals(name)).findAny().orElse(null);
   }
 
-  @Override
-  public GQLSourceLocation location() {
-    return this.location;
+  public static ImmutableGQLFieldSelection.Builder builder() {
+    return ImmutableGQLFieldSelection.builder();
   }
 
 }

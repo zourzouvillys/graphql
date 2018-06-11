@@ -1,16 +1,14 @@
 package io.zrz.graphql.core.decl;
 
 import java.util.List;
+import java.util.Optional;
+
+import org.eclipse.jdt.annotation.Nullable;
+import org.immutables.value.Value;
 
 import io.zrz.graphql.core.doc.GQLDirective;
 import io.zrz.graphql.core.types.GQLTypeReference;
 import io.zrz.graphql.core.value.GQLValue;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.NonNull;
-import lombok.Singular;
-import lombok.ToString;
-import lombok.experimental.Wither;
 
 /**
  * An argument definition.
@@ -18,42 +16,24 @@ import lombok.experimental.Wither;
  * @author theo
  */
 
-@Wither
-@ToString
-@EqualsAndHashCode
-@Builder(builderClassName = "Builder")
-public final class GQLArgumentDefinition {
+@Value.Immutable(copy = true)
+public interface GQLArgumentDefinition {
 
-  @NonNull
-  private final String name;
-  private final String description;
+  abstract String name();
 
-  @Singular
-  private final List<GQLDirective> directives;
+  @Nullable
+  abstract String description();
 
-  @NonNull
-  private final GQLTypeReference type;
+  abstract List<GQLDirective> directives();
 
-  private final GQLValue defaultValue;
+  abstract GQLTypeReference type();
 
-  public String name() {
-    return this.name;
-  }
+  ImmutableGQLArgumentDefinition withType(GQLTypeReference value);
 
-  public String description() {
-    return this.description;
-  }
+  abstract Optional<GQLValue> defaultValue();
 
-  public GQLTypeReference type() {
-    return this.type;
-  }
-
-  public GQLValue defaultValue() {
-    return this.defaultValue;
-  }
-
-  public List<GQLDirective> directives() {
-    return this.directives;
+  public static ImmutableGQLArgumentDefinition.Builder builder() {
+    return ImmutableGQLArgumentDefinition.builder();
   }
 
 }

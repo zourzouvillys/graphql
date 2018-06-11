@@ -2,16 +2,16 @@ package io.zrz.graphql.core.doc;
 
 import io.zrz.graphql.core.parser.GQLParser;
 import io.zrz.graphql.core.parser.GQLSourceInput;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.ToString;
 
-@ToString
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public final class GQLSelectedOperation {
 
   private final GQLDocument doc;
   private final GQLOperationDefinition query;
+
+  public GQLSelectedOperation(GQLDocument doc, GQLOperationDefinition op) {
+    this.doc = doc;
+    this.query = op;
+  }
 
   public GQLDocument doc() {
     return this.doc;
@@ -33,8 +33,8 @@ public final class GQLSelectedOperation {
   }
 
   /**
-   * returns the selected operation with the specified named. If the name is null
-   * or empty, the default will be returned.
+   * returns the selected operation with the specified named. If the name is null or empty, the default will be
+   * returned.
    *
    * If the named query doesn't exist, {@link IllegalArgumentException} is thrown.
    *

@@ -2,19 +2,33 @@ package io.zrz.graphql.core.decl;
 
 import java.util.List;
 
+import org.eclipse.jdt.annotation.Nullable;
+
 import io.zrz.graphql.core.doc.GQLDirective;
 import io.zrz.graphql.core.types.GQLTypeReference;
 
 public interface GQLFieldDeclaration {
 
-  public String name();
+  String name();
 
-  public String description();
+  @Nullable
+  String description();
 
-  public GQLTypeReference type();
+  GQLTypeReference type();
 
-  public String deprecationReason();
+  @Nullable
+  String deprecationReason();
 
-  public List<GQLDirective> directives();
+  List<GQLDirective> directives();
+
+  GQLFieldDeclaration withName(String ref);
+
+  GQLFieldDeclaration withDescription(String ref);
+
+  GQLFieldDeclaration withType(GQLTypeReference ref);
+
+  GQLFieldDeclaration withDeprecationReason(String ref);
+
+  GQLFieldDeclaration withDirectives(GQLDirective... ref);
 
 }

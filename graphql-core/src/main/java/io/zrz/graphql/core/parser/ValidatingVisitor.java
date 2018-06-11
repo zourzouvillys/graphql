@@ -9,6 +9,7 @@ import io.zrz.graphql.core.doc.GQLDocument;
 import io.zrz.graphql.core.doc.GQLFragmentDefinition;
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.doc.GQLOperationDefinition;
+import io.zrz.graphql.core.doc.ImmutableGQLOperationDefinition;
 
 /**
  * validates the basic parts of the document are correct.
@@ -54,10 +55,11 @@ class ValidatingVisitor implements GQLDefinitionVisitor<GQLDefinition> {
       }
       // anonymous without type specified is a query.
       if (op.type() == null) {
-        op = op.withType(GQLOpType.Query);
+        op = ImmutableGQLOperationDefinition.copyOf(op).withType(GQLOpType.Query);
       }
       this.defaultQuery = op;
-    } else if (this.operations.put(op.name(), op) != null) {
+    }
+    else if (this.operations.put(op.name(), op) != null) {
       throw new RuntimeException(String.format("operation '%s' defined multiple times", op.name()));
     }
 

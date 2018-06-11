@@ -1,70 +1,48 @@
 package io.zrz.graphql.core.decl;
 
-import java.util.List;
+import org.eclipse.jdt.annotation.Nullable;
+import org.immutables.value.Value;
 
 import io.zrz.graphql.core.doc.GQLDirective;
 import io.zrz.graphql.core.types.GQLTypeReference;
 import io.zrz.graphql.core.value.GQLValue;
-import lombok.Builder;
-import lombok.Singular;
-import lombok.experimental.Wither;
 
-@Wither
-@Builder(builderClassName = "Builder")
-public class GQLInputFieldDeclaration implements GQLFieldDeclaration {
+@Value.Immutable(copy = true)
+public abstract class GQLInputFieldDeclaration implements GQLFieldDeclaration {
 
-  private final String name;
-  private final String description;
-
-  private final GQLTypeReference type;
-
-  private final String deprecationReason;
-
-  private final GQLValue defaultValue;
-
-  @Singular
-  private final List<GQLDirective> directives;
+  @Nullable
+  public abstract GQLValue defaultValue();
 
   @Override
-  public String name() {
-    return this.name;
-  }
+  public abstract GQLInputFieldDeclaration withName(String ref);
 
   @Override
-  public String description() {
-    return this.description;
-  }
+  public abstract GQLInputFieldDeclaration withDescription(String ref);
 
   @Override
-  public GQLTypeReference type() {
-    return this.type;
-  }
+  public abstract GQLInputFieldDeclaration withType(GQLTypeReference ref);
 
   @Override
-  public String deprecationReason() {
-    return this.deprecationReason;
-  }
+  public abstract GQLInputFieldDeclaration withDeprecationReason(String ref);
 
-  public GQLValue defaultValue() {
-    return this.defaultValue;
-  }
+  @Override
+  public abstract GQLInputFieldDeclaration withDirectives(GQLDirective... ref);
 
   @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder("GQLInputField(");
     sb.append(this.name()).append(": ").append(this.type());
     sb.append(')');
-    if (this.defaultValue != null) {
+    if (this.defaultValue() != null) {
       sb.append(" = ");
-      sb.append(this.defaultValue);
+      sb.append(this.defaultValue());
     }
     return sb.toString();
 
   }
 
-  @Override
-  public List<GQLDirective> directives() {
-    return this.directives;
+  public static ImmutableGQLInputFieldDeclaration.Builder builder() {
+    return ImmutableGQLInputFieldDeclaration.builder();
   }
 
 }

@@ -4,13 +4,11 @@ import io.zrz.graphql.core.converter.DynamicListCreationMaterializer;
 import io.zrz.graphql.core.converter.DynamicObjectInstanceCreationMaterializer;
 import io.zrz.graphql.core.converter.TypeConverter;
 
-public class GQLValueTypeConverter extends TypeConverter
-{
+public class GQLValueTypeConverter extends TypeConverter {
 
   public static final GQLValueTypeConverter INSTANCE = new GQLValueTypeConverter();
 
-  public GQLValueTypeConverter()
-  {
+  public GQLValueTypeConverter() {
 
     // register all of our conveters.
 
@@ -29,8 +27,7 @@ public class GQLValueTypeConverter extends TypeConverter
 
   }
 
-  public static GQLValueTypeConverter getInstance()
-  {
+  public static GQLValueTypeConverter getInstance() {
     return INSTANCE;
   }
 

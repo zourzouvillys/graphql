@@ -2,49 +2,22 @@ package io.zrz.graphql.core.doc;
 
 import java.util.List;
 
-import io.zrz.graphql.core.parser.GQLSourceLocation;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Singular;
-import lombok.ToString;
-import lombok.experimental.Wither;
+import org.immutables.value.Value;
 
-@Wither
-@EqualsAndHashCode
-@ToString
-@Builder(builderClassName = "Builder")
-public final class GQLFragmentSpreadSelection implements GQLSelection {
+@Value.Immutable(copy = true)
+public abstract class GQLFragmentSpreadSelection implements GQLSelection {
 
-  /**
-   * the name of the fragment this refers to.
-   */
+  public abstract String name();
 
-  private final String name;
-  private final GQLSourceLocation location;
-
-  /**
-   * any directives.
-   */
-
-  @Singular
-  private final List<GQLDirective> directives;
-
-  public String name() {
-    return this.name;
-  }
-
-  public List<GQLDirective> directives() {
-    return this.directives;
-  }
+  public abstract List<GQLDirective> directives();
 
   @Override
   public <R> R apply(GQLSelectionVisitor<R> visitor) {
     return visitor.visitFragmentSelection(this);
   }
 
-  @Override
-  public GQLSourceLocation location() {
-    return this.location;
+  public static ImmutableGQLFragmentSpreadSelection.Builder builder() {
+    return ImmutableGQLFragmentSpreadSelection.builder();
   }
 
 }

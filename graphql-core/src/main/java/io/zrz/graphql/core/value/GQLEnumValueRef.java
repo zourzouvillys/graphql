@@ -1,23 +1,12 @@
 package io.zrz.graphql.core.value;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import lombok.experimental.Wither;
+import org.immutables.value.Value;
 
-@EqualsAndHashCode
-@ToString
-@Wither
-public final class GQLEnumValueRef implements GQLScalarValue {
+@Value.Immutable
+public abstract class GQLEnumValueRef implements GQLScalarValue {
 
-  private final String value;
-
-  GQLEnumValueRef(final String value) {
-    this.value = value;
-  }
-
-  public String value() {
-    return this.value;
-  }
+  @Value.Parameter
+  public abstract String value();
 
   @Override
   public <R> R apply(final GQLValueVisitor<R> visitor) {
@@ -25,7 +14,7 @@ public final class GQLEnumValueRef implements GQLScalarValue {
   }
 
   public static GQLEnumValueRef from(final String value) {
-    return new GQLEnumValueRef(value);
+    return ImmutableGQLEnumValueRef.of(value);
   }
 
   @Override

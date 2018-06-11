@@ -1,23 +1,12 @@
 package io.zrz.graphql.core.value;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import lombok.experimental.Wither;
+import org.immutables.value.Value;
 
-@Wither
-@ToString
-@EqualsAndHashCode
-public final class GQLIntValue implements GQLScalarValue {
+@Value.Immutable(copy = false)
+public abstract class GQLIntValue implements GQLScalarValue {
 
-  private final long value;
-
-  private GQLIntValue(final long value) {
-    this.value = value;
-  }
-
-  public long value() {
-    return this.value;
-  }
+  @Value.Parameter
+  public abstract long value();
 
   @Override
   public <R> R apply(final GQLValueVisitor<R> visitor) {
@@ -25,7 +14,7 @@ public final class GQLIntValue implements GQLScalarValue {
   }
 
   public static GQLIntValue from(final long value) {
-    return new GQLIntValue(value);
+    return ImmutableGQLIntValue.of(value);
   }
 
   @Override

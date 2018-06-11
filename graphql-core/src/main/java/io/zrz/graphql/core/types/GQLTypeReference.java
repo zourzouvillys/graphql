@@ -9,8 +9,7 @@ import io.zrz.graphql.core.lang.GQLTypeVisitor;
  *
  */
 
-public interface GQLTypeReference
-{
+public interface GQLTypeReference {
 
   <R> R apply(GQLTypeVisitor<R> visitor);
 

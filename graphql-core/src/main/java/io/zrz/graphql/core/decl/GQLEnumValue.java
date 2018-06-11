@@ -2,37 +2,26 @@ package io.zrz.graphql.core.decl;
 
 import java.util.List;
 
+import org.eclipse.jdt.annotation.Nullable;
+import org.immutables.value.Value;
+
 import io.zrz.graphql.core.doc.GQLDirective;
-import lombok.Builder;
-import lombok.Singular;
-import lombok.ToString;
-import lombok.experimental.Wither;
 
-@Wither
-@ToString
-@Builder
-public final class GQLEnumValue {
+@Value.Immutable(copy = true)
+public interface GQLEnumValue {
 
-  private final String name;
-  private final String description;
-  private final String deprecationReason;
-  @Singular
-  private final List<GQLDirective> directives;
+  String name();
 
-  public String name() {
-    return this.name;
-  }
+  @Nullable
+  String description();
 
-  public String description() {
-    return this.description;
-  }
+  @Nullable
+  String deprecationReason();
 
-  public String deprecationReason() {
-    return this.deprecationReason;
-  }
+  List<GQLDirective> directives();
 
-  public List<GQLDirective> directives() {
-    return this.directives;
+  public static ImmutableGQLEnumValue.Builder builder() {
+    return ImmutableGQLEnumValue.builder();
   }
 
 }

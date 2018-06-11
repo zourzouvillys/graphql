@@ -8,11 +8,8 @@ import io.zrz.graphql.core.value.DefaultValueVisitor;
 import io.zrz.graphql.core.value.GQLObjectValue;
 import io.zrz.graphql.core.value.GQLValue;
 import io.zrz.graphql.core.value.GQLVariableRef;
-import lombok.experimental.UtilityClass;
 
-@UtilityClass
-public class GQLUtils
-{
+public final class GQLUtils {
 
   /**
    * Pretty print the args.
@@ -21,13 +18,11 @@ public class GQLUtils
    * @return
    */
 
-  public static String toString(final List<GQLArgument> args)
-  {
+  public static String toString(final List<GQLArgument> args) {
     return args.stream().map(arg -> toString(arg)).collect(Collectors.joining(", "));
   }
 
-  private static String toString(final GQLArgument arg)
-  {
+  private static String toString(final GQLArgument arg) {
     final StringBuilder sb = new StringBuilder();
     sb.append(arg.name());
     sb.append('=');
@@ -35,45 +30,36 @@ public class GQLUtils
     return sb.toString();
   }
 
-  public static boolean isValidTypeName(String name)
-  {
-    if (name == null || name.isEmpty())
-    {
+  public static boolean isValidTypeName(String name) {
+    if (name == null || name.isEmpty()) {
       return false;
     }
     return true;
   }
 
-  public static String normalize(String input)
-  {
-    if (input == null)
-    {
+  public static String normalize(String input) {
+    if (input == null) {
       return null;
     }
     input = input.trim();
-    if (input.isEmpty())
-    {
+    if (input.isEmpty()) {
       return null;
     }
     return input;
   }
 
-  public static final GQLValue resolve(GQLArgument arg, GQLObjectValue input)
-  {
+  public static final GQLValue resolve(GQLArgument arg, GQLObjectValue input) {
 
     return arg.value().apply(new DefaultValueVisitor<GQLValue>() {
 
       @Override
-      public GQLValue visitDefaultValue(GQLValue value)
-      {
+      public GQLValue visitDefaultValue(GQLValue value) {
         return value;
       }
 
       @Override
-      public GQLValue visitVarValue(GQLVariableRef value)
-      {
-        if (input != null)
-        {
+      public GQLValue visitVarValue(GQLVariableRef value) {
+        if (input != null) {
           return input.entry(value.name()).orElse(null);
         }
         return null;

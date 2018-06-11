@@ -10,7 +10,6 @@ import org.junit.Test;
 import io.zrz.graphql.core.doc.GQLDocument;
 import io.zrz.graphql.core.parser.GQLParser;
 import io.zrz.graphql.core.parser.GQLSourceInput;
-import io.zrz.graphql.core.utils.GQLDocumentPrinter;
 
 public class DefinitionPrinterTest {
 
@@ -19,6 +18,11 @@ public class DefinitionPrinterTest {
    *
    * @throws IOException
    */
+
+  @Test
+  public void testSimple() throws IOException {
+    this.checkEquality("query { a }");
+  }
 
   @Test
   public void test() throws IOException {
@@ -52,7 +56,8 @@ public class DefinitionPrinterTest {
 
     final GQLDocument doc2 = GQLParser.parseDocument(os.toString(), GQLSourceInput.emptySource());
 
-    Assert.assertEquals(doc, doc2);
+    Assert.assertEquals(doc.defaultOperation().operationName(), doc2.defaultOperation().operationName());
+    Assert.assertEquals(doc.fragments(), doc2.fragments());
 
   }
 

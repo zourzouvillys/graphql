@@ -2,53 +2,28 @@ package io.zrz.graphql.core.doc;
 
 import java.util.List;
 
+import org.immutables.value.Value;
+
 import io.zrz.graphql.core.types.GQLDeclarationRef;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Singular;
-import lombok.ToString;
-import lombok.experimental.Wither;
 
-@EqualsAndHashCode
-@Wither
-@Builder
-@ToString
-public final class GQLFragmentDefinition implements GQLDefinition
-{
+@Value.Immutable(copy = true)
+public abstract class GQLFragmentDefinition implements GQLDefinition {
 
-  private final String name;
-  private final GQLDeclarationRef namedType;
+  public abstract String name();
 
-  @Singular
-  private final List<GQLDirective> directives;
+  public abstract GQLDeclarationRef namedType();
 
-  @Singular
-  private final List<GQLSelection> selections;
+  public abstract List<GQLDirective> directives();
 
-  public String name()
-  {
-    return this.name;
-  }
-
-  public GQLDeclarationRef namedType()
-  {
-    return this.namedType;
-  }
-
-  public List<GQLDirective> directives()
-  {
-    return this.directives;
-  }
-
-  public List<GQLSelection> selections()
-  {
-    return this.selections;
-  }
+  public abstract List<GQLSelection> selections();
 
   @Override
-  public <R> R apply(final GQLDefinitionVisitor<R> visitor)
-  {
+  public <R> R apply(final GQLDefinitionVisitor<R> visitor) {
     return visitor.visitFragment(this);
+  }
+
+  public static ImmutableGQLFragmentDefinition.Builder builder() {
+    return ImmutableGQLFragmentDefinition.builder();
   }
 
 }

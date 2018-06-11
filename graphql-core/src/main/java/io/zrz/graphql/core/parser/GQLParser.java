@@ -13,16 +13,16 @@ import io.zrz.graphql.core.decl.GQLDeclaration;
 import io.zrz.graphql.core.doc.GQLDocument;
 import io.zrz.graphql.core.doc.GQLOperationDefinition;
 import io.zrz.graphql.core.doc.GQLSelection;
+import io.zrz.graphql.core.doc.ImmutableGQLDocument;
 import io.zrz.graphql.core.lang.GQLSchemaBuilder;
 import io.zrz.graphql.core.lang.GQLTypeRegistry;
 import io.zrz.graphql.core.types.GQLTypeReference;
 import io.zrz.graphql.core.types.GQLTypes;
 import io.zrz.graphql.core.value.GQLValue;
-import lombok.SneakyThrows;
 
 /**
- * Although a parser generator could be used, the amount of code is pretty much
- * identical due to the well designed nature of the GraphQL specification.
+ * Although a parser generator could be used, the amount of code is pretty much identical due to the well designed
+ * nature of the GraphQL specification.
  *
  * @author theo
  *
@@ -41,8 +41,8 @@ public class GQLParser {
   }
 
   /**
-   * Parses the given string into a document model and performs basic structural
-   * validation, but doesn't validate the shape or other query semantics.
+   * Parses the given string into a document model and performs basic structural validation, but doesn't validate the
+   * shape or other query semantics.
    *
    * @param doc
    * @return
@@ -72,15 +72,15 @@ public class GQLParser {
 
   private GQLDocument validate(GQLDocument doc) {
     final ValidatingVisitor visitor = new ValidatingVisitor(doc);
-    return doc.withDefinitions(
-        doc.definitions().stream().map(def -> def.apply(visitor)).collect(Collectors.toList()));
+    return ImmutableGQLDocument.copyOf(doc)
+        .withDefinitions(doc.definitions().stream().map(def -> def.apply(visitor)).collect(Collectors.toList()));
   }
 
   /**
    * Parses a query, which must begin with 'query' or '{'.
    *
-   * Note that this is only useful for diagnostics and debugging, as the returned
-   * query is not validated and any references to fragments will not be available.
+   * Note that this is only useful for diagnostics and debugging, as the returned query is not validated and any
+   * references to fragments will not be available.
    *
    */
 
@@ -95,8 +95,8 @@ public class GQLParser {
   }
 
   /**
-   * read the given input string and convert into GQL schema declarations, without
-   * performing and processing logic on it.
+   * read the given input string and convert into GQL schema declarations, without performing and processing logic on
+   * it.
    *
    * @param schema
    *          The input string to process
@@ -149,7 +149,8 @@ public class GQLParser {
   private static String streamToString(final InputStream inputStream) {
     try (final BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
       return br.lines().collect(Collectors.joining("\n"));
-    } catch (final IOException e) {
+    }
+    catch (final IOException e) {
       throw new RuntimeException(e);
     }
   }
@@ -178,10 +179,12 @@ public class GQLParser {
     return parseDocument(streamToString(input), source);
   }
 
-  @SneakyThrows
   public static GQLDocument parseDocument(Path path) {
     try (InputStream in = new FileInputStream(path.toString())) {
-      return parseDocument(in, new GQLSourceInput(path.toString()));
+      return parseDocument(in, GQLSourceInput.of(path.toString()));
+    }
+    catch (Exception ex) {
+      throw new RuntimeException(ex);
     }
   }
 

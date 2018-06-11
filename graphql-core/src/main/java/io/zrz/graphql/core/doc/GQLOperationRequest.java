@@ -1,7 +1,6 @@
 package io.zrz.graphql.core.doc;
 
 import io.zrz.graphql.core.value.GQLObjectValue;
-import lombok.AllArgsConstructor;
 
 /**
  * A document along with optional named query and input value.
@@ -15,35 +14,27 @@ import lombok.AllArgsConstructor;
  */
 
 @Deprecated
-@AllArgsConstructor
-public class GQLOperationRequest
-{
+public class GQLOperationRequest {
 
-  private final GQLDocument doc;
-  private final String query;
-  private final GQLObjectValue inputs;
+  private GQLDocument doc;
+  private String query;
+  private GQLObjectValue inputs;
 
-  public GQLDocument doc()
-  {
+  public GQLDocument doc() {
     return this.doc;
   }
 
-  public String operationName()
-  {
+  public String operationName() {
     return this.query;
   }
 
-  public GQLObjectValue inputs()
-  {
+  public GQLObjectValue inputs() {
     return this.inputs;
   }
 
-  public GQLOperationDefinition operation()
-  {
-    if (query == null)
-    {
-      if (doc().operations().isEmpty())
-      {
+  public GQLOperationDefinition operation() {
+    if (query == null) {
+      if (doc().operations().isEmpty()) {
         return null;
       }
       return doc().operations().iterator().next();
@@ -51,8 +42,7 @@ public class GQLOperationRequest
     return doc().named(operationName());
   }
 
-  public boolean valid()
-  {
+  public boolean valid() {
     return operation() != null;
   }
 

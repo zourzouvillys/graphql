@@ -7,7 +7,6 @@ import static io.zrz.graphql.core.doc.GQLDirective.createDirective;
 import static io.zrz.graphql.core.doc.GQLFieldSelection.fieldSelection;
 import static io.zrz.graphql.core.doc.GQLVariableDefinition.intVar;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.util.Lists.newArrayList;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.BufferedReader;
@@ -21,8 +20,6 @@ import org.junit.Test;
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.doc.GQLOperationDefinition;
 import io.zrz.graphql.core.lang.GQLTypeRegistry;
-import io.zrz.graphql.core.parser.GQLParser;
-import io.zrz.graphql.core.parser.GQLSourceInput;
 import io.zrz.graphql.core.utils.TypePrinter;
 
 public class GQLParserTest {
@@ -49,11 +46,11 @@ public class GQLParserTest {
     assertThat(q.vars())
         .containsExactly(intVar("input", 1));
 
-    assertThat(q.selections())
+    assertThat(q.selections().stream().map(x -> x.withLocation(null)).collect(Collectors.toList()))
         .containsExactly(
             fieldSelection("moo")
-                .withDirectives(newArrayList(createDirective("include", varArg("if", "something"))))
-                .withArgs(newArrayList(stringArg("test", "hello"))));
+                .withDirectives(createDirective("include", varArg("if", "something")))
+                .withArgs(stringArg("test", "hello")).withLocation(null));
 
   }
 
@@ -67,7 +64,9 @@ public class GQLParserTest {
   @Test
   public void testParseSchema() throws Exception {
 
-    final GQLTypeRegistry schema = this.PARSER.parseSchema(streamToString(this.getClass().getResourceAsStream("/test.schema")), GQLSourceInput.emptySource());
+    String input = streamToString(this.getClass().getResourceAsStream("/test.schema"));
+
+    final GQLTypeRegistry schema = this.PARSER.parseSchema(input, GQLSourceInput.emptySource());
 
     schema.types().forEach(type -> {
 
@@ -81,7 +80,8 @@ public class GQLParserTest {
   public static String streamToString(final InputStream inputStream) throws Exception {
     try (final BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
       return br.lines().collect(Collectors.joining("\n"));
-    } catch (final IOException e) {
+    }
+    catch (final IOException e) {
       throw new RuntimeException(e);
     }
   }

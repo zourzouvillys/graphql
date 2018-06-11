@@ -4,20 +4,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Singular;
-import lombok.experimental.Wither;
+import org.immutables.value.Value;
 
-@EqualsAndHashCode
-@Wither
-@Builder(builderClassName = "Builder")
-public final class GQLObjectValue implements GQLValue {
+@Value.Immutable(copy = true)
+public abstract class GQLObjectValue implements GQLValue {
 
   private static final GQLObjectValue EMPTY = builder().build();
 
-  @Singular
-  private final Map<String, GQLValue> values;
+  public abstract Map<String, GQLValue> values();
 
   @Override
   public <R> R apply(final GQLValueVisitor<R> visitor) {
@@ -25,16 +19,15 @@ public final class GQLObjectValue implements GQLValue {
   }
 
   public Map<String, GQLValue> entries() {
-    return this.values;
+    return this.values();
   }
 
   public Optional<GQLValue> entry(String key) {
-    return Optional.ofNullable(this.values.get(key));
+    return Optional.ofNullable(this.values().get(key));
   }
 
   /**
-   * Note: toStrings are never used for output to clients. Only
-   * degbugging/logging.
+   * Note: toStrings are never used for output to clients. Only degbugging/logging.
    */
 
   @Override
@@ -53,16 +46,16 @@ public final class GQLObjectValue implements GQLValue {
   }
 
   public static GQLObjectValue singleValue(String key, String value) {
-    return GQLObjectValue.builder().value(key, GQLValues.stringValue(value)).build();
+    return GQLObjectValue.builder().putValues(key, GQLValues.stringValue(value)).build();
   }
 
   public static GQLObjectValue singleValue(String key, GQLValue value) {
-    return GQLObjectValue.builder().value(key, value).build();
+    return GQLObjectValue.builder().putValues(key, value).build();
   }
 
   /**
-   * Creates a visitor which when applied to a gQLValue will return the
-   * specified field name, if it exists. Otherwise returens null.
+   * Creates a visitor which when applied to a gQLValue will return the specified field name, if it exists. Otherwise
+   * returens null.
    *
    * @param fieldName
    * @return
@@ -89,6 +82,10 @@ public final class GQLObjectValue implements GQLValue {
   @Override
   public GQLValueType type() {
     return GQLValueType.Object;
+  }
+
+  public static ImmutableGQLObjectValue.Builder builder() {
+    return ImmutableGQLObjectValue.builder();
   }
 
 }

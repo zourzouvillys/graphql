@@ -13,6 +13,8 @@ public interface GQLTypeDeclaration extends GQLDeclaration {
 
   String name();
 
+  GQLTypeDeclaration withName(String value);
+
   <R> R apply(GQLTypeDeclarationVisitor<R> visitor);
 
   @Override

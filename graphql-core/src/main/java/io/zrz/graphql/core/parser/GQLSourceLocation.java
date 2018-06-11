@@ -1,20 +1,22 @@
 package io.zrz.graphql.core.parser;
 
-import lombok.Value;
+import org.immutables.value.Value;
 
-@Value(staticConstructor = "of")
-public class GQLSourceLocation {
+@Value.Immutable(copy = true)
+public abstract class GQLSourceLocation {
 
-  private final GQLSourceInput input;
+  public abstract GQLSourceInput input();
 
-  private final int sourceOffset;
-  private final int lineNumber;
-  private final int lineOffset;
+  public abstract int sourceOffset();
+
+  public abstract int lineNumber();
+
+  public abstract int lineOffset();
 
   @Override
   public String toString() {
 
-    return String.format("%s (line %d col %d)", this.input, this.lineNumber, this.lineOffset);
+    return String.format("%s (line %d col %d)", this.input(), this.lineNumber(), this.lineOffset());
 
   }
 

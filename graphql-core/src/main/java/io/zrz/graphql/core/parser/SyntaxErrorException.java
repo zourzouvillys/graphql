@@ -1,7 +1,5 @@
 package io.zrz.graphql.core.parser;
 
-import io.zrz.graphql.core.parser.Lexer.LineInfo;
-
 public class SyntaxErrorException extends GQLException {
 
   private static final long serialVersionUID = 1L;
@@ -28,7 +26,7 @@ public class SyntaxErrorException extends GQLException {
     this.message = message;
   }
 
-  private static LineInfo calculateLine(ParseContext ctx) {
+  private static ImmutableLineInfo calculateLine(ParseContext ctx) {
     if (ctx.lexer().peek() == null) {
       return null;
     }

@@ -90,6 +90,6 @@ input InputType {
   answer: Int = 42
 }
 
-extend type Foo {
+extend type Foo2 {
   seven(argument: [String]): Int
 }

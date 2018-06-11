@@ -12,73 +12,72 @@ import org.junit.Test;
 import com.google.common.base.Throwables;
 
 import io.zrz.graphql.core.decl.GQLUnionTypeDeclaration;
-import io.zrz.graphql.core.lang.DuplicateTypeNameException;
-import io.zrz.graphql.core.lang.GQLSchemaBuilder;
-import io.zrz.graphql.core.lang.GQLTypeRegistry;
-import io.zrz.graphql.core.lang.UnresolvableTypeNameException;
+import io.zrz.graphql.core.decl.ImmutableGQLParameterableFieldDeclaration;
 
 public class GQLSchemaBuilderTest {
 
-	@Test(expected = DuplicateTypeNameException.class)
-	public void testFailOnDuplicateNames() {
-		final GQLSchemaBuilder builder = new GQLSchemaBuilder();
-		builder.add(scalar("ID"));
-		builder.add(scalar("ID"));
-		builder.build(); // throws.
-	}
+  @Test(expected = DuplicateTypeNameException.class)
+  public void testFailOnDuplicateNames() {
+    final GQLSchemaBuilder builder = new GQLSchemaBuilder();
+    builder.add(scalar("ID"));
+    builder.add(scalar("ID"));
+    builder.build(); // throws.
+  }
 
-	@Test
-	public void testRegisterBuiltints() {
-		final GQLSchemaBuilder builder = new GQLSchemaBuilder();
-		builder.add(builtins());
-		final GQLTypeRegistry reg = builder.build();
-		Assert.assertNotNull(reg.scalar("String"));
-		Assert.assertNotNull(reg.scalar("Int"));
-		Assert.assertNotNull(reg.scalar("Float"));
-		Assert.assertNotNull(reg.scalar("Boolean"));
-		Assert.assertNotNull(reg.scalar("ID"));
-	}
+  @Test
+  public void testRegisterBuiltints() {
+    final GQLSchemaBuilder builder = new GQLSchemaBuilder();
+    builder.add(builtins());
+    final GQLTypeRegistry reg = builder.build();
+    Assert.assertNotNull(reg.scalar("String"));
+    Assert.assertNotNull(reg.scalar("Int"));
+    Assert.assertNotNull(reg.scalar("Float"));
+    Assert.assertNotNull(reg.scalar("Boolean"));
+    Assert.assertNotNull(reg.scalar("ID"));
+  }
 
-	/**
-	 * make sure a definition which references an unknown type throws.
-	 */
+  /**
+   * make sure a definition which references an unknown type throws.
+   */
 
-	@Test(expected = UnresolvableTypeNameException.class)
-	public void testRefInvalidTypeName() {
-		final GQLSchemaBuilder builder = new GQLSchemaBuilder();
-		builder.add(builtins());
-		builder.add(union("MyUnion", "unknbownBLOOP", "Int"));
-		try {
-			builder.build(); // throws, as it doesn't exist.
-		} catch (RuntimeException ex) {
-			Throwables.throwIfInstanceOf(ex.getCause(), UnresolvableTypeNameException.class);
-			throw ex;
-		}
-	}
+  @Test(expected = UnresolvableTypeNameException.class)
+  public void testRefInvalidTypeName() {
+    final GQLSchemaBuilder builder = new GQLSchemaBuilder();
+    builder.add(builtins());
+    builder.add(union("MyUnion", "unknbownBLOOP", "Int"));
+    try {
+      builder.build(); // throws, as it doesn't exist.
+    }
+    catch (RuntimeException ex) {
+      Throwables.throwIfInstanceOf(ex.getCause(), UnresolvableTypeNameException.class);
+      throw ex;
+    }
+  }
 
-	/**
-	 * make sure all type references are updated.
-	 */
+  /**
+   * make sure all type references are updated.
+   */
 
-	@Test
-	public void testRefReplacement() {
+  @Test
+  public void testRefReplacement() {
 
-		final GQLSchemaBuilder builder = new GQLSchemaBuilder();
+    final GQLSchemaBuilder builder = new GQLSchemaBuilder();
 
-		builder.add(builtins());
-		builder.add(union("MyUnion", "String", "Int"));
-		builder.add(structBuilder("MyStruct")
-				// .iface(ifaceBuilder("xxx").addField("moo",
-				// nonNull("String")).build())
-				.addField("moo", nonNull("String"))
-				.build());
+    builder.add(builtins());
+    builder.add(union("MyUnion", "String", "Int"));
+    builder.add(structBuilder("MyStruct")
+        // .iface(ifaceBuilder("xxx").addField("moo",
+        // nonNull("String")).build())
+        .addFields(ImmutableGQLParameterableFieldDeclaration.builder().name("moo").type(nonNull("String")).build())
+        // .addFields("moo", nonNull("String"))
+        .build());
 
-		final GQLTypeRegistry reg = builder.build();
+    final GQLTypeRegistry reg = builder.build();
 
-		final GQLUnionTypeDeclaration union = reg.union("MyUnion");
+    final GQLUnionTypeDeclaration union = reg.union("MyUnion");
 
-		Assert.assertEquals(reg.scalar("String"), union.types().get(0).ref());
+    Assert.assertEquals(reg.scalar("String"), union.types().get(0).ref());
 
-	}
+  }
 
 }

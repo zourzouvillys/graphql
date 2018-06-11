@@ -5,6 +5,7 @@ import io.zrz.graphql.core.decl.GQLInputTypeDeclaration;
 import io.zrz.graphql.core.decl.GQLInterfaceTypeDeclaration;
 import io.zrz.graphql.core.decl.GQLObjectTypeDeclaration;
 import io.zrz.graphql.core.decl.GQLScalarTypeDeclaration;
+import io.zrz.graphql.core.decl.GQLTypeDeclaration;
 import io.zrz.graphql.core.decl.GQLTypeDeclarationVisitor;
 import io.zrz.graphql.core.decl.GQLUnionTypeDeclaration;
 import io.zrz.graphql.core.types.GQLDeclarationRef;
@@ -52,10 +53,11 @@ public class IsScalarTypeVisitor implements GQLTypeDeclarationVisitor<Boolean>, 
 
   @Override
   public Boolean visitDeclarationRef(GQLDeclarationRef type) {
-    if (type.ref() == null) {
+    final GQLTypeDeclaration ref = type.ref();
+    if (ref == null) {
       throw new IllegalStateException(String.format("Internal Error: Attmpted to turn '%s' into a scalar, which had not been resolved.", type.name()));
     }
-    return type.ref().apply(this);
+    return ref.apply(this);
   }
 
   @Override

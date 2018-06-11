@@ -1,44 +1,36 @@
 package io.zrz.graphql.core.parser;
 
+import org.immutables.value.Value;
+
 import io.zrz.graphql.core.parser.Lexer.TokenType;
-import lombok.EqualsAndHashCode;
 
-@EqualsAndHashCode
-public class Token {
+@Value.Immutable
+public abstract class Token {
 
-  private final TokenType type;
-  private final String value;
-  private final SourcePosition position;
+  @Value.Parameter
+  public abstract TokenType type();
 
-  public Token(final TokenType type, final String value, SourcePosition position) {
-    this.type = type;
-    this.value = value;
-    this.position = position;
-  }
+  @Value.Parameter
+  public abstract String value();
 
-  public TokenType type() {
-    return this.type;
-  }
-
-  public String value() {
-    return this.value;
-  }
-
-  public SourcePosition position() {
-    return this.position;
-  }
+  @Value.Parameter
+  public abstract SourcePosition position();
 
   @Override
   public String toString() {
     return String.format("%s[%s]@%s", this.type(), this.value(), this.position());
   }
 
+  public static Token from(TokenType type, String string, SourcePosition range) {
+    return ImmutableToken.of(type, string, range);
+  }
+
   public static Token name(String string, SourcePosition range) {
-    return new Token(TokenType.NAME, string, range);
+    return ImmutableToken.of(TokenType.NAME, string, range);
   }
 
   public static Token fragmentSpread(SourcePosition range) {
-    return new Token(TokenType.PUNCTUATION, "...", range);
+    return ImmutableToken.of(TokenType.PUNCTUATION, "...", range);
   }
 
 }

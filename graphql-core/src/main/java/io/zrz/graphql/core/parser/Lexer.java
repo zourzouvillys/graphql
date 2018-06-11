@@ -5,13 +5,24 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import lombok.Value;
-
 public final class Lexer {
 
-  private static final String[] PUNCTUATORS = { "...", "!", "$", "(", ")", ":", "=", "@", "[", "]", "{", "}",
+  private static final String[] PUNCTUATORS = {
+      "...",
+      "!",
+      "$",
+      "(",
+      ")",
+      ":",
+      "=",
+      "@",
+      "[",
+      "]",
+      "{",
+      "}",
       // for type parsing:
-      "|", ";" };
+      "|",
+      ";" };
 
   public static enum TokenType {
 
@@ -61,7 +72,7 @@ public final class Lexer {
     for (final String punctuator : PUNCTUATORS) {
       if (this.is(punctuator)) {
         this.skip(punctuator.length());
-        return new Token(TokenType.PUNCTUATION, punctuator, this.createPosition(this.pos - punctuator.length(), this.pos));
+        return Token.from(TokenType.PUNCTUATION, punctuator, this.createPosition(this.pos - punctuator.length(), this.pos));
       }
     }
 
@@ -77,8 +88,9 @@ public final class Lexer {
       final String comment = this.input.substring(this.pos, idx + 2);
 
       try {
-        return new Token(TokenType.COMMENT, comment, this.createPosition(this.pos, idx + 2));
-      } finally {
+        return Token.from(TokenType.COMMENT, comment, this.createPosition(this.pos, idx + 2));
+      }
+      finally {
         this.pos = idx + 2;
       }
 
@@ -93,15 +105,18 @@ public final class Lexer {
 
         if (Character.isDigit(ch)) {
           // continue
-        } else if (ch == '-') {
+        }
+        else if (ch == '-') {
           // it's a float.
-        } else if (ch == '.') {
+        }
+        else if (ch == '.') {
           // it's a float.
-        } else {
+        }
+        else {
           final int oldpos = this.pos;
           final String val = this.input.substring(this.pos, i);
           this.pos = i;
-          return new Token(TokenType.INT, val, this.createPosition(oldpos, this.pos));
+          return Token.from(TokenType.INT, val, this.createPosition(oldpos, this.pos));
         }
 
       }
@@ -109,7 +124,7 @@ public final class Lexer {
       final int oldpos = this.pos;
       final String val = this.input.substring(this.pos, this.input.length());
       this.pos = this.input.length();
-      return new Token(TokenType.INT, val, this.createPosition(oldpos, this.pos));
+      return Token.from(TokenType.INT, val, this.createPosition(oldpos, this.pos));
 
     }
 
@@ -126,7 +141,8 @@ public final class Lexer {
           if (this.input.charAt(i + 1) == term) {
             ++i;
             sb.append(term);
-          } else {
+          }
+          else {
 
             switch (this.input.charAt(i + 1)) {
               case 'n':
@@ -143,13 +159,16 @@ public final class Lexer {
 
           }
 
-        } else if (this.input.charAt(i) == term) {
+        }
+        else if (this.input.charAt(i) == term) {
           try {
-            return new Token(TokenType.STRING, sb.toString(), this.createPosition(this.pos + 1, i));
-          } finally {
+            return Token.from(TokenType.STRING, sb.toString(), this.createPosition(this.pos + 1, i));
+          }
+          finally {
             this.pos = i + 1;
           }
-        } else {
+        }
+        else {
           sb.append(this.input.charAt(i));
         }
 
@@ -174,7 +193,7 @@ public final class Lexer {
 
     final String val = this.input.substring(m.start(), m.end());
 
-    return new Token(TokenType.NAME, val, this.createPosition(m.start(), m.end()));
+    return Token.from(TokenType.NAME, val, this.createPosition(m.start(), m.end()));
 
   }
 
@@ -204,17 +223,20 @@ public final class Lexer {
       final char ch = this.input.charAt(this.pos);
       if (ch == ',') {
         // skip
-      } else if (ch == '#') {
+      }
+      else if (ch == '#') {
         // read until end of line.
         final int pos = this.input.indexOf('\n', this.pos);
         if (pos == -1) {
           // no newline.
           this.pos = this.input.length();
-        } else {
+        }
+        else {
           this.pos = pos;
         }
         continue;
-      } else if (!Character.isWhitespace(ch)) {
+      }
+      else if (!Character.isWhitespace(ch)) {
         return;
       }
       ++this.pos;
@@ -234,7 +256,8 @@ public final class Lexer {
         return this.peek();
       }
       return this.next;
-    } finally {
+    }
+    finally {
       this.next = null;
     }
   }
@@ -267,20 +290,23 @@ public final class Lexer {
     return this.input;
   }
 
-  @Value
-  public static class LineInfo {
-    private GQLSourceInput source;
-    private int lineNumber;
-    private int lineOffset;
+  @org.immutables.value.Value.Immutable(copy = true)
+  public static abstract class AbstractLineInfo {
+
+    public abstract GQLSourceInput source();
+
+    public abstract int lineNumber();
+
+    public abstract int lineOffset();
 
     @Override
     public String toString() {
-      return String.format("%s line %d (offset %d)", this.source, this.lineNumber, this.lineOffset);
+      return String.format("%s line %d (offset %d)", this.source(), this.lineNumber(), this.lineOffset());
     }
 
   }
 
-  public LineInfo lineNumberAtOffset(int start) {
+  public ImmutableLineInfo lineNumberAtOffset(int start) {
     int lines = 0;
     int lineStartAt = 0;
     for (int i = 0; i < start; ++i) {
@@ -289,12 +315,24 @@ public final class Lexer {
         lineStartAt = i;
       }
     }
-    return new LineInfo(this.source, lines + 1, start - lineStartAt);
+    return ImmutableLineInfo.builder()
+        .source(this.source)
+        .lineNumber(lines + 1)
+        .lineOffset(start - lineStartAt)
+        .build();
   }
 
   public GQLSourceLocation position() {
-    final LineInfo current = this.lineNumberAtOffset(this.pos);
-    return GQLSourceLocation.of(this.source, this.pos, current.lineNumber, current.lineOffset);
+    final ImmutableLineInfo current = this.lineNumberAtOffset(this.pos);
+    return ImmutableGQLSourceLocation
+        .builder()
+        .input(source)
+        .sourceOffset(this.pos)
+        .lineOffset(this.pos)
+        .lineNumber(current.lineNumber())
+        .lineOffset(current.lineOffset())
+        .build();
+
   }
 
 }

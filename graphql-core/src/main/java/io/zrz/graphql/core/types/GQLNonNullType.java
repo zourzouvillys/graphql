@@ -2,30 +2,35 @@ package io.zrz.graphql.core.types;
 
 import java.util.Collection;
 
+import org.immutables.value.Value;
+
+import com.google.common.collect.ImmutableList;
+
 import io.zrz.graphql.core.doc.GQLDirective;
 import io.zrz.graphql.core.lang.GQLTypeVisitor;
-import lombok.Builder;
-import lombok.ToString;
-import lombok.experimental.Wither;
 
-@ToString
-@Wither
-@Builder
-public final class GQLNonNullType implements GQLTypeReference {
+@Value.Immutable(copy = true)
+public abstract class GQLNonNullType implements GQLTypeReference {
 
-  private final GQLTypeReference wrappedType;
-  private final Collection<GQLDirective> directives;
+  public abstract GQLTypeReference type();
 
-  private GQLNonNullType(GQLTypeReference wrappedType, Collection<GQLDirective> directives) {
+  @Value.Default
+  public Collection<GQLDirective> directives() {
+    return ImmutableList.of();
+  }
+
+  public abstract GQLNonNullType withType(GQLTypeReference value);
+
+  public abstract GQLNonNullType withDirectives(Collection<GQLDirective> value);
+
+  public static GQLNonNullType of(GQLTypeReference wrappedType, Collection<GQLDirective> directives) {
+
     if (wrappedType instanceof GQLNonNullType) {
       throw new IllegalArgumentException("Can't have a non null type ref a non null ttpe");
     }
-    this.wrappedType = wrappedType;
-    this.directives = directives;
-  }
 
-  public GQLTypeReference type() {
-    return this.wrappedType;
+    return ImmutableGQLNonNullType.builder().type(wrappedType).directives(directives).build();
+
   }
 
   @Override

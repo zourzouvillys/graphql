@@ -3,11 +3,7 @@ package io.zrz.graphql.core.value;
 import java.util.List;
 import java.util.Map;
 
-import lombok.experimental.UtilityClass;
-
-@UtilityClass
-
-public class GQLValues {
+public final class GQLValues {
 
   /**
    * Returns a reference to the given variable.
@@ -60,8 +56,7 @@ public class GQLValues {
   }
 
   /**
-   * Note: the float value is actually a double in java (like an int is actually
-   * a ong). sorry for the confusion.
+   * Note: the float value is actually a double in java (like an int is actually a ong). sorry for the confusion.
    *
    * @return
    */

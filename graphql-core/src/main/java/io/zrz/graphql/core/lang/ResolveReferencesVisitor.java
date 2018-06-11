@@ -15,6 +15,10 @@ import io.zrz.graphql.core.decl.GQLScalarTypeDeclaration;
 import io.zrz.graphql.core.decl.GQLTypeDeclaration;
 import io.zrz.graphql.core.decl.GQLTypeDeclarationVisitor;
 import io.zrz.graphql.core.decl.GQLUnionTypeDeclaration;
+import io.zrz.graphql.core.decl.ImmutableGQLInputTypeDeclaration;
+import io.zrz.graphql.core.decl.ImmutableGQLInterfaceTypeDeclaration;
+import io.zrz.graphql.core.decl.ImmutableGQLObjectTypeDeclaration;
+import io.zrz.graphql.core.decl.ImmutableGQLUnionTypeDeclaration;
 import io.zrz.graphql.core.types.GQLDeclarationRef;
 import io.zrz.graphql.core.types.GQLListType;
 import io.zrz.graphql.core.types.GQLNonNullType;
@@ -39,7 +43,8 @@ public class ResolveReferencesVisitor implements GQLTypeDeclarationVisitor<GQLTy
   private List<GQLDeclarationRef> replace(List<GQLDeclarationRef> type, String message) {
     try {
       return type.stream().map(ref -> ref.withRef(this.resolve(ref.name()))).collect(Collectors.toList());
-    } catch (final Exception ex) {
+    }
+    catch (final Exception ex) {
       throw new RuntimeException(message, ex);
     }
   }
@@ -53,7 +58,8 @@ public class ResolveReferencesVisitor implements GQLTypeDeclarationVisitor<GQLTy
       return field
           .withType(this.replace(field.type()))
           .withArgs(this.replaceArgs(field.args()));
-    } catch (final Exception ex) {
+    }
+    catch (final Exception ex) {
       throw new RuntimeException(String.format("on field '%s'", field.name()), ex);
     }
   }
@@ -68,7 +74,7 @@ public class ResolveReferencesVisitor implements GQLTypeDeclarationVisitor<GQLTy
 
   @Override
   public GQLTypeDeclaration visitUnion(GQLUnionTypeDeclaration type) {
-    return type.withTypes(this.replace(type.types(), "in union type"));
+    return ImmutableGQLUnionTypeDeclaration.copyOf(type).withTypes(this.replace(type.types(), "in union type"));
   }
 
   @Override
@@ -77,18 +83,18 @@ public class ResolveReferencesVisitor implements GQLTypeDeclarationVisitor<GQLTy
   }
 
   @Override
-  public GQLTypeDeclaration visitInput(GQLInputTypeDeclaration type) {
-    return type
-        .withFields(this.replaceInputFields(type.fields()));
+  public GQLInputTypeDeclaration visitInput(GQLInputTypeDeclaration type) {
+    return ImmutableGQLInputTypeDeclaration.copyOf(type).withFields(this.replaceInputFields(type.fields()));
   }
 
   @Override
   public GQLTypeDeclaration visitObject(GQLObjectTypeDeclaration type) {
     try {
-      return type
+      return ImmutableGQLObjectTypeDeclaration.copyOf(type)
           .withIfaces(this.replace(type.ifaces(), "in interface"))
           .withFields(this.replaceFields(type.fields()));
-    } catch (final Exception ex) {
+    }
+    catch (final Exception ex) {
       throw new RuntimeException(String.format("in type %s", type.name()), ex);
     }
   }
@@ -96,10 +102,11 @@ public class ResolveReferencesVisitor implements GQLTypeDeclarationVisitor<GQLTy
   @Override
   public GQLTypeDeclaration visitInterface(GQLInterfaceTypeDeclaration type) {
     try {
-      return type
+      return ImmutableGQLInterfaceTypeDeclaration.copyOf(type)
           .withIfaces(this.replace(type.ifaces(), "in interface"))
           .withFields(this.replaceFields(type.fields()));
-    } catch (final Exception ex) {
+    }
+    catch (final Exception ex) {
       throw new RuntimeException(String.format("in interface %s", type.name()), ex);
     }
   }
@@ -113,12 +120,12 @@ public class ResolveReferencesVisitor implements GQLTypeDeclarationVisitor<GQLTy
 
   @Override
   public GQLTypeReference visitNonNull(GQLNonNullType type) {
-    return type.withWrappedType(type.type().apply(this));
+    return type.withType(type.type().apply(this));
   }
 
   @Override
   public GQLTypeReference visitList(GQLListType type) {
-    return type.withWrappedType(type.type().apply(this));
+    return type.withType(type.type().apply(this));
   }
 
   @Override

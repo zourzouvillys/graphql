@@ -1,9 +1,6 @@
 package io.zrz.graphql.core.value;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import lombok.experimental.Wither;
+import org.immutables.value.Value;
 
 /**
  * A reference to a variable.
@@ -12,13 +9,8 @@ import lombok.experimental.Wither;
  *
  */
 
-@EqualsAndHashCode
-@ToString
-@Builder
-@Wither
-public final class GQLVariableRef implements GQLValue {
-
-  private final String name;
+@Value.Immutable(copy = true)
+public abstract class GQLVariableRef implements GQLValue {
 
   /**
    * The name of the variable referenced.
@@ -26,9 +18,7 @@ public final class GQLVariableRef implements GQLValue {
    * @return
    */
 
-  public String name() {
-    return this.name;
-  }
+  public abstract String name();
 
   @Override
   public <R> R apply(final GQLValueVisitor<R> visitor) {
@@ -38,6 +28,10 @@ public final class GQLVariableRef implements GQLValue {
   @Override
   public GQLValueType type() {
     return GQLValueType.VariableRef;
+  }
+
+  public static ImmutableGQLVariableRef.Builder builder() {
+    return ImmutableGQLVariableRef.builder();
   }
 
 }

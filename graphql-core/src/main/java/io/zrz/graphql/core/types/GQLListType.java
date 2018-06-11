@@ -2,31 +2,30 @@ package io.zrz.graphql.core.types;
 
 import java.util.List;
 
+import org.immutables.value.Value;
+
 import io.zrz.graphql.core.doc.GQLDirective;
 import io.zrz.graphql.core.lang.GQLTypeVisitor;
-import lombok.Builder;
-import lombok.Singular;
-import lombok.experimental.Wither;
 
 /**
- * A type modifier which indicates the contained type is a list of the specified
- * type.
+ * A type modifier which indicates the contained type is a list of the specified type.
  *
  * @author theo
  *
  */
 
-@Wither
-@Builder
-public final class GQLListType implements GQLTypeReference {
+@Value.Immutable(copy = true)
+public abstract class GQLListType implements GQLTypeReference {
 
-  private final GQLTypeReference wrappedType;
-  @Singular
-  private final List<GQLDirective> directives;
+  public abstract GQLTypeReference type();
 
-  public GQLTypeReference type() {
-    return this.wrappedType;
-  }
+  public abstract List<GQLDirective> directives();
+
+  public abstract GQLListType withType(GQLTypeReference value);
+
+  public abstract GQLListType withDirectives(GQLDirective... elements);
+
+  public abstract GQLListType withDirectives(Iterable<? extends GQLDirective> elements);
 
   @Override
   public <R> R apply(final GQLTypeVisitor<R> visitor) {

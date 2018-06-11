@@ -8,15 +8,14 @@ import java.util.stream.Collectors;
 
 import io.zrz.graphql.core.decl.GQLInputTypeDeclaration;
 import io.zrz.graphql.core.decl.GQLInterfaceTypeDeclaration;
-import io.zrz.graphql.core.decl.GQLObjectTypeDeclaration;
 import io.zrz.graphql.core.decl.GQLScalarTypeDeclaration;
-import io.zrz.graphql.core.decl.GQLSchemaDeclaration;
 import io.zrz.graphql.core.decl.GQLTypeDeclaration;
 import io.zrz.graphql.core.decl.GQLUnionTypeDeclaration;
+import io.zrz.graphql.core.decl.ImmutableGQLInputTypeDeclaration;
+import io.zrz.graphql.core.decl.ImmutableGQLObjectTypeDeclaration;
+import io.zrz.graphql.core.decl.ImmutableGQLSchemaDeclaration;
 import io.zrz.graphql.core.doc.GQLDirective;
-import lombok.experimental.UtilityClass;
 
-@UtilityClass
 public class GQLTypes {
 
   public static GQLTypeReference ref(GQLTypeDeclaration type) {
@@ -89,15 +88,15 @@ public class GQLTypes {
   }
 
   public static GQLNonNullType nonNull(final String name) {
-    return GQLNonNullType.builder().wrappedType(typeRef(name)).build();
+    return ImmutableGQLNonNullType.builder().type(typeRef(name)).build();
   }
 
   public static GQLTypeReference nonNull(GQLTypeReference type, Collection<GQLDirective> directives) {
-    return GQLNonNullType.builder().wrappedType(type).directives(directives).build();
+    return ImmutableGQLNonNullType.builder().type(type).directives(directives).build();
   }
 
   public static GQLNonNullType nonNull(final GQLTypeReference type) {
-    return GQLNonNullType.builder().wrappedType(type).build();
+    return ImmutableGQLNonNullType.builder().type(type).build();
   }
 
   public static GQLDeclarationRef typeRef(final String name, Collection<GQLDirective> directives) {
@@ -108,24 +107,24 @@ public class GQLTypes {
     return GQLDeclarationRef.builder().name(name).build();
   }
 
-  public static GQLInputTypeDeclaration.Builder inputBuilder(final String name) {
+  public static ImmutableGQLInputTypeDeclaration.Builder inputBuilder(final String name) {
     return GQLInputTypeDeclaration.builder().name(name);
   }
 
-  public static GQLSchemaDeclaration.Builder schemaBuilder() {
-    return GQLSchemaDeclaration.builder();
+  public static ImmutableGQLSchemaDeclaration.Builder schemaBuilder() {
+    return ImmutableGQLSchemaDeclaration.builder();
   }
 
-  public static GQLObjectTypeDeclaration.Builder structBuilder(final String name) {
-    return GQLObjectTypeDeclaration.builder().name(name);
+  public static ImmutableGQLObjectTypeDeclaration.Builder structBuilder(final String name) {
+    return ImmutableGQLObjectTypeDeclaration.builder().name(name);
   }
 
   public static GQLTypeReference listOf(GQLTypeReference type) {
-    return GQLListType.builder().wrappedType(type).build();
+    return ImmutableGQLListType.builder().type(type).build();
   }
 
   public static GQLTypeReference listOf(GQLTypeReference type, Collection<GQLDirective> directives) {
-    return GQLListType.builder().wrappedType(type).directives(directives).build();
+    return ImmutableGQLListType.builder().type(type).directives(directives).build();
   }
 
 }

@@ -6,8 +6,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 
 import io.zrz.graphql.core.value.GQLObjectValue;
@@ -21,25 +19,21 @@ import io.zrz.graphql.core.value.GQLValue;
  *
  */
 
-public class DynamicObjectInstanceCreationMaterializer implements TypeMaterializer<GQLObjectValue>
-{
+public class DynamicObjectInstanceCreationMaterializer implements TypeMaterializer<GQLObjectValue> {
 
   @SuppressWarnings("unchecked")
   @Override
-  public <O> O convert(TypeConverter converter, GQLObjectValue from, Type target, Annotation[] annotations)
-  {
+  public <O> O convert(TypeConverter converter, GQLObjectValue from, Type target, Annotation[] annotations) {
 
     Class<?> targetType = (Class<?>) target;
 
     // ---
 
-    for (Constructor<?> ctor : targetType.getConstructors())
-    {
+    for (Constructor<?> ctor : targetType.getConstructors()) {
 
       ConstructorProperties props = ctor.getAnnotation(ConstructorProperties.class);
 
-      if (props != null)
-      {
+      if (props != null) {
         return (O) create(converter, from, targetType, annotations, ctor, props);
       }
 
@@ -59,16 +53,14 @@ public class DynamicObjectInstanceCreationMaterializer implements TypeMaterializ
    * @return
    */
 
-  private <O> O create(TypeConverter converter, GQLObjectValue from, Class<O> targetType, Annotation[] annotations, Constructor<?> ctor, ConstructorProperties props)
-  {
+  private <O> O create(TypeConverter converter, GQLObjectValue from, Class<O> targetType, Annotation[] annotations, Constructor<?> ctor,
+      ConstructorProperties props) {
 
-    try
-    {
+    try {
 
       MethodHandle ref = MethodHandles.publicLookup().unreflectConstructor(ctor);
 
-      for (int i = 0; i < props.value().length; ++i)
-      {
+      for (int i = 0; i < props.value().length; ++i) {
 
         String prop = props.value()[i];
         AnnotatedType ptype = ctor.getAnnotatedParameterTypes()[i];
@@ -85,8 +77,7 @@ public class DynamicObjectInstanceCreationMaterializer implements TypeMaterializ
       return (O) ref.invoke();
 
     }
-    catch (Throwable t)
-    {
+    catch (Throwable t) {
       t.printStackTrace();
       throw new RuntimeException(t);
     }

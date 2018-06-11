@@ -17,7 +17,14 @@ import io.zrz.graphql.core.decl.GQLParameterableFieldDeclaration;
 import io.zrz.graphql.core.decl.GQLScalarTypeDeclaration;
 import io.zrz.graphql.core.decl.GQLSchemaDeclaration;
 import io.zrz.graphql.core.decl.GQLUnionTypeDeclaration;
-import io.zrz.graphql.core.decl.GQLEnumValue.GQLEnumValueBuilder;
+import io.zrz.graphql.core.decl.ImmutableGQLArgumentDefinition;
+import io.zrz.graphql.core.decl.ImmutableGQLEnumDeclaration;
+import io.zrz.graphql.core.decl.ImmutableGQLEnumValue;
+import io.zrz.graphql.core.decl.ImmutableGQLInputFieldDeclaration;
+import io.zrz.graphql.core.decl.ImmutableGQLInputTypeDeclaration;
+import io.zrz.graphql.core.decl.ImmutableGQLParameterableFieldDeclaration;
+import io.zrz.graphql.core.decl.ImmutableGQLSchemaDeclaration;
+import io.zrz.graphql.core.decl.ImmutableGQLUnionTypeDeclaration;
 import io.zrz.graphql.core.doc.GQLArgument;
 import io.zrz.graphql.core.doc.GQLDefinition;
 import io.zrz.graphql.core.doc.GQLDirective;
@@ -30,11 +37,14 @@ import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.doc.GQLOperationDefinition;
 import io.zrz.graphql.core.doc.GQLSelection;
 import io.zrz.graphql.core.doc.GQLVariableDefinition;
-import io.zrz.graphql.core.doc.GQLDirective.GQLDirectiveBuilder;
-import io.zrz.graphql.core.doc.GQLFragmentDefinition.GQLFragmentDefinitionBuilder;
-import io.zrz.graphql.core.doc.GQLFragmentSpreadSelection.Builder;
-import io.zrz.graphql.core.doc.GQLInlineFragmentSelection.GQLInlineFragmentSelectionBuilder;
-import io.zrz.graphql.core.doc.GQLVariableDefinition.GQLVariableDefinitionBuilder;
+import io.zrz.graphql.core.doc.ImmutableGQLDirective;
+import io.zrz.graphql.core.doc.ImmutableGQLDocument;
+import io.zrz.graphql.core.doc.ImmutableGQLFieldSelection;
+import io.zrz.graphql.core.doc.ImmutableGQLFragmentDefinition;
+import io.zrz.graphql.core.doc.ImmutableGQLFragmentSpreadSelection;
+import io.zrz.graphql.core.doc.ImmutableGQLInlineFragmentSelection;
+import io.zrz.graphql.core.doc.ImmutableGQLOperationDefinition;
+import io.zrz.graphql.core.doc.ImmutableGQLVariableDefinition;
 import io.zrz.graphql.core.parser.Lexer.TokenType;
 import io.zrz.graphql.core.types.GQLTypeReference;
 import io.zrz.graphql.core.types.GQLTypes;
@@ -42,6 +52,8 @@ import io.zrz.graphql.core.value.GQLListValue;
 import io.zrz.graphql.core.value.GQLObjectValue;
 import io.zrz.graphql.core.value.GQLValue;
 import io.zrz.graphql.core.value.GQLValues;
+import io.zrz.graphql.core.value.ImmutableGQLListValue;
+import io.zrz.graphql.core.value.ImmutableGQLObjectValue;
 
 public class ParseContext {
 
@@ -82,21 +94,28 @@ public class ParseContext {
     if (this.is("@")) {
       directives = this.parseDirectives();
     }
+    else {
+      directives = new LinkedList<>();
+    }
 
     switch (this.lexer.peek().value()) {
 
       case "extend":
         this.require("extend");
         if (this.is("input")) {
-          return this.parseInputDefinition().withExtension(true).withDescription(comment).withLocation(this.lexer.position());
-        } else if (this.is("type")) {
-          return this.parseObjectTypeDefinition().withExtension(true).withDescription(comment).withLocation(this.lexer.position());
-        } else if (this.is("union")) {
-          return this.parseUnionDefinition().withExtension(true).withDescription(comment).withLocation(this.lexer.position());
-        } else if (this.is("enum")) {
-          return this.parseEnumDefinition().withExtension(true).withDescription(comment).withLocation(this.lexer.position());
-        } else if (this.is("interface")) {
-          return this.parseInterfaceDefinition().withExtension(true).withDescription(comment).withLocation(this.lexer.position());
+          return this.parseInputDefinition().withIsExtension(true).withDescription(comment).withLocation(this.lexer.position());
+        }
+        else if (this.is("type")) {
+          return this.parseObjectTypeDefinition().withIsExtension(true).withDescription(comment).withLocation(this.lexer.position());
+        }
+        else if (this.is("union")) {
+          return this.parseUnionDefinition().withIsExtension(true).withDescription(comment).withLocation(this.lexer.position());
+        }
+        else if (this.is("enum")) {
+          return this.parseEnumDefinition().withIsExtension(true).withDescription(comment).withLocation(this.lexer.position());
+        }
+        else if (this.is("interface")) {
+          return this.parseInterfaceDefinition().withIsExtension(true).withDescription(comment).withLocation(this.lexer.position());
         }
         throw ParserExceptions.expect(this, "unsupported extend", null);
 
@@ -110,7 +129,11 @@ public class ParseContext {
         return this.parseObjectTypeDefinition().withDescription(comment).withDirectives(directives).withLocation(this.lexer.position());
 
       case "enum":
-        return this.parseEnumDefinition().withDescription(comment).withDirectives(directives).withLocation(this.lexer.position());
+        return this
+            .parseEnumDefinition()
+            .withDescription(comment)
+            .withDirectives(directives)
+            .withLocation(this.lexer.position());
 
       case "union":
         return this.parseUnionDefinition().withDescription(comment).withDirectives(directives).withLocation(this.lexer.position());
@@ -155,8 +178,9 @@ public class ParseContext {
 
     if (this.skip("implements")) {
       do {
-        b.iface(GQLTypes.concreteTypeRef(this.require(TokenType.NAME)));
-      } while (this.is(","));
+        b.addIfaces(GQLTypes.concreteTypeRef(this.require(TokenType.NAME)));
+      }
+      while (this.is(","));
     }
 
     this.require("{");
@@ -165,7 +189,7 @@ public class ParseContext {
 
     while (!this.is("}")) {
 
-      final GQLParameterableFieldDeclaration.Builder fb = GQLParameterableFieldDeclaration.builder();
+      final ImmutableGQLParameterableFieldDeclaration.Builder fb = GQLParameterableFieldDeclaration.builder();
 
       if (this.is("@")) {
         fb.directives(this.parseDirectives());
@@ -181,7 +205,7 @@ public class ParseContext {
 
       fb.type(this.parseTypeRef());
 
-      b.field(fb.build());
+      b.addFields(fb.build());
 
     }
 
@@ -206,16 +230,17 @@ public class ParseContext {
     if (this.skip("implements")) {
       do {
         final String name = this.require(TokenType.NAME);
-        b.iface(GQLTypes.concreteTypeRef(name));
+        b.addIfaces(GQLTypes.concreteTypeRef(name));
         // note: parser skips over comma.
-      } while (this.is(TokenType.NAME));
+      }
+      while (this.is(TokenType.NAME));
     }
 
     this.require("{");
 
     while (!this.is("}")) {
 
-      final GQLParameterableFieldDeclaration.Builder fb = GQLParameterableFieldDeclaration.builder();
+      final ImmutableGQLParameterableFieldDeclaration.Builder fb = GQLParameterableFieldDeclaration.builder();
 
       if (this.is(TokenType.COMMENT)) {
         fb.description(this.require(TokenType.COMMENT));
@@ -237,7 +262,7 @@ public class ParseContext {
 
       fb.type(type);
 
-      b.field(fb.build());
+      b.addFields(fb.build());
 
     }
 
@@ -247,8 +272,7 @@ public class ParseContext {
   }
 
   /**
-   * returns a field definition, e.g the name, type and optional default value.
-   * Consumes start and end '(' ')'
+   * returns a field definition, e.g the name, type and optional default value. Consumes start and end '(' ')'
    *
    * @return
    */
@@ -260,7 +284,7 @@ public class ParseContext {
 
     while (!this.is(")")) {
 
-      final GQLArgumentDefinition.Builder ab = GQLArgumentDefinition.builder();
+      final ImmutableGQLArgumentDefinition.Builder ab = GQLArgumentDefinition.builder();
 
       if (this.is("@")) {
         ab.directives(this.parseDirectives());
@@ -291,19 +315,19 @@ public class ParseContext {
    */
 
   private GQLEnumDeclaration parseEnumDefinition() {
-    final GQLEnumDeclaration.Builder b = GQLEnumDeclaration.builder();
+    final ImmutableGQLEnumDeclaration.Builder b = GQLEnumDeclaration.builder();
     this.require("enum");
     b.name(this.require(TokenType.NAME));
     this.require("{");
     while (!this.is("}")) {
 
-      final GQLEnumValueBuilder eb = GQLEnumValue.builder();
+      final ImmutableGQLEnumValue.Builder eb = GQLEnumValue.builder();
 
       if (this.is("@")) {
         eb.directives(this.parseDirectives());
       }
 
-      b.value(eb.name(this.require(TokenType.NAME)).build());
+      b.addValues(eb.name(this.require(TokenType.NAME)).build());
     }
     this.require("}");
 
@@ -312,15 +336,16 @@ public class ParseContext {
 
   private GQLUnionTypeDeclaration parseUnionDefinition() {
 
-    final GQLUnionTypeDeclaration.Builder b = GQLUnionTypeDeclaration.builder();
+    final ImmutableGQLUnionTypeDeclaration.Builder b = GQLUnionTypeDeclaration.builder();
 
     this.require("union");
     b.name(this.require(TokenType.NAME));
     this.require("=");
 
     do {
-      b.type(GQLTypes.concreteTypeRef(this.require(TokenType.NAME)));
-    } while (this.lexer.isReadable() && this.skip("|"));
+      b.addTypes(GQLTypes.concreteTypeRef(this.require(TokenType.NAME)));
+    }
+    while (this.lexer.isReadable() && this.skip("|"));
 
     return b.build();
 
@@ -328,7 +353,7 @@ public class ParseContext {
 
   private GQLSchemaDeclaration parseSchemaDefinition() {
 
-    final GQLSchemaDeclaration.Builder builder = GQLTypes.schemaBuilder();
+    final ImmutableGQLSchemaDeclaration.Builder builder = GQLTypes.schemaBuilder();
 
     this.require("schema");
 
@@ -341,7 +366,7 @@ public class ParseContext {
     while (!this.is("}")) {
       final String key = this.require(TokenType.NAME);
       this.require(":");
-      builder.entry(key, GQLTypes.typeRef(this.next()));
+      builder.putEntries(key, GQLTypes.typeRef(this.next()));
     }
 
     this.require("}");
@@ -355,11 +380,11 @@ public class ParseContext {
     final String name = this.require(TokenType.NAME);
     this.require("{");
 
-    final GQLInputTypeDeclaration.Builder b = GQLTypes.inputBuilder(name);
+    final ImmutableGQLInputTypeDeclaration.Builder b = GQLTypes.inputBuilder(name);
 
     while (!this.is("}")) {
 
-      final GQLInputFieldDeclaration.Builder ib = GQLInputFieldDeclaration.builder();
+      final ImmutableGQLInputFieldDeclaration.Builder ib = GQLInputFieldDeclaration.builder();
 
       if (this.is("@")) {
         ib.directives(this.parseDirectives());
@@ -374,7 +399,7 @@ public class ParseContext {
         ib.defaultValue(this.parseValue());
       }
 
-      b.field(ib.build());
+      b.addFields(ib.build());
 
     }
 
@@ -390,11 +415,11 @@ public class ParseContext {
 
   public GQLDocument parseDocument() {
 
-    final GQLDocument.Builder b = GQLDocument.builder();
+    final ImmutableGQLDocument.Builder b = GQLDocument.builder();
 
     while (this.lexer.isReadable()) {
       final GQLDefinition def = this.parseDefinition();
-      b.definition(def);
+      b.addDefinitions(def);
     }
 
     return b.build();
@@ -429,15 +454,18 @@ public class ParseContext {
           .build();
     }
 
-    final GQLOperationDefinition.Builder b = GQLOperationDefinition.builder();
+    final ImmutableGQLOperationDefinition.Builder b = GQLOperationDefinition.builder();
 
     if (this.skip("query")) {
       b.type(GQLOpType.Query);
-    } else if (this.skip("mutation")) {
+    }
+    else if (this.skip("mutation")) {
       b.type(GQLOpType.Mutation);
-    } else if (this.skip("subscription")) {
+    }
+    else if (this.skip("subscription")) {
       b.type(GQLOpType.Subscription);
-    } else {
+    }
+    else {
       throw ParserExceptions.create(this, String.format("Unknown operation type: %s", this.next()));
     }
 
@@ -466,7 +494,7 @@ public class ParseContext {
     this.require("(");
 
     while (!this.is(")")) {
-      final GQLVariableDefinitionBuilder b = GQLVariableDefinition.builder();
+      final ImmutableGQLVariableDefinition.Builder b = GQLVariableDefinition.builder();
       this.require("$");
       b.name(this.require(TokenType.NAME));
       this.require(":");
@@ -502,10 +530,12 @@ public class ParseContext {
 
     if (this.lexer.peek().type() == TokenType.NAME) {
       type = GQLTypes.typeRef(this.next(), directives);
-    } else if (this.skip("[")) {
+    }
+    else if (this.skip("[")) {
       type = GQLTypes.listOf(this.parseTypeRef(), directives);
       this.require("]");
-    } else {
+    }
+    else {
       throw ParserExceptions.create(this, "unexpected input");
     }
 
@@ -524,7 +554,7 @@ public class ParseContext {
 
   private GQLFragmentDefinition parseFragment() {
 
-    final GQLFragmentDefinitionBuilder b = GQLFragmentDefinition.builder();
+    final ImmutableGQLFragmentDefinition.Builder b = GQLFragmentDefinition.builder();
 
     final String fragmentName = this.next();
 
@@ -572,7 +602,7 @@ public class ParseContext {
 
         if (this.is("on") || this.is("@") || this.is("{")) {
 
-          final GQLInlineFragmentSelectionBuilder ifs = GQLInlineFragmentSelection.builder();
+          final ImmutableGQLInlineFragmentSelection.Builder ifs = GQLInlineFragmentSelection.builder();
 
           ifs.location(this.lexer.position());
 
@@ -590,9 +620,10 @@ public class ParseContext {
 
           selections.add(ifs.build());
 
-        } else {
+        }
+        else {
 
-          final Builder fsb = GQLFragmentSpreadSelection.builder();
+          final ImmutableGQLFragmentSpreadSelection.Builder fsb = GQLFragmentSpreadSelection.builder();
 
           fsb.location(this.lexer.position());
 
@@ -610,7 +641,7 @@ public class ParseContext {
 
       }
 
-      final GQLFieldSelection.Builder fb = GQLFieldSelection.builder();
+      final ImmutableGQLFieldSelection.Builder fb = GQLFieldSelection.builder();
 
       final String name = this.require(TokenType.NAME,
           "or '}' to match '{' defined at position " + opening.position().start());
@@ -620,7 +651,8 @@ public class ParseContext {
       if (this.skip(":")) {
         fb.alias(name);
         fb.name(this.require(TokenType.NAME, "field name expected after alias"));
-      } else {
+      }
+      else {
         fb.name(name);
       }
 
@@ -674,21 +706,29 @@ public class ParseContext {
   GQLValue parseValue() {
     if (this.skip("$")) {
       return GQLValues.variable(this.require(TokenType.NAME));
-    } else if (this.skip("false")) {
+    }
+    else if (this.skip("false")) {
       return GQLValues.booleanFalse();
-    } else if (this.skip("true")) {
+    }
+    else if (this.skip("true")) {
       return GQLValues.booleanTrue();
-    } else if (this.lexer.peek().type() == TokenType.INT) {
+    }
+    else if (this.lexer.peek().type() == TokenType.INT) {
       return GQLValues.intValue(Long.parseLong(this.next()));
-    } else if (this.lexer.peek().type() == TokenType.FLOAT) {
+    }
+    else if (this.lexer.peek().type() == TokenType.FLOAT) {
       return GQLValues.floatValue(Double.parseDouble(this.next()));
-    } else if (this.lexer.peek().type() == TokenType.STRING) {
+    }
+    else if (this.lexer.peek().type() == TokenType.STRING) {
       return GQLValues.stringValue(this.next());
-    } else if (this.is("[")) {
+    }
+    else if (this.is("[")) {
       return this.parseArray();
-    } else if (this.is("{")) {
+    }
+    else if (this.is("{")) {
       return this.parseObject();
-    } else {
+    }
+    else {
       if (this.is("null")) {
         throw ParserExceptions.create(this, "Invalid ENUM name");
       }
@@ -698,12 +738,12 @@ public class ParseContext {
 
   private GQLListValue parseArray() {
 
-    final GQLListValue.Builder b = GQLListValue.builder();
+    final ImmutableGQLListValue.Builder b = GQLListValue.builder();
 
     this.require("[");
 
     while (!this.is("]")) {
-      b.value(this.parseValue());
+      b.addValues(this.parseValue());
     }
 
     this.require("]");
@@ -714,14 +754,14 @@ public class ParseContext {
 
   private GQLValue parseObject() {
 
-    final GQLObjectValue.Builder b = GQLObjectValue.builder();
+    final ImmutableGQLObjectValue.Builder b = GQLObjectValue.builder();
 
     this.require("{");
 
     while (!this.is("}")) {
       final String name = this.parseName();
       this.require(":");
-      b.value(name, this.parseValue());
+      b.putValues(name, this.parseValue());
     }
 
     this.require("}");
@@ -739,7 +779,7 @@ public class ParseContext {
     final List<GQLDirective> items = new LinkedList<>();
 
     while (this.skip("@")) {
-      final GQLDirectiveBuilder b = GQLDirective.builder();
+      final ImmutableGQLDirective.Builder b = GQLDirective.builder();
       b.name(this.next());
       if (this.is("(")) {
         b.args(this.parseArguments());

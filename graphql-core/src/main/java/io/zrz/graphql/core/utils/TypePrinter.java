@@ -126,10 +126,14 @@ public class TypePrinter implements GQLTypeVisitor<Void>, GQLValueVisitor<Void>,
         this.out.print(arg.name());
         this.out.print(": ");
         arg.type().apply(new TypeRefPrinter(this.out));
-        if (arg.defaultValue() != null) {
+
+        arg.defaultValue().ifPresent(val -> {
+
           this.out.print(" = ");
-          arg.defaultValue().apply(this);
-        }
+          val.apply(this);
+
+        });
+
       }
       this.out.print(")");
     }

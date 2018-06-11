@@ -1,6 +1,7 @@
 
 [
  'graphql-core',
+ 'graphql-converter',
  'graphql-server', 
  'graphql-generator', 
  'graphql-cli', 

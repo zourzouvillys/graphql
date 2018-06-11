@@ -4,26 +4,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.NonNull;
-import lombok.Singular;
-import lombok.ToString;
-import lombok.experimental.Wither;
+import org.immutables.value.Value;
 
-@Wither
-@EqualsAndHashCode
-@ToString
-@Builder(builderClassName = "Builder")
-public final class GQLDocument {
+@Value.Immutable(copy = true)
+public abstract class GQLDocument {
 
-  @NonNull
-  @Singular
-  private final List<GQLDefinition> definitions;
-
-  public List<GQLDefinition> definitions() {
-    return this.definitions;
-  }
+  public abstract List<GQLDefinition> definitions();
 
   /**
    * finds the operation with the given name.
@@ -37,7 +23,7 @@ public final class GQLDocument {
         .stream()
         .map(def -> def.apply(GQLDefinitionVisitors.operationExtractor()))
         .filter(p -> p != null)
-        .filter(val -> val.name() != null && val.name().equals(name))
+        .filter(val -> val.name() != null && name.equals(val.name()))
         .findAny()
         .orElse(null);
   }
@@ -82,6 +68,10 @@ public final class GQLDocument {
 
   public GQLSelectedOperation defaultOperation() {
     return GQLSelectedOperation.defaultQuery(this);
+  }
+
+  public static ImmutableGQLDocument.Builder builder() {
+    return ImmutableGQLDocument.builder();
   }
 
 }

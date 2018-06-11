@@ -2,56 +2,34 @@ package io.zrz.graphql.core.decl;
 
 import java.util.List;
 
+import org.immutables.value.Value;
+
 import io.zrz.graphql.core.doc.GQLDirective;
 import io.zrz.graphql.core.types.GQLTypeReference;
-import lombok.Builder;
-import lombok.Singular;
-import lombok.experimental.Wither;
 
-@Wither
-@Builder(builderClassName = "Builder")
-public final class GQLParameterableFieldDeclaration implements GQLFieldDeclaration {
+@Value.Immutable(copy = true)
+public abstract class GQLParameterableFieldDeclaration implements GQLFieldDeclaration {
 
-  private final String name;
-  private final String description;
+  public abstract List<GQLArgumentDefinition> args();
 
-  private final GQLTypeReference type;
+  public abstract GQLParameterableFieldDeclaration withArgs(GQLArgumentDefinition... elements);
 
-  private final String deprecationReason;
-
-  @Singular
-  private final List<GQLArgumentDefinition> args;
-
-  @Singular
-  private final List<GQLDirective> directives;
+  public abstract GQLParameterableFieldDeclaration withArgs(Iterable<? extends GQLArgumentDefinition> elements);
 
   @Override
-  public String name() {
-    return this.name;
-  }
+  public abstract GQLParameterableFieldDeclaration withName(String ref);
 
   @Override
-  public String description() {
-    return this.description;
-  }
+  public abstract GQLParameterableFieldDeclaration withDescription(String ref);
 
   @Override
-  public GQLTypeReference type() {
-    return this.type;
-  }
+  public abstract GQLParameterableFieldDeclaration withType(GQLTypeReference ref);
 
   @Override
-  public String deprecationReason() {
-    return this.deprecationReason;
-  }
+  public abstract GQLParameterableFieldDeclaration withDeprecationReason(String ref);
 
-  public List<GQLArgumentDefinition> args() {
-    return this.args;
-  }
-
-  public List<GQLDirective> directives() {
-    return this.directives;
-  }
+  @Override
+  public abstract GQLParameterableFieldDeclaration withDirectives(GQLDirective... ref);
 
   @Override
   public String toString() {
@@ -62,7 +40,11 @@ public final class GQLParameterableFieldDeclaration implements GQLFieldDeclarati
   }
 
   public GQLArgumentDefinition arg(String name) {
-    return this.args.stream().filter(arg -> name.equals(arg.name())).findAny().orElse(null);
+    return this.args().stream().filter(arg -> name.equals(arg.name())).findAny().orElse(null);
+  }
+
+  public static ImmutableGQLParameterableFieldDeclaration.Builder builder() {
+    return ImmutableGQLParameterableFieldDeclaration.builder();
   }
 
 }

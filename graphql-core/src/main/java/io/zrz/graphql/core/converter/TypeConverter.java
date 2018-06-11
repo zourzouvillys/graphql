@@ -8,47 +8,47 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.reflect.TypeToken;
+import org.immutables.value.Value;
 
-import lombok.Value;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Helper class which provides an API for converting between different types - both primitive and collections/arrays.
  *
- * Although there are other libraries out there, we need something that handles {@link AnnotatedType} and generics rather than plain {#link
- * Class<?> instances}.
+ * Although there are other libraries out there, we need something that handles {@link AnnotatedType} and generics
+ * rather than plain {#link Class<?> instances}.
  *
  * @author theo
  *
  */
 
-public class TypeConverter
-{
+public class TypeConverter {
 
   public static TypeConverter JRE_COVNERTER = new TypeConverter().registerBuiltins();
 
-  public static TypeConverter defaultConverter()
-  {
+  public static TypeConverter defaultConverter() {
     return JRE_COVNERTER;
   }
 
-  @Value
-  private static class Converstion
-  {
-    private final Type inputClass;
-    private final Type outputClass;
+  @Value.Immutable
+  public static abstract class Converstion {
+
+    @Value.Parameter
+    public abstract Type inputClass();
+
+    @Value.Parameter
+    public abstract Type outputClass();
+
   }
 
   private Map<Converstion, TypeMapper<Object, Object>> registered = new HashMap<>();
   private Map<Type, TypeMaterializer<? super Object>> materializers = new HashMap<>();
   private Map<Class<?>, Object> defaultValues = new HashMap<>();
 
-  public TypeConverter()
-  {
+  public TypeConverter() {
   }
 
-  private TypeConverter registerBuiltins()
-  {
+  private TypeConverter registerBuiltins() {
 
     register(String.class, Integer.class, Integer::new);
     register(Integer.class, String.class, val -> val.toString());
@@ -76,7 +76,7 @@ public class TypeConverter
     registerDefaultValue(Integer.TYPE, 0);
     registerDefaultValue(Short.TYPE, (short) 0);
     registerDefaultValue(Byte.TYPE, (byte) 0);
-    registerDefaultValue(Boolean.TYPE, (boolean) false);
+    registerDefaultValue(Boolean.TYPE, false);
     registerDefaultValue(Character.TYPE, (char) 0);
     registerDefaultValue(Float.TYPE, (float) 0);
     registerDefaultValue(Double.TYPE, (double) 0);
@@ -89,8 +89,7 @@ public class TypeConverter
    * 
    */
 
-  private <T> void registerDefaultValue(Class<T> type, Object value)
-  {
+  private <T> void registerDefaultValue(Class<T> type, Object value) {
     this.defaultValues.put(type, value);
   }
 
@@ -99,9 +98,8 @@ public class TypeConverter
    */
 
   @SuppressWarnings("unchecked")
-  public <I extends Object, O extends Object> void register(Class<I> inputClass, Class<O> outputClass, TypeMapper<I, O> mapper)
-  {
-    this.registered.put(new Converstion(inputClass, outputClass), (TypeMapper<Object, Object>) mapper);
+  public <I extends Object, O extends Object> void register(Class<I> inputClass, Class<O> outputClass, TypeMapper<I, O> mapper) {
+    this.registered.put(ImmutableConverstion.of(inputClass, outputClass), (TypeMapper<Object, Object>) mapper);
   }
 
   /**
@@ -111,11 +109,9 @@ public class TypeConverter
    */
 
   @SuppressWarnings("unchecked")
-  public <T> void register(TypeMaterializer<T> materializer)
-  {
+  public <T> void register(TypeMaterializer<T> materializer) {
     AnnotatedType supported = TypeUtils.getParamterOfInterface(materializer.getClass(), TypeMaterializer.class, 0);
-    if (supported == null)
-    {
+    if (supported == null) {
       throw new IllegalArgumentException("materializer must implement TypeMaterializer<T>");
     }
     this.materializers.put(supported.getType(), (TypeMaterializer<? super Object>) materializer);
@@ -130,53 +126,43 @@ public class TypeConverter
    * @throws Exception
    */
 
-  public <I extends Object, O extends Object> O convert(I input, Type outputClass, Annotation[] annotations)
-  {
+  public <I extends Object, O extends Object> O convert(I input, Type outputClass, Annotation[] annotations) {
     return _convert(input, outputClass, annotations);
   }
 
-  
   @SuppressWarnings("unchecked")
-  public <I extends Object, O extends Object> O _convert(I input, Type outputClass, Annotation[] annotations)
-  {
+  public <I extends Object, O extends Object> O _convert(I input, Type outputClass, Annotation[] annotations) {
 
     // null input always results in null output.
-    if (input == null)
-    {
+    if (input == null) {
       return defaultValue(outputClass, annotations);
     }
 
-    TypeMapper<? super Object, ? super Object> converter = registered.get(new Converstion(input.getClass(), outputClass));
+    TypeMapper<? super Object, ? super Object> converter = registered.get(ImmutableConverstion.of(input.getClass(), outputClass));
 
-    if (converter != null)
-    {
+    if (converter != null) {
       return (O) converter.convert(input);
     }
 
     // check out the superclasses.
 
-    for (TypeToken<?> t : TypeToken.of(input.getClass()).getTypes())
-    {
-      
-      converter = registered.get(new Converstion(t.getRawType(), outputClass));
+    for (TypeToken<?> t : TypeToken.of(input.getClass()).getTypes()) {
 
-      if (converter != null)
-      {
+      converter = registered.get(ImmutableConverstion.of(t.getRawType(), outputClass));
+
+      if (converter != null) {
         return (O) converter.convert(input);
       }
 
     }
 
-
     // ---
 
     // type the type materializers.
 
-    for (Map.Entry<Type, TypeMaterializer<? super Object>> materializer : this.materializers.entrySet())
-    {
+    for (Map.Entry<Type, TypeMaterializer<? super Object>> materializer : this.materializers.entrySet()) {
 
-      if (!materializer.getKey().equals(input.getClass()))
-      {
+      if (!materializer.getKey().equals(input.getClass())) {
         continue;
       }
 
@@ -184,8 +170,7 @@ public class TypeConverter
 
       Object val = materializer.getValue().convert(this, input, outputClass, annotations);
 
-      if (val != null)
-      {
+      if (val != null) {
         return (O) val;
       }
 
@@ -206,23 +191,19 @@ public class TypeConverter
    */
 
   @SuppressWarnings("unchecked")
-  private <O> O defaultValue(Type outputType, Annotation[] annotations)
-  {
+  private <O> O defaultValue(Type outputType, Annotation[] annotations) {
     return (O) this.defaultValues.get(outputType);
   }
 
-  public <I, O> O convert(I input, Type outputClass)
-  {
+  public <I, O> O convert(I input, Type outputClass) {
     return convert(input, outputClass, new Annotation[0]);
   }
 
-  public <I, O> O convert(I input, AnnotatedType outputClass)
-  {
+  public <I, O> O convert(I input, AnnotatedType outputClass) {
     return convert(input, outputClass.getType(), outputClass.getAnnotations());
   }
 
-  public <I, O> O convert(I input, Class<O> outputClass)
-  {
+  public <I, O> O convert(I input, Class<O> outputClass) {
     return convert(input, outputClass, new Annotation[0]);
   }
 

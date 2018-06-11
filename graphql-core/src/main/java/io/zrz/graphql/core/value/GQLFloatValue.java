@@ -1,26 +1,15 @@
 package io.zrz.graphql.core.value;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import lombok.experimental.Wither;
+import org.immutables.value.Value;
 
-@EqualsAndHashCode
-@ToString
-@Wither
-public final class GQLFloatValue implements GQLScalarValue {
+@Value.Immutable
+public abstract class GQLFloatValue implements GQLScalarValue {
 
-  private final double value;
-
-  GQLFloatValue(final double value) {
-    this.value = value;
-  }
-
-  public double value() {
-    return this.value;
-  }
+  @Value.Parameter
+  public abstract double value();
 
   public static GQLFloatValue from(final double value) {
-    return new GQLFloatValue(value);
+    return ImmutableGQLFloatValue.of(value);
   }
 
   @Override
