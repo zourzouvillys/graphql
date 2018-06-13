@@ -1,5 +1,9 @@
 package io.zrz.graphql.core.runtime;
 
+import java.util.Optional;
+
+import io.zrz.graphql.core.doc.GQLOpType;
+
 public interface GQLOperationType {
 
   /**
@@ -7,5 +11,13 @@ public interface GQLOperationType {
    */
 
   String operationName();
+
+  /**
+   * if this operation is one of the standard types returns it, else empty.
+   */
+
+  default Optional<GQLOpType> standardType() {
+    return Optional.empty();
+  }
 
 }

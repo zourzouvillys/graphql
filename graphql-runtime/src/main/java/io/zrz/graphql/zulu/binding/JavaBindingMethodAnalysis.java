@@ -1,0 +1,206 @@
+package io.zrz.graphql.zulu.binding;
+
+import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
+
+import io.zrz.graphql.zulu.JavaInputField;
+import io.zrz.graphql.zulu.JavaOutputField;
+import io.zrz.graphql.zulu.ZuluUtils;
+import io.zrz.graphql.zulu.annotations.GQLDocumentation;
+import io.zrz.graphql.zulu.annotations.GQLField;
+import io.zrz.graphql.zulu.annotations.GQLOutputExtension;
+import io.zrz.graphql.zulu.annotations.GQLTypeUse;
+
+/**
+ * a java based contribution.
+ * 
+ * @author theo
+ *
+ */
+public class JavaBindingMethodAnalysis implements JavaOutputField {
+
+  private Method method;
+  private JavaBindingClassAnalysis owner;
+
+  /**
+   * 
+   */
+
+  public JavaBindingMethodAnalysis(JavaBindingClassAnalysis owner, Method method) {
+    this.owner = owner;
+    this.method = method;
+  }
+
+  /**
+   * the context that this method needs.
+   * 
+   * if it is an extension, this is the type that is needed for the method. otherwise, it's the owning class.
+   * 
+   */
+
+  public TypeToken<?> receiverType() {
+    if (isExtensionMethod()) {
+      return extensionReceiver();
+    }
+    return this.owner.javaType();
+  }
+
+  private TypeToken<?> extensionReceiver() {
+    Preconditions.checkState(isExtensionMethod());
+    Preconditions.checkState(this.method.getParameterCount() > 0, "invalid number of parameters for extension type (requires at least 1 for the receiver)");
+    return TypeToken.of(this.method.getGenericParameterTypes()[0]);
+  }
+
+  @Override
+  public ImmutableList<String> documentation() {
+    return Arrays
+        .stream(method.getAnnotationsByType(GQLDocumentation.class))
+        .map(a -> a.value())
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  /**
+   * if this field is an extension on another class.
+   */
+
+  public boolean isExtensionMethod() {
+    return this.owner.isExtensionClass() || (method.getAnnotationsByType(GQLOutputExtension.class).length > 0);
+  }
+
+  /**
+   * the raw parameters, which will exclude any java binding specific ones (e.g, receiver for extension method) but
+   * include viewer, context, etc.
+   */
+
+  public List<JavaBindingParameter> parameters() {
+
+    Parameter[] params = method.getParameters();
+
+    ImmutableList<com.google.common.reflect.Parameter> tp = this.owner.javaType().method(method).getParameters();
+
+    return IntStream.range(isExtensionMethod() ? 1 : 0, params.length)
+        .mapToObj(idx -> new JavaBindingParameter(this, idx, params[idx], tp.get(idx).getType()))
+        .collect(ImmutableList.toImmutableList());
+
+  }
+
+  @Override
+  public Stream<? extends JavaInputField> inputFields() {
+    return this.parameters().stream();
+  }
+
+  public Annotation[] returnTypeUse() {
+    return this.method.getAnnotatedReturnType().getAnnotations();
+  }
+
+  @Override
+  public TypeToken<?> returnType() {
+    return TypeToken.of(this.method.getGenericReturnType());
+  }
+
+  public String returnTypeAnnotations() {
+    return Arrays.toString(returnTypeUse());
+  }
+
+  public String typeParameters() {
+
+    return Arrays.stream(method.getTypeParameters())
+        .map(x -> Arrays.toString(x.getBounds()))
+        .collect(Collectors.joining(", "));
+
+  }
+
+  /**
+   * the zulu name of this field.
+   */
+
+  @Override
+  public String fieldName() {
+    if (method.isAnnotationPresent(GQLField.class)) {
+      for (GQLField field : method.getAnnotationsByType(GQLField.class)) {
+        if (field.value().length() > 0) {
+          return field.value();
+        }
+      }
+    }
+    return method.getName();
+  }
+
+  public String returnTypeName() {
+    if (method.getAnnotatedReturnType().isAnnotationPresent(GQLTypeUse.class)) {
+      for (GQLTypeUse u : method.getAnnotatedReturnType().getAnnotationsByType(GQLTypeUse.class)) {
+        if (!u.name().isEmpty()) {
+          return u.name();
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * the handle for invoking this field.
+   */
+
+  public MethodHandle bind() {
+    return ZuluUtils.unreflect(MethodHandles.lookup(), method);
+  }
+
+  /**
+   * 
+   */
+
+  @Override
+  public String toString() {
+    if (this.isExtensionMethod()) {
+      return getClass().getSimpleName() + "{" + this.receiverType() + "." + fieldName() + ", " + JavaBindingUtils.toString(this.method) + "}";
+    }
+    return getClass().getSimpleName() + "{" + this.owner + "." + fieldName() + ", " + JavaBindingUtils.toString(this.method) + "}";
+  }
+
+  public String annotations() {
+    return Arrays.toString(this.method.getAnnotations());
+  }
+
+  public boolean isAutoInclude() {
+    return this.owner.isAutoInclude() || this.method.isAnnotationPresent(GQLField.class);
+  }
+
+  /**
+   * 
+   */
+
+  @Override
+  public Optional<Method> origin() {
+    return Optional.of(this.method);
+  }
+
+  @Override
+  public <T, C, V> T invoke(V request, C context, Object... args) {
+    Preconditions.checkState(this.method != null);
+    try {
+      return (T) this.method.invoke(context, args);
+    }
+    catch (InvocationTargetException ex) {
+      throw new RuntimeException(ex.getCause());
+    }
+    catch (IllegalAccessException | IllegalArgumentException e) {
+      throw new RuntimeException(e);
+    }
+
+  }
+
+}

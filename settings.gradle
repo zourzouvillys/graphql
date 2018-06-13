@@ -1,6 +1,7 @@
 
 [
- 'graphql-core'
+ 'graphql-core',
+ 'graphql-runtime'
 // 'graphql-converter',
 // 'graphql-server',
 // 'graphql-generator',
