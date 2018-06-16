@@ -44,6 +44,13 @@ public class GQLSchemaField {
   // type: __Type!
 
   public GQLSchemaType type() {
+
+    if (field.fieldType().arity() > 0) {
+
+      return new GQLSchemaType(field.fieldType().type(), field.fieldType().arity());
+
+    }
+
     return new GQLSchemaType(field.fieldType().type());
   }
 

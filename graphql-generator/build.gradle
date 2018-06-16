@@ -1,15 +1,125 @@
 buildscript {
-    repositories {
-        mavenCentral()
+  repositories {
+    maven {
+      url 'https://plugins.gradle.org/m2/'
     }
+  }
+  dependencies {
+    classpath 'net.ltgt.gradle:gradle-apt-plugin:0.15'
+    classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+  }
 }
 
-apply plugin: 'java'
+apply plugin: 'java-library'
+apply plugin: 'com.github.johnrengelman.plugin-shadow'
+apply plugin: 'eclipse'
+apply plugin: 'net.ltgt.apt'
+apply plugin: 'net.ltgt.apt-eclipse'
+apply plugin: 'maven'
 
 dependencies {
-    compile group: project.group, name: "graphql-client", version: project.version
-    compile group: project.group, name: "graphql-server", version: project.version
-    compile group: project.group, name: "graphql-core", version: project.version
-    testCompile libraries.junit
+  
+  // runtime shared dependencies.
+  api                 'org.slf4j:slf4j-api:1.7.25'
+  
+  // these are internal only, shaded for deploy.
+  implementation      'com.google.guava:guava:25.1-jre'
+  implementation      'org.apache.commons:commons-lang3:3.7'
+  implementation      'com.github.zourzouvillys:commons:950d929406'
+  implementation      'org.apache.commons:commons-text:1.4'
+  implementation      'net.jodah:typetools:0.5.0'
+  implementation      project(':graphql-core')
+  implementation      project(':graphql:runtime')
+  implementation      project(':graphql:schema')
+  implementation      'com.squareup:javapoet:1.11.1'
+  
+
+  // compile time only dependencies
+  compileOnly         'com.google.errorprone:error_prone_annotations:2.3.1'
+  compileOnly         'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.100'
+
+  compileOnly         'org.immutables:builder:2.6.1'
+  compileOnly         'org.immutables:value:2.6.1:annotations'
+
+  annotationProcessor 'org.immutables:builder:2.6.1'
+  annotationProcessor 'org.immutables:value:2.6.1'
+
+  testImplementation  'junit:junit:4.12'
+  testImplementation  'org.assertj:assertj-core:3.6.1'
+  testImplementation  'ch.qos.logback:logback-classic:1.2.3'
+
 }
 
+shadowJar {
+   baseName = 'shadow'
+   classifier = null
+   version = null
+}
+
+repositories {
+  jcenter()
+  maven { url 'https://jitpack.io' }
+}
+
+sourceCompatibility = 9
+targetCompatibility = 9
+
+
+
+// --------------------------------------------------
+// compile
+// --------------------------------------------------
+
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-parameters'
+}
+
+
+eclipse {
+  jdt {
+    file {
+      withProperties { properties ->
+        properties.setProperty("org.eclipse.jdt.core.compiler.codegen.methodParameters", "generate")
+      }
+    }
+  }
+}
+// --------------------------------------------------
+// install
+// --------------------------------------------------
+
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+tasks.withType(Javadoc) {
+      options.addStringOption('Xdoclint:none', '-quiet')
+}
+    
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+// To specify a license in the pom:
+install {
+  repositories.mavenInstaller {
+    pom.project {
+      licenses {
+        license {
+          name 'The Apache Software License, Version 2.0'
+          url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          distribution 'repo'
+        }
+      }
+    }
+  }
+}

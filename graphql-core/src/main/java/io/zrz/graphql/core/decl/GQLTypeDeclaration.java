@@ -1,5 +1,7 @@
 package io.zrz.graphql.core.decl;
 
+import io.zrz.graphql.core.types.GQLTypeDeclKind;
+
 /**
  * A declaration of a type, e.g object, type, interface, scalar, etc.
  *
@@ -21,5 +23,7 @@ public interface GQLTypeDeclaration extends GQLDeclaration {
   default <R> R apply(GQLDeclarationVisitor<R> visitor) {
     return visitor.visitTypeDeclaration(this);
   }
+
+  GQLTypeDeclKind typeKind();
 
 }

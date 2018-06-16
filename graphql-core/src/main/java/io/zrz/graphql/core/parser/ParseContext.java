@@ -233,7 +233,7 @@ public class ParseContext {
         b.addIfaces(GQLTypes.concreteTypeRef(name));
         // note: parser skips over comma.
       }
-      while (this.is(TokenType.NAME));
+      while (this.skip("&"));
     }
 
     this.require("{");
@@ -244,10 +244,6 @@ public class ParseContext {
 
       if (this.is(TokenType.COMMENT)) {
         fb.description(this.require(TokenType.COMMENT));
-      }
-
-      if (this.is("@")) {
-        fb.directives(this.parseDirectives());
       }
 
       fb.name(this.require(TokenType.NAME));
@@ -261,6 +257,10 @@ public class ParseContext {
       final GQLTypeReference type = this.parseTypeRef();
 
       fb.type(type);
+
+      if (this.is("@")) {
+        fb.directives(this.parseDirectives());
+      }
 
       b.addFields(fb.build());
 

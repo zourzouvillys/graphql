@@ -5,6 +5,7 @@ import java.util.List;
 import org.immutables.value.Value;
 
 import io.zrz.graphql.core.types.GQLDeclarationRef;
+import io.zrz.graphql.core.types.GQLTypeDeclKind;
 import io.zrz.graphql.core.types.GQLTypeReference;
 
 @Value.Immutable(copy = true)
@@ -13,6 +14,11 @@ public abstract class GQLInterfaceTypeDeclaration implements GQLExtendableTypeDe
   public abstract List<GQLDeclarationRef> ifaces();
 
   public abstract List<GQLParameterableFieldDeclaration> fields();
+
+  @Override
+  public GQLTypeDeclKind typeKind() {
+    return GQLTypeDeclKind.INTERFACE;
+  }
 
   public GQLParameterableFieldDeclaration field(String name) {
     return this.fields().stream().filter(d -> d.name().equals(name)).findAny().orElse(null);

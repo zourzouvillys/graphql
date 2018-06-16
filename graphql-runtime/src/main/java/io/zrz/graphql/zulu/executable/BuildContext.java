@@ -4,10 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
 
+import io.zrz.graphql.zulu.JavaOutputField;
 import io.zrz.graphql.zulu.LogicalTypeKind;
 import io.zrz.graphql.zulu.binding.JavaBindingMethodAnalysis;
 import io.zrz.graphql.zulu.binding.OutputFieldFilter;
@@ -163,6 +165,24 @@ class BuildContext implements OutputFieldFilter {
   @Override
   public boolean shouldInclude(JavaBindingMethodAnalysis m) {
     return true;
+  }
+
+  /**
+   * provides the fields which the given output type will have.
+   * 
+   * @param symbol
+   * @param type
+   * @return
+   */
+
+  public Stream<? extends JavaOutputField> outputFieldsFor(Symbol symbol, ExecutableOutputType type) {
+    if (symbol.handle == null) {
+      return builder().outputFieldsFor(symbol, type);
+    }
+    return Stream.concat(
+        builder().outputFieldsFor(symbol, type),
+        symbol.handle.outputFields(this.filterFor(type)));
+
   }
 
 }

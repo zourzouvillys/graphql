@@ -13,4 +13,6 @@ public interface GQLTypeReference {
 
   <R> R apply(GQLTypeVisitor<R> visitor);
 
+  GQLTypeRefKind typeRefKind();
+
 }

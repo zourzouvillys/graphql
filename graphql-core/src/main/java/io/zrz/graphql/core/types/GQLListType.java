@@ -17,6 +17,11 @@ import io.zrz.graphql.core.lang.GQLTypeVisitor;
 @Value.Immutable(copy = true)
 public abstract class GQLListType implements GQLTypeReference {
 
+  @Override
+  public GQLTypeRefKind typeRefKind() {
+    return GQLTypeRefKind.LIST;
+  }
+
   public abstract GQLTypeReference type();
 
   public abstract List<GQLDirective> directives();

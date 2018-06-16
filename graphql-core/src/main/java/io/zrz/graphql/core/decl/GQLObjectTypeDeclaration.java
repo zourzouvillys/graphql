@@ -5,10 +5,16 @@ import java.util.List;
 import org.immutables.value.Value;
 
 import io.zrz.graphql.core.types.GQLDeclarationRef;
+import io.zrz.graphql.core.types.GQLTypeDeclKind;
 import io.zrz.graphql.core.types.GQLTypeReference;
 
 @Value.Immutable(copy = true)
 public abstract class GQLObjectTypeDeclaration implements GQLExtendableTypeDeclaration {
+
+  @Override
+  public GQLTypeDeclKind typeKind() {
+    return GQLTypeDeclKind.OBJECT;
+  }
 
   public static class Builder extends ImmutableGQLObjectTypeDeclaration.Builder {
 

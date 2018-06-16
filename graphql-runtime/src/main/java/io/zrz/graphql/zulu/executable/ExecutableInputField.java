@@ -73,7 +73,7 @@ public final class ExecutableInputField implements ZField, ExecutableElement {
   @Override
   public String toString() {
     return "parameter " + this.name + " of " + this.field.receiverType().typeName() + "." + this.field.fieldName()
-        + ": " + fieldType() + " (native " + this.javaType + ")";
+        + ": " + ((this.fieldTypeUse == null) ? "<recursive>" : fieldType()) + " (native " + this.javaType + ")";
   }
 
   public int index() {

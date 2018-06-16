@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.immutables.value.Value;
 
+import io.zrz.graphql.core.types.GQLTypeDeclKind;
+
 @Value.Immutable(copy = true)
 public abstract class GQLEnumDeclaration implements GQLExtendableTypeDeclaration {
 
@@ -16,6 +18,11 @@ public abstract class GQLEnumDeclaration implements GQLExtendableTypeDeclaration
 
   public static ImmutableGQLEnumDeclaration.Builder builder() {
     return ImmutableGQLEnumDeclaration.builder();
+  }
+
+  @Override
+  public GQLTypeDeclKind typeKind() {
+    return GQLTypeDeclKind.ENUM;
   }
 
 }

@@ -8,6 +8,8 @@ public enum GQLTypeKind {
   UNION,
   ENUM,
   INPUT_OBJECT,
+
+  // .. reference types.
   LIST,
   NON_NULL,
 

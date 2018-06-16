@@ -41,6 +41,17 @@ public class ZuluEngineBuilder {
     return this;
   }
 
+  /**
+   * declares a type as an object, without scanning it.
+   * 
+   * the resulting type will have no methods initially, they must be added manually or through extensions.
+   * 
+   */
+
+  public void stubType(Type type) {
+    schema.addStubType(type, null, null);
+  }
+
   public ZuluEngineBuilder plugin(ZuluPlugin plugin) {
     plugin.onPluginRegistered(this);
     this.plugins.add(plugin);

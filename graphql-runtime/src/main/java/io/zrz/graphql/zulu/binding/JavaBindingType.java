@@ -65,13 +65,11 @@ public class JavaBindingType {
         this.analysis.methods()
             .filter(m -> !Modifier.isStatic(m.method.getModifiers()))
             .filter(m -> filter.shouldInclude(m)),
-        Stream.concat(
-            this.analysis
-                .superTypes()
-                .filter(a -> a.isMixin())
-                .map(a -> generator.include(a.typeToken()))
-                .flatMap(t -> t.outputFields(filter.forSupertype(t))),
-            this.generator.extensionsFor(this.type)));
+        this.analysis
+            .superTypes()
+            .filter(a -> a.isMixin())
+            .map(a -> generator.include(a.typeToken()))
+            .flatMap(t -> t.outputFields(filter.forSupertype(t))));
   }
 
   /**

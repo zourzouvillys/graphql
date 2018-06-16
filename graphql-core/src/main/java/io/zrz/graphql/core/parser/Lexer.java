@@ -22,7 +22,8 @@ public final class Lexer {
       "}",
       // for type parsing:
       "|",
-      ";" };
+      ";",
+      "&" };
 
   public static enum TokenType {
 

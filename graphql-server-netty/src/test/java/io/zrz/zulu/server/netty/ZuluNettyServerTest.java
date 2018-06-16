@@ -1,5 +1,7 @@
 package io.zrz.zulu.server.netty;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -7,12 +9,23 @@ import org.junit.Test;
 
 import io.zrz.graphql.zulu.annotations.GQLDocumentation;
 import io.zrz.graphql.zulu.annotations.GQLField;
+import io.zrz.graphql.zulu.annotations.GQLOutputType;
 import io.zrz.graphql.zulu.engine.ZuluEngine;
+import io.zrz.graphql.zulu.plugins.Jre8ZuluPlugin;
 import io.zrz.graphql.zulu.schema.GQLSchema;
 
 public class ZuluNettyServerTest {
 
-  @GQLDocumentation("# A Test Class")
+  @GQLDocumentation("A Test Class")
+  public static class TestHelloService {
+
+    public String hello(String name) {
+      return "Hello, " + name;
+    }
+
+  }
+
+  @GQLDocumentation("A Test Class")
   public static class TestQueryRoot {
 
     public String hello() {
@@ -23,8 +36,16 @@ public class ZuluNettyServerTest {
       return 1;
     }
 
+    public List<String> listing() {
+      return null;
+    }
+
     public Integer maybecount() {
       return null;
+    }
+
+    public Instant now() {
+      return Instant.now();
     }
 
     @GQLDocumentation("test a flag")
@@ -34,6 +55,23 @@ public class ZuluNettyServerTest {
 
     public TestQueryRoot self() {
       return this;
+    }
+
+    public MyOther other() {
+      return new MyOther();
+    }
+
+  }
+
+  /**
+   * 
+   */
+
+  @GQLOutputType
+  public static class MyOther {
+
+    public String another() {
+      return "bnoom";
     }
 
   }
@@ -49,6 +87,7 @@ public class ZuluNettyServerTest {
         .queryRoot(TestQueryRoot.class)
         .schema(s -> s.allowedAutoloader(type -> false))
         .plugin(new ZuluJacksonPlugin())
+        .plugin(new Jre8ZuluPlugin())
         .build();
 
     // start up.

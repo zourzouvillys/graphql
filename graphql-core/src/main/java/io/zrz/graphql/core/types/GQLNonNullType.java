@@ -18,6 +18,11 @@ public abstract class GQLNonNullType implements GQLTypeReference {
     return Collections.emptyList();
   }
 
+  @Override
+  public GQLTypeRefKind typeRefKind() {
+    return GQLTypeRefKind.NOT_NULL;
+  }
+
   public abstract GQLNonNullType withType(GQLTypeReference value);
 
   public abstract GQLNonNullType withDirectives(Collection<GQLDirective> value);

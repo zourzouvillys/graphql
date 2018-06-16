@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.similarity.FuzzyScore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,14 +39,19 @@ public final class ExecutableOutputType implements ExecutableType, ZOutputType, 
     this.typeName = symbol.typeName;
     this.javaType = symbol.typeToken;
 
-    this.documentation = symbol.handle
-        .analysis()
-        .annotations(GQLDocumentation.class)
-        .stream().map(a -> a.value())
-        .collect(Collectors.joining("\n\n"));
+    if (symbol.handle != null) {
 
-    this.fields = symbol.handle.outputFields(buildctx.filterFor(this))
-        // .peek(s -> log.info("field {} -> {}", s.fieldName(), s))
+      this.documentation = symbol.handle
+          .analysis()
+          .annotations(GQLDocumentation.class)
+          .stream()
+          .map(a -> StringUtils.trimToNull(a.value()))
+          .filter(text -> text != null)
+          .collect(Collectors.joining("\n\n"));
+
+    }
+
+    this.fields = buildctx.outputFieldsFor(symbol, this)
         .map(field -> new ExecutableOutputField(this, symbol, field, buildctx))
         .collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k));
 

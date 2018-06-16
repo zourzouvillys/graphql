@@ -45,6 +45,16 @@ public abstract class GQLDeclarationRef implements GQLTypeReference, GQLTypeDecl
 
   }
 
+  @Override
+  public GQLTypeRefKind typeRefKind() {
+    return GQLTypeRefKind.DECL;
+  }
+
+  @Override
+  public GQLTypeDeclKind typeKind() {
+    return null;
+  }
+
   // toString only ever used for diagnostics!
   @Override
   public String toString() {

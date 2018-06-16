@@ -17,13 +17,23 @@ import io.zrz.graphql.zulu.executable.ExecutableType;
 public class GQLSchemaType {
 
   private final ExecutableType type;
+  private int arity;
 
   public GQLSchemaType(ExecutableType type) {
+    this(type, 0);
+  }
+
+  public GQLSchemaType(ExecutableType type, int arity) {
     this.type = Objects.requireNonNull(type);
+    this.arity = arity;
   }
 
   // kind: __TypeKind!
   public @NonNull GQLTypeKind kind() {
+
+    if (this.arity > 0) {
+      return GQLTypeKind.LIST;
+    }
 
     switch (type.logicalKind()) {
       case ENUM:
@@ -46,6 +56,8 @@ public class GQLSchemaType {
 
   // name: String
   public String name() {
+    if (this.arity > 0)
+      return null;
     return type.typeName();
   }
 
@@ -109,6 +121,11 @@ public class GQLSchemaType {
   // # NON_NULL and LIST only
   // ofType: __Type
   public GQLSchemaType ofType() {
+
+    if (this.arity > 0) {
+      return new GQLSchemaType(this.type, this.arity - 1);
+    }
+
     return null;
   }
 

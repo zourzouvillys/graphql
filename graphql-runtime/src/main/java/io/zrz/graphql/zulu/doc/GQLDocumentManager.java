@@ -46,4 +46,12 @@ public interface GQLDocumentManager {
 
   GQLDocument parse(String input);
 
+  /**
+   * 
+   */
+
+  static GQLDocumentManager defaultInstance() {
+    return DefaultGQLDocumentManager.defaultInstance();
+  }
+
 }

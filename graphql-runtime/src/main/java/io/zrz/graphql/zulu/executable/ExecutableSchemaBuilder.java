@@ -200,6 +200,7 @@ public final class ExecutableSchemaBuilder {
   }
 
   private Symbol registerType(TypeToken<?> typeToken, String typeName, LogicalTypeKind typeKind) {
+
     if (typeKind.equals(LogicalTypeKind.OUTPUT)) {
 
       JavaBindingType handle = binder.registerType(typeToken);
@@ -218,6 +219,7 @@ public final class ExecutableSchemaBuilder {
       this.checkSymbol(typeToken, typeName, typeKind);
       return this.addSymbol(typeToken, typeName, typeKind, null);
     }
+
   }
 
   /**
@@ -227,6 +229,19 @@ public final class ExecutableSchemaBuilder {
   public ExecutableSchemaBuilder addType(Type klass) {
     registerType(TypeToken.of(klass), null, LogicalTypeKind.OUTPUT);
     return this;
+  }
+
+  public ExecutableSchemaBuilder addStubType(Type klass, String typeName, JavaBindingType handle) {
+
+    TypeToken<?> typeToken = TypeToken.of(klass);
+
+    if (typeName == null) {
+      typeName = this.generateName(typeToken, handle);
+    }
+
+    this.addSymbol(typeToken, typeName, LogicalTypeKind.OUTPUT, null);
+    return this;
+
   }
 
   /**
@@ -624,6 +639,23 @@ public final class ExecutableSchemaBuilder {
         typeName,
         LogicalTypeKind.OUTPUT,
         handle);
+  }
+
+  public Stream<? extends JavaOutputField> outputFieldsFor(Symbol symbol, ExecutableOutputType type) {
+
+    return this.binder.extensionsFor(symbol.typeToken);
+
+    // this.analysis.methods()
+    // .filter(m -> !Modifier.isStatic(m.method.getModifiers()))
+    // .filter(m -> filter.shouldInclude(m)),
+    // Stream.concat(
+    // this.analysis
+    // .superTypes()
+    // .filter(a -> a.isMixin())
+    // .map(a -> generator.include(a.typeToken()))
+    // .flatMap(t -> t.outputFields(filter.forSupertype(t))),
+    // this.generator.extensionsFor(this.type)));
+
   }
 
 }

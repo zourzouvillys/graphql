@@ -5,9 +5,15 @@ import java.util.List;
 import org.immutables.value.Value;
 
 import io.zrz.graphql.core.types.GQLDeclarationRef;
+import io.zrz.graphql.core.types.GQLTypeDeclKind;
 
 @Value.Immutable(copy = true)
 public abstract class GQLUnionTypeDeclaration implements GQLExtendableTypeDeclaration {
+
+  @Override
+  public GQLTypeDeclKind typeKind() {
+    return GQLTypeDeclKind.UNION;
+  }
 
   public abstract List<GQLDeclarationRef> types();
 

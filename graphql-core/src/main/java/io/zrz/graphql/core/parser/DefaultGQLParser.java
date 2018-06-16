@@ -82,6 +82,7 @@ public class DefaultGQLParser implements GQLParser {
    *
    */
 
+  @Override
   public GQLOperationDefinition parseQuery(final String doc) {
     return this.parseQuery(doc, GQLSourceInput.emptySource());
 
@@ -121,6 +122,7 @@ public class DefaultGQLParser implements GQLParser {
     return this.parseSchema(schema, GQLSourceInput.emptySource());
   }
 
+  @Override
   public GQLTypeRegistry parseSchema(String schema, GQLSourceInput source) {
     return new GQLSchemaBuilder()
         .add(GQLTypes.builtins())
@@ -139,6 +141,7 @@ public class DefaultGQLParser implements GQLParser {
     return this.parseSchema(schema, GQLSourceInput.emptySource());
   }
 
+  @Override
   public GQLTypeRegistry parseSchema(InputStream schema, GQLSourceInput source) {
     return new GQLSchemaBuilder().add(GQLTypes.builtins())
         .add(new ParseContext(streamToString(schema), source).parseSchema()).build();

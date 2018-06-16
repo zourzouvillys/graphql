@@ -8,7 +8,9 @@ import io.zrz.graphql.core.parser.GQLParser;
 
 public final class DefaultGQLDocumentManager implements GQLDocumentManager {
 
-  public static final DefaultGQLParser DEFAULT_PARSER = DefaultGQLParser.instance();
+  private static final DefaultGQLParser DEFAULT_PARSER = DefaultGQLParser.instance();
+
+  private static final DefaultGQLDocumentManager INSTANCE = new DefaultGQLDocumentManager();
 
   private final GQLParser parser;
 
@@ -35,6 +37,10 @@ public final class DefaultGQLDocumentManager implements GQLDocumentManager {
   @Override
   public GQLDocument parse(String input) {
     return Objects.requireNonNull(parser.parse(input));
+  }
+
+  public static DefaultGQLDocumentManager defaultInstance() {
+    return INSTANCE;
   }
 
 }

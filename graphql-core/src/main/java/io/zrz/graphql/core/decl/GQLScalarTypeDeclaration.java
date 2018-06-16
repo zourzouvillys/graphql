@@ -2,6 +2,8 @@ package io.zrz.graphql.core.decl;
 
 import org.immutables.value.Value;
 
+import io.zrz.graphql.core.types.GQLTypeDeclKind;
+
 /**
  * As expected by the name, a scalar represents a primitive value in GraphQL. GraphQL responses take the form of a
  * hierarchical tree; the leaves on these trees are GraphQL scalars.
@@ -21,6 +23,11 @@ import org.immutables.value.Value;
 
 @Value.Immutable(copy = true)
 public abstract class GQLScalarTypeDeclaration implements GQLTypeDeclaration {
+
+  @Override
+  public GQLTypeDeclKind typeKind() {
+    return GQLTypeDeclKind.SCALAR;
+  }
 
   /**
    * The GraphQL language defines a few types as primitive, and as always available to the type system (builtins).
