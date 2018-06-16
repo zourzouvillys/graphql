@@ -5,15 +5,10 @@ import java.util.concurrent.TimeoutException;
 
 import org.junit.Test;
 
-import io.zrz.graphql.zulu.annotations.GQLContext;
 import io.zrz.graphql.zulu.annotations.GQLDocumentation;
 import io.zrz.graphql.zulu.annotations.GQLField;
-import io.zrz.graphql.zulu.annotations.GQLOutputExtension;
 import io.zrz.graphql.zulu.engine.ZuluEngine;
-import io.zrz.graphql.zulu.executable.ExecutableSchema;
-import io.zrz.graphql.zulu.executable.ExecutableType;
 import io.zrz.graphql.zulu.schema.GQLSchema;
-import io.zrz.graphql.zulu.schema.GQLSchemaType;
 
 public class ZuluNettyServerTest {
 
@@ -41,36 +36,6 @@ public class ZuluNettyServerTest {
       return this;
     }
 
-    public GQLSchema __schema(@GQLContext ExecutableSchema schema) {
-      return new GQLSchema(schema);
-    }
-
-    /**
-     * 
-     * @param schema
-     * @param typeName
-     * @return
-     */
-
-    public GQLSchemaType __type(@GQLContext ExecutableSchema schema, @GQLField("name") String typeName) {
-      ExecutableType type = schema.resolveType(typeName);
-      if (type == null) {
-        return null;
-      }
-      return new GQLSchemaType(type);
-    }
-
-    /**
-     * 
-     * @param instance
-     * @return
-     */
-
-    @GQLOutputExtension
-    public static String __typename(Object instance) {
-      return "test: " + instance.getClass().getName();
-    }
-
   }
 
   @Test
@@ -80,6 +45,7 @@ public class ZuluNettyServerTest {
 
     // create engine
     ZuluEngine engine = ZuluEngine.builder()
+        .type(GQLSchema.class)
         .queryRoot(TestQueryRoot.class)
         .schema(s -> s.allowedAutoloader(type -> false))
         .plugin(new ZuluJacksonPlugin())

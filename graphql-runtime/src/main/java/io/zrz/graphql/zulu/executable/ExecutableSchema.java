@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
+import com.google.common.reflect.TypeToken;
 
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.runtime.GQLOperationType;
@@ -24,6 +25,7 @@ public class ExecutableSchema implements ExecutableElement {
 
   private final ImmutableMap<GQLOperationType, ExecutableOutputType> operationRoots;
   private final ImmutableMap<String, ExecutableType> types;
+  private ImmutableMap<TypeToken<?>, ExecutableType> tokens;
 
   ExecutableSchema(ExecutableSchemaBuilder b) {
 
@@ -44,6 +46,11 @@ public class ExecutableSchema implements ExecutableElement {
           return t1;
 
         }));
+
+    this.tokens = ctx.types
+        .entrySet()
+        .stream()
+        .collect(ImmutableMap.toImmutableMap(k -> k.getKey().typeToken, k -> k.getValue()));
 
   }
 
@@ -126,6 +133,17 @@ public class ExecutableSchema implements ExecutableElement {
 
   public ExecutableType resolveType(String typeName) {
     return this.types.get(typeName);
+  }
+
+  /**
+   * converts a registered java type to it's executable type.
+   * 
+   * @param type
+   * @return
+   */
+
+  public ExecutableType type(TypeToken<? extends Object> type) {
+    return this.tokens.get(type);
   }
 
 }

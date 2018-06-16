@@ -24,7 +24,21 @@ public interface JavaInputField {
 
   TypeToken<?> inputType();
 
+  /**
+   * the index of this parameter.
+   * 
+   * note that this may not directly map to the underlying declared method, but will map to the handler.
+   * 
+   * for example, a static extension method will not include the extension context value as a parameter and instead
+   * handle it internally.
+   * 
+   */
+
   int index();
+
+  /**
+   * 
+   */
 
   <T extends Annotation> Optional<T> annotation(Class<T> klass);
 

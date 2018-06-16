@@ -1,6 +1,7 @@
 package io.zrz.graphql.zulu.binding;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Optional;
@@ -73,6 +74,8 @@ public class JavaBindingParameter implements JavaInputField {
 
   @Override
   public int index() {
+    if (Modifier.isStatic(this.method.method.getModifiers()))
+      return index - 1;
     return index;
   }
 

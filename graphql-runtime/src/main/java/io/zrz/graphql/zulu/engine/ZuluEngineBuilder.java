@@ -35,6 +35,12 @@ public class ZuluEngineBuilder {
     return this;
   }
 
+  public ZuluEngineBuilder type(Class<?> type) {
+    schema.addType(type);
+    schema.registerExtension(type);
+    return this;
+  }
+
   public ZuluEngineBuilder plugin(ZuluPlugin plugin) {
     plugin.onPluginRegistered(this);
     this.plugins.add(plugin);
@@ -61,4 +67,5 @@ public class ZuluEngineBuilder {
 
     return engine;
   }
+
 }

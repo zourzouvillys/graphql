@@ -1,5 +1,6 @@
 package io.zrz.graphql.zulu.binding;
 
+import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -61,7 +62,9 @@ public class JavaBindingType {
 
   public Stream<? extends JavaOutputField> outputFields(OutputFieldFilter filter) {
     return Stream.concat(
-        this.analysis.methods().filter(m -> filter.shouldInclude(m)),
+        this.analysis.methods()
+            .filter(m -> !Modifier.isStatic(m.method.getModifiers()))
+            .filter(m -> filter.shouldInclude(m)),
         Stream.concat(
             this.analysis
                 .superTypes()

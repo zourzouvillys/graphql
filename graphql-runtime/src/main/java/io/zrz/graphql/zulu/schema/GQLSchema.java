@@ -4,8 +4,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.reflect.TypeToken;
+
 import io.zrz.graphql.core.doc.GQLOpType;
+import io.zrz.graphql.zulu.annotations.GQLContext;
 import io.zrz.graphql.zulu.annotations.GQLDocumentation;
+import io.zrz.graphql.zulu.annotations.GQLField;
+import io.zrz.graphql.zulu.annotations.GQLOutputExtension;
 import io.zrz.graphql.zulu.annotations.GQLOutputType;
 import io.zrz.graphql.zulu.executable.ExecutableSchema;
 import io.zrz.graphql.zulu.executable.ExecutableType;
@@ -65,6 +70,46 @@ public class GQLSchema {
 
   public List<GQLSchemaDirective> directives() {
     return Collections.emptyList();
+  }
+
+  /**
+   * the magic extensions foe __typename
+   * 
+   * @param instance
+   * @return
+   */
+
+  @GQLOutputExtension
+  public static String __typename(Object instance, @GQLContext ExecutableSchema schema) {
+    return schema.type(TypeToken.of(instance.getClass())).typeName();
+  }
+
+  /**
+   * 
+   * @param instance
+   * @param schema
+   * @return
+   */
+
+  @GQLOutputExtension
+  public static GQLSchema __schema(Object instance, @GQLContext ExecutableSchema schema) {
+    return new GQLSchema(schema);
+  }
+
+  /**
+   * 
+   * @param schema
+   * @param typeName
+   * @return
+   */
+
+  @GQLOutputExtension
+  public static GQLSchemaType __type(Object instance, @GQLContext ExecutableSchema schema, @GQLField("name") String typeName) {
+    ExecutableType type = schema.resolveType(typeName);
+    if (type == null) {
+      return null;
+    }
+    return new GQLSchemaType(type);
   }
 
 }

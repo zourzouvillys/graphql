@@ -7,6 +7,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.text.similarity.FuzzyScore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
@@ -19,6 +21,8 @@ import io.zrz.zulu.types.ZTypeKind;
 
 public final class ExecutableOutputType implements ExecutableType, ZOutputType, ExecutableElement {
 
+  private static Logger log = LoggerFactory.getLogger(ExecutableOutputType.class);
+
   private ExecutableSchema schema;
   private String typeName;
   private ImmutableMap<String, ExecutableOutputField> fields;
@@ -27,19 +31,26 @@ public final class ExecutableOutputType implements ExecutableType, ZOutputType, 
   private String documentation;
 
   ExecutableOutputType(ExecutableSchema schema, Symbol symbol, BuildContext buildctx) {
+
     buildctx.add(symbol, this);
+
     this.schema = schema;
     this.typeName = symbol.typeName;
     this.javaType = symbol.typeToken;
+
     this.documentation = symbol.handle
         .analysis()
         .annotations(GQLDocumentation.class)
         .stream().map(a -> a.value())
         .collect(Collectors.joining("\n\n"));
+
     this.fields = symbol.handle.outputFields(buildctx.filterFor(this))
+        // .peek(s -> log.info("field {} -> {}", s.fieldName(), s))
         .map(field -> new ExecutableOutputField(this, symbol, field, buildctx))
         .collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k));
+
     this.typeUse = buildctx.use(this, symbol.typeToken, 0);
+
   }
 
   public ExecutableSchema schema() {

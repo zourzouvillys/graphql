@@ -60,26 +60,35 @@ class BuildContext implements OutputFieldFilter {
 
     if (found == null) {
 
-      switch (symbol.typeKind) {
-        case OUTPUT: {
-          ExecutableOutputType decl = new ExecutableOutputType(schema, symbol, this);
-          types.put(symbol, decl);
-          return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl);
-        }
-        case ENUM:
-        case INPUT:
-        case INTERFACE:
-        case SCALAR:
-        case UNION: {
-          ExecutableType decl = this.compile(symbol);
-          types.put(symbol, decl);
-          return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl);
-        }
-        default:
-          break;
-      }
+      try {
 
-      throw new IllegalArgumentException(symbol.typeKind.toString());
+        switch (symbol.typeKind) {
+          case OUTPUT: {
+            ExecutableOutputType decl = new ExecutableOutputType(schema, symbol, this);
+            types.put(symbol, decl);
+            return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl);
+          }
+          case ENUM:
+          case INPUT:
+          case INTERFACE:
+          case SCALAR:
+          case UNION: {
+            ExecutableType decl = this.compile(symbol);
+            types.put(symbol, decl);
+            return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl);
+          }
+          default:
+            break;
+        }
+
+        throw new IllegalArgumentException(symbol.typeKind.toString());
+
+      }
+      catch (Exception ex) {
+
+        throw new RuntimeException("error building '" + symbol.typeName + "' from " + symbol.typeToken, ex);
+
+      }
 
     }
 

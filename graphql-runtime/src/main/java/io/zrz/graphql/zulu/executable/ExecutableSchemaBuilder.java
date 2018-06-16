@@ -200,15 +200,22 @@ public final class ExecutableSchemaBuilder {
   }
 
   private Symbol registerType(TypeToken<?> typeToken, String typeName, LogicalTypeKind typeKind) {
-    if (typeName == null) {
-      typeName = JavaBindingUtils.autoTypeName(typeToken);
-    }
-    this.checkSymbol(typeToken, typeName, typeKind);
     if (typeKind.equals(LogicalTypeKind.OUTPUT)) {
+
       JavaBindingType handle = binder.registerType(typeToken);
+
+      if (typeName == null) {
+        typeName = this.generateName(typeToken, handle);
+      }
+
       return this.addSymbol(typeToken, typeName, typeKind, handle);
+
     }
     else {
+      if (typeName == null) {
+        typeName = this.generateName(typeToken, null);
+      }
+      this.checkSymbol(typeToken, typeName, typeKind);
       return this.addSymbol(typeToken, typeName, typeKind, null);
     }
   }
@@ -551,10 +558,12 @@ public final class ExecutableSchemaBuilder {
 
   private String generateName(TypeToken<?> req, JavaBindingType handle) {
 
-    // TODO: also for enum, scalar, etc ...
-    for (GQLOutputType a : handle.analysis().annotations(GQLOutputType.class)) {
-      if (!StringUtils.isEmpty(a.name())) {
-        return a.name();
+    if (handle != null) {
+      // TODO: also for enum, scalar, etc ...
+      for (GQLOutputType a : handle.analysis().annotations(GQLOutputType.class)) {
+        if (!StringUtils.isEmpty(a.name())) {
+          return a.name();
+        }
       }
     }
 

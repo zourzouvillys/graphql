@@ -122,18 +122,24 @@ public class JavaBindingProvider {
     JavaBindingType ext = include(TypeToken.of(klass));
     ext.analysis()
         .extensionFields()
+        .peek(e -> log.trace("adding extension for {}: {}", e.receiverType(), e))
         .forEach(a -> this.extensions.put(a.receiverType(), a));
   }
 
   /**
    * returns the extension fields for the given token type.
+   * 
+   * this includes not just the exact types, but also any other types that it can match.
+   * 
    */
 
   public Stream<JavaOutputField> extensionsFor(TypeToken<?> type) {
+    log.trace("looking up in {} extensions for {}: {}", extensions.size(), type, type.getTypes());
     return Stream.concat(
-        this.extensions.get(type).stream(),
-        this.extensionGenerators.stream()
-            .flatMap(gen -> gen.generateExtensions(type)));
+        type.getTypes().stream().flatMap(e -> this.extensions.get(e).stream()).distinct(),
+        this.extensionGenerators.stream().flatMap(gen -> gen.generateExtensions(type)))
+    // .peek(f -> log.trace("extending {} with {}", type, f))
+    ;
 
   }
 
