@@ -1,13 +1,14 @@
 package io.zrz.graphql.zulu.executable;
 
-import java.lang.invoke.MethodHandle;
-import java.util.List;
+import java.lang.reflect.AnnotatedElement;
 import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
 
 import io.zrz.graphql.zulu.JavaOutputField;
 import io.zrz.graphql.zulu.ZOutputField;
+import io.zrz.graphql.zulu.annotations.GQLContext;
+import io.zrz.graphql.zulu.binding.JavaBindingUtils;
 import io.zrz.graphql.zulu.executable.ExecutableSchemaBuilder.Symbol;
 
 public final class ExecutableOutputField implements ZOutputField, ExecutableElement {
@@ -15,22 +16,50 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
   private final ExecutableOutputType receiverType;
   private final JavaOutputField field;
   private final ExecutableInputType params;
-  private ExecutableTypeUse fieldType;
+  private ReturnTypeUse returnType;
+
+  /**
+   * context parameters needed for this field.
+   */
+
+  private ImmutableList<ExecutableInputContext> context;
 
   ExecutableOutputField(ExecutableOutputType receiverType, Symbol symbol, JavaOutputField field, BuildContext types) {
+
     this.receiverType = receiverType;
     this.field = field;
+
     this.params = new ExecutableInputType(
         this,
         field.inputFields()
+            .filter(f -> !f.annotation(GQLContext.class).isPresent())
             .map(f -> new ExecutableInputField(this, f, types))
             .collect(ImmutableList.toImmutableList()));
-    this.fieldType = types.use(this, field.returnType());
+
+    this.context = field.inputFields()
+        .filter(f -> f.annotation(GQLContext.class).isPresent())
+        .map(f -> new ExecutableInputContext(this, f, types))
+        .collect(ImmutableList.toImmutableList());
+
+    this.returnType = new ReturnTypeUse(this, types, field.returnType());
+
+  }
+
+  JavaOutputField field() {
+    return this.field;
+  }
+
+  /**
+   * contextual parameters needed for this field.
+   */
+
+  public ImmutableList<ExecutableInputContext> contextParameters() {
+    return this.context;
   }
 
   @Override
   public ExecutableTypeUse fieldType() {
-    return this.fieldType;
+    return this.returnType.use();
   }
 
   /**
@@ -61,15 +90,18 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
   }
 
   /**
-   * the method handle for executing this field.
+   * each of the parameters needed for this field.
    */
 
-  public MethodHandle methodHandle() {
-    throw new RuntimeException("not implemented");
+  @Override
+  public ExecutableInputField parameter(String pname) {
+    if (params.fields().isEmpty())
+      return null;
+    return params.field(pname).get();
   }
 
   /**
-   * a slow-path invocation using the reflection API. prefer the methodHandle.
+   * a slow-path invocation using the reflection API. prefer the invoker.
    * 
    * @param viewer
    *          The viewer request.
@@ -86,8 +118,23 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
     return this.field.invoke(request, context, args);
   }
 
-  public List<String> documentation() {
-    return this.field.documentation();
+  public ExecutableInvoker invoker() {
+    return new ExecutableInvoker(this, this.field.invoker(), this.returnType);
+  }
+
+  @Override
+  public String documentation() {
+    return field.documentation();
+  }
+
+  @Override
+  public String toString() {
+    return "field " + this.receiverType.typeName() + "." + this.fieldName()
+        + " (defined by " + JavaBindingUtils.toString(this.field.origin().get()) + ")";
+  }
+
+  public Optional<? extends AnnotatedElement> origin() {
+    return field.origin();
   }
 
 }

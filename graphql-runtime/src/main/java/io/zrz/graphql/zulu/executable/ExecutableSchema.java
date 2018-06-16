@@ -1,5 +1,6 @@
 package io.zrz.graphql.zulu.executable;
 
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -9,6 +10,7 @@ import com.google.common.collect.ImmutableMap.Builder;
 
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.runtime.GQLOperationType;
+import io.zrz.graphql.zulu.LogicalTypeKind;
 import io.zrz.graphql.zulu.executable.ExecutableSchemaBuilder.Symbol;
 import io.zrz.zulu.types.ZType;
 
@@ -32,13 +34,8 @@ public class ExecutableSchema implements ExecutableElement {
 
     Builder<GQLOperationType, ExecutableOutputType> roots = ImmutableMap.<GQLOperationType, ExecutableOutputType>builder();
 
-    b.operationRoots().forEach((type, symbol) -> roots.put(type, (ExecutableOutputType) ctx.compile(symbol)));
-
-    // while (!ctx.pending().isEmpty()) {
-    // Symbol symbol = ctx.pending().iterator().next();
-    // ctx.types.put(symbol, new ExecutableOutputType(this, symbol, ctx));
-    // Preconditions.checkState(!ctx.pending().contains(symbol));
-    // }
+    b.operationRoots()
+        .forEach((type, symbol) -> roots.put(type, (ExecutableOutputType) ctx.compile(symbol)));
 
     this.operationRoots = roots.build();
 
@@ -83,6 +80,51 @@ public class ExecutableSchema implements ExecutableElement {
   public Map<GQLOperationType, ExecutableOutputType> operationTypes() {
     return this.operationRoots;
 
+  }
+
+  public ExecutableOutputField resolve(String typeName, String fieldName) {
+
+    ExecutableType type = this.types.get(typeName);
+
+    if (type.logicalKind() != LogicalTypeKind.OUTPUT) {
+      throw new IllegalArgumentException("type '" + typeName + "' is not an output type");
+    }
+
+    return resolve((ExecutableOutputType) type, fieldName);
+
+  }
+
+  private ExecutableOutputField resolve(ExecutableOutputType type, String fieldName) {
+    return type.field(fieldName)
+        .orElseThrow(() -> type.missingFieldException(fieldName));
+  }
+
+  public static ExecutableSchemaBuilder builder() {
+    return new ExecutableSchemaBuilder();
+  }
+
+  public static ExecutableSchema withRoot(Type queryRoot) {
+    return builder()
+        .setRootType(GQLOpType.Query, queryRoot)
+        .build();
+  }
+
+  public static ExecutableSchema withRoot(Type queryRoot, Type mutationRoot) {
+    return builder()
+        .setRootType(GQLOpType.Query, queryRoot)
+        .setRootType(GQLOpType.Mutation, mutationRoot)
+        .build();
+  }
+
+  /**
+   * finds the type with the specified name.
+   * 
+   * @param typeName
+   * @return
+   */
+
+  public ExecutableType resolveType(String typeName) {
+    return this.types.get(typeName);
   }
 
 }

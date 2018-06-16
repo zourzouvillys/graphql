@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -43,7 +42,6 @@ public class JavaBindingProvider {
   private Map<TypeToken<?>, JavaBindingType> types = new HashMap<>();
   private Map<TypeToken<?>, JavaBindingType> interfaces = new HashMap<>();
   private Map<TypeToken<?>, String> unions = new HashMap<>();
-  private Map<TypeToken<?>, String> scalars = new HashMap<>();
 
   private Set<ExtensionGenerator> extensionGenerators = new HashSet<>();
 
@@ -73,7 +71,7 @@ public class JavaBindingProvider {
    */
 
   public JavaBindingType registerType(TypeToken<?> typeToken) {
-    log.info("registering type [{}]", typeToken);
+    log.trace("scanning type [{}]", typeToken);
     return this.types.computeIfAbsent(typeToken, _token -> new JavaBindingType(this, _token));
   }
 
@@ -94,12 +92,6 @@ public class JavaBindingProvider {
     // add each of the names to the types which implement it.
     this.types.values().forEach(t -> t.processInterface(type));
 
-  }
-
-  public Stream<JavaBindingNamedType> typeNames() {
-    return Stream.concat(
-        this.types.values().stream().flatMap(type -> type.names().stream().map(name -> new JavaBindingNamedType(type, name, false))),
-        this.interfaces.values().stream().flatMap(type -> type.names().stream().map(name -> new JavaBindingNamedType(type, name, true))));
   }
 
   /**
@@ -127,13 +119,10 @@ public class JavaBindingProvider {
    */
 
   public void registerExtension(Class<?> klass) {
-
     JavaBindingType ext = include(TypeToken.of(klass));
-
     ext.analysis()
         .extensionFields()
         .forEach(a -> this.extensions.put(a.receiverType(), a));
-
   }
 
   /**
@@ -157,18 +146,6 @@ public class JavaBindingProvider {
   }
 
   /**
-   * registers a java type as a scalar.
-   * 
-   * @param type
-   * @param materializer
-   * @param name
-   */
-
-  public <T> void registerScalar(TypeToken<?> type, Function<String, T> materializer) {
-    // this.scalars.put(type, name);
-  }
-
-  /**
    * all types exposed by the bindings. these will all need to have mappings in some form to external APIs.
    */
 
@@ -178,28 +155,8 @@ public class JavaBindingProvider {
         .addAll(this.types.keySet())
         .addAll(this.interfaces.keySet())
         .addAll(this.unions.keySet())
-        .addAll(this.scalars.keySet())
         .build()
         .stream();
-  }
-
-  /**
-   * return the logical type that is registered for this type, throwing if it is not registered.
-   * 
-   * @param type
-   * @return
-   */
-
-  public JavaBindingType getType(TypeToken<?> type) {
-
-    JavaBindingType res = this.uses.get(type);
-
-    if (res == null) {
-      throw new IllegalArgumentException(type.toString());
-    }
-
-    return res;
-
   }
 
   public Stream<TypeToken<?>> usedTypes() {
@@ -208,7 +165,6 @@ public class JavaBindingProvider {
         .addAll(this.types.keySet())
         .addAll(this.interfaces.keySet())
         .addAll(this.unions.keySet())
-        .addAll(this.scalars.keySet())
         .addAll(this.uses.keySet())
         .build()
         .stream()

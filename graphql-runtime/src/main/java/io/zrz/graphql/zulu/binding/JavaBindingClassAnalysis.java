@@ -1,5 +1,6 @@
 package io.zrz.graphql.zulu.binding;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,8 +11,8 @@ import java.util.stream.Stream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 
+import io.zrz.graphql.zulu.annotations.GQLAutoScan;
 import io.zrz.graphql.zulu.annotations.GQLOutputExtension;
-import io.zrz.graphql.zulu.annotations.GQLOutputType;
 
 /**
  * given a class, scans to generate an analysis of it for later processing.
@@ -74,15 +75,22 @@ public class JavaBindingClassAnalysis {
   }
 
   /**
-   * true if all methods in this class are extensions, otherwise false.
+   * true if this class should be included for auto-scanning of fields.
+   * 
+   * this is true if we were manually registered, or have a GQLAutoScan method.
+   * 
    */
 
   public boolean isAutoInclude() {
     return Arrays
-        .stream(rawClass.getAnnotationsByType(GQLOutputType.class))
+        .stream(rawClass.getAnnotationsByType(GQLAutoScan.class))
         .findAny()
-        .map(x -> x.autoscan())
-        .orElse(true);
+        .map(x -> x.value())
+        .orElse(false);
+  }
+
+  public <T extends Annotation> boolean isAnnotationPresent(Class<T> annotationClass) {
+    return rawClass.isAnnotationPresent(annotationClass);
   }
 
   /**
@@ -123,6 +131,10 @@ public class JavaBindingClassAnalysis {
 
     return "JavaClassAnalysis{" + javaType() + "}";
 
+  }
+
+  public <T extends Annotation> ImmutableList<T> annotations(Class<T> annotationClass) {
+    return ImmutableList.copyOf(this.type.getRawType().getAnnotationsByType(annotationClass));
   }
 
 }

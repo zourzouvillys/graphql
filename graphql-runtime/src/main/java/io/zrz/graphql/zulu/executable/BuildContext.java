@@ -9,9 +9,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
 
 import io.zrz.graphql.zulu.LogicalTypeKind;
+import io.zrz.graphql.zulu.binding.JavaBindingMethodAnalysis;
+import io.zrz.graphql.zulu.binding.OutputFieldFilter;
 import io.zrz.graphql.zulu.executable.ExecutableSchemaBuilder.Symbol;
 
-class BuildContext {
+class BuildContext implements OutputFieldFilter {
 
   Map<Symbol, ExecutableType> types = new HashMap<>();
   private ExecutableSchemaBuilder b;
@@ -26,35 +28,62 @@ class BuildContext {
     this.target = b.symbols().collect(Collectors.toSet());
   }
 
+  ExecutableSchemaBuilder builder() {
+    return this.b;
+  }
+
   ExecutableTypeUse use(ExecutableElement user, TypeToken<?> javaType) {
+    return use(user, javaType, 0);
+  }
+
+  ExecutableTypeUse use(ExecutableElement user, TypeToken<?> javaType, int arity) {
 
     Symbol symbol = this.suppliers.get(javaType);
 
-    Preconditions.checkState(symbol != null, "couldn't find a symbol for '%s'", javaType);
+    if (symbol == null) {
+      // a chance to autoload before failing it.
+      symbol = this.b.autoload(javaType, user);
+      if (symbol != null) {
+        this.target.add(symbol);
+        this.suppliers.put(javaType, symbol);
+      }
+    }
+
+    Preconditions.checkState(
+        symbol != null,
+        "couldn't find a symbol for %s '%s' for %s",
+        javaType.getType().getClass().getSimpleName(),
+        javaType,
+        user);
 
     ExecutableType found = types.get(symbol);
 
     if (found == null) {
 
       switch (symbol.typeKind) {
-        case OUTPUT:
-          types.put(symbol, new ExecutableOutputType(schema, symbol, this));
-          return new ExecutableTypeUse(javaType, symbol.typeName);
+        case OUTPUT: {
+          ExecutableOutputType decl = new ExecutableOutputType(schema, symbol, this);
+          types.put(symbol, decl);
+          return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl);
+        }
         case ENUM:
         case INPUT:
         case INTERFACE:
         case SCALAR:
-        case UNION:
-          this.compile(symbol);
-          return new ExecutableTypeUse(javaType, symbol.typeName);
+        case UNION: {
+          ExecutableType decl = this.compile(symbol);
+          types.put(symbol, decl);
+          return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl);
+        }
         default:
+          break;
       }
 
       throw new IllegalArgumentException(symbol.typeKind.toString());
 
     }
 
-    return new ExecutableTypeUse(javaType, found);
+    return new ExecutableTypeUse(javaType, found, arity, symbol);
 
   }
 
@@ -88,8 +117,16 @@ class BuildContext {
         types.put(symbol, value);
         return value;
       }
-      case ENUM:
-      case INPUT:
+      case INPUT: {
+        ExecutableInputType value = new ExecutableInputType(schema, symbol, this);
+        types.put(symbol, value);
+        return value;
+      }
+      case ENUM: {
+        ExecutableEnumType value = new ExecutableEnumType(schema, symbol, this);
+        types.put(symbol, value);
+        return value;
+      }
       case INTERFACE:
       case UNION:
       default:
@@ -97,6 +134,26 @@ class BuildContext {
 
     throw new IllegalArgumentException(symbol.typeKind.toString());
 
+  }
+
+  /**
+   * returns the filter to use for scanning the executabletype.
+   * 
+   * @param type
+   * @return
+   */
+
+  public OutputFieldFilter filterFor(ExecutableOutputType type) {
+    return this;
+  }
+
+  /**
+   * true if the given method should be included as a field in the generation.
+   */
+
+  @Override
+  public boolean shouldInclude(JavaBindingMethodAnalysis m) {
+    return true;
   }
 
 }

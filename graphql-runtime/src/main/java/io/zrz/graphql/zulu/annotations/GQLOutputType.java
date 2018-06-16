@@ -19,6 +19,4 @@ public @interface GQLOutputType {
 
   String name() default "";
 
-  boolean autoscan() default false;
-
 }

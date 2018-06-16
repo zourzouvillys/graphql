@@ -1,6 +1,9 @@
 
 package io.zrz.graphql.zulu;
 
+import java.lang.annotation.Annotation;
+import java.util.Optional;
+
 import com.google.common.reflect.TypeToken;
 
 /**
@@ -20,5 +23,9 @@ public interface JavaInputField {
    */
 
   TypeToken<?> inputType();
+
+  int index();
+
+  <T extends Annotation> Optional<T> annotation(Class<T> klass);
 
 }

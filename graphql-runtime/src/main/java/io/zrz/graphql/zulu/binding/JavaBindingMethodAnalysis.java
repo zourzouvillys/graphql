@@ -1,8 +1,6 @@
 package io.zrz.graphql.zulu.binding;
 
 import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -13,13 +11,14 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 
 import io.zrz.graphql.zulu.JavaInputField;
 import io.zrz.graphql.zulu.JavaOutputField;
-import io.zrz.graphql.zulu.ZuluUtils;
 import io.zrz.graphql.zulu.annotations.GQLDocumentation;
 import io.zrz.graphql.zulu.annotations.GQLField;
 import io.zrz.graphql.zulu.annotations.GQLOutputExtension;
@@ -33,8 +32,9 @@ import io.zrz.graphql.zulu.annotations.GQLTypeUse;
  */
 public class JavaBindingMethodAnalysis implements JavaOutputField {
 
-  private Method method;
+  final Method method;
   private JavaBindingClassAnalysis owner;
+  private JavaBindingInvoker invoker;
 
   /**
    * 
@@ -66,11 +66,11 @@ public class JavaBindingMethodAnalysis implements JavaOutputField {
   }
 
   @Override
-  public ImmutableList<String> documentation() {
-    return Arrays
+  public String documentation() {
+    return StringUtils.trimToNull(Arrays
         .stream(method.getAnnotationsByType(GQLDocumentation.class))
         .map(a -> a.value())
-        .collect(ImmutableList.toImmutableList());
+        .collect(Collectors.joining("\n\n")));
   }
 
   /**
@@ -98,9 +98,14 @@ public class JavaBindingMethodAnalysis implements JavaOutputField {
 
   }
 
+  /**
+   * the expected input fields for this method.
+   */
+
   @Override
   public Stream<? extends JavaInputField> inputFields() {
-    return this.parameters().stream();
+    return this.parameters()
+        .stream();
   }
 
   public Annotation[] returnTypeUse() {
@@ -155,8 +160,12 @@ public class JavaBindingMethodAnalysis implements JavaOutputField {
    * the handle for invoking this field.
    */
 
-  public MethodHandle bind() {
-    return ZuluUtils.unreflect(MethodHandles.lookup(), method);
+  @Override
+  public JavaBindingInvoker invoker() {
+    if (this.invoker == null) {
+      this.invoker = new JavaBindingInvoker(this);
+    }
+    return this.invoker;
   }
 
   /**
@@ -171,8 +180,8 @@ public class JavaBindingMethodAnalysis implements JavaOutputField {
     return getClass().getSimpleName() + "{" + this.owner + "." + fieldName() + ", " + JavaBindingUtils.toString(this.method) + "}";
   }
 
-  public String annotations() {
-    return Arrays.toString(this.method.getAnnotations());
+  public Annotation[] annotations() {
+    return this.method.getAnnotations();
   }
 
   public boolean isAutoInclude() {
@@ -195,9 +204,17 @@ public class JavaBindingMethodAnalysis implements JavaOutputField {
       return (T) this.method.invoke(context, args);
     }
     catch (InvocationTargetException ex) {
-      throw new RuntimeException(ex.getCause());
+      try {
+        throw ex.getCause();
+      }
+      catch (RuntimeException inner) {
+        throw inner;
+      }
+      catch (Throwable inner) {
+        throw new RuntimeException(inner);
+      }
     }
-    catch (IllegalAccessException | IllegalArgumentException e) {
+    catch (IllegalAccessException e) {
       throw new RuntimeException(e);
     }
 

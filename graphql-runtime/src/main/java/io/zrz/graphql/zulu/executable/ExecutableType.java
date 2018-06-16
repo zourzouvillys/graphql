@@ -9,4 +9,8 @@ public interface ExecutableType extends ZType {
 
   String typeName();
 
+  default String documentation() {
+    return null;
+  }
+
 }

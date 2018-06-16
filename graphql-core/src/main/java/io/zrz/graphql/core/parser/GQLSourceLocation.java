@@ -16,7 +16,11 @@ public abstract class GQLSourceLocation {
   @Override
   public String toString() {
 
-    return String.format("%s (line %d col %d)", this.input(), this.lineNumber(), this.lineOffset());
+    if (this.input() != null && this.input().name() != null && !this.input().name().isEmpty()) {
+      return String.format("%s (line %d col %d)", this.input(), this.lineNumber(), this.lineOffset());
+    }
+
+    return String.format("(line %d col %d)", this.lineNumber(), this.lineOffset());
 
   }
 

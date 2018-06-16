@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import io.zrz.graphql.zulu.runtime.CachingGQLDocumentManager;
-import io.zrz.graphql.zulu.runtime.GQLPreparedDocument;
+import io.zrz.graphql.zulu.doc.CachingGQLDocumentManager;
+import io.zrz.graphql.zulu.doc.GQLPreparedDocument;
 
 public class CachingGQLDocumentManagerTest {
 

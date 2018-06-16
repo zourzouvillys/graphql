@@ -2,7 +2,6 @@ package io.zrz.graphql.zulu.schema;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -103,13 +102,7 @@ public class SchemaGenerator {
     StringBuilder sb = new StringBuilder();
 
     Optional.ofNullable(m.documentation())
-        .map(x -> x.stream())
-        .orElse(Stream.empty())
-        .forEach(doc -> {
-
-          sb.append("# ").append(doc).append("\n");
-
-        });
+        .ifPresent(doc -> sb.append("# ").append(doc).append("\n"));
 
     sb.append(m.fieldName());
 
@@ -144,7 +137,7 @@ public class SchemaGenerator {
 
   private String typeUse(ExecutableTypeUse use) {
     try {
-      return use.logicalType();
+      return StringUtils.repeat("[", use.arity()) + use.logicalType() + StringUtils.repeat("]", use.arity());
     }
     catch (Exception ex) {
       ex.printStackTrace();

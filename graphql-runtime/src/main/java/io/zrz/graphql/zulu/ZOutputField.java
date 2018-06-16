@@ -2,6 +2,8 @@ package io.zrz.graphql.zulu;
 
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import io.zrz.zulu.types.ZField;
 import io.zrz.zulu.types.ZStructType;
 
@@ -12,5 +14,8 @@ public interface ZOutputField extends ZField {
    */
 
   Optional<? extends ZStructType> parameters();
+
+  @Nullable
+  ZField parameter(String pname);
 
 }

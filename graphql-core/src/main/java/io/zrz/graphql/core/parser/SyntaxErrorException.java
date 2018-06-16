@@ -34,6 +34,10 @@ public class SyntaxErrorException extends GQLException {
     return ctx.lexer().lineNumberAtOffset(pos.start());
   }
 
+  public ImmutableLineInfo lineInfo() {
+    return calculateLine(ctx);
+  }
+
   /**
    * returns the line (or a bunch of context) related to this error.
    *

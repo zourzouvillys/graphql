@@ -2,11 +2,12 @@ package io.zrz.graphql.zulu.schema;
 
 import static org.junit.Assert.assertEquals;
 
+import java.lang.annotation.Annotation;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 
 import io.zrz.graphql.core.doc.GQLOpType;
@@ -197,6 +198,16 @@ public class SchemaGeneratorTest {
                 return TypeToken.of(String.class);
               }
 
+              @Override
+              public int index() {
+                return 0;
+              }
+
+              @Override
+              public <T extends Annotation> Optional<T> annotation(Class<T> klass) {
+                return Optional.empty();
+              }
+
             });
           }
 
@@ -207,8 +218,8 @@ public class SchemaGeneratorTest {
           }
 
           @Override
-          public ImmutableList<String> documentation() {
-            return ImmutableList.of("example dynamically generated field");
+          public String documentation() {
+            return "example dynamically generated field";
           }
 
           @Override

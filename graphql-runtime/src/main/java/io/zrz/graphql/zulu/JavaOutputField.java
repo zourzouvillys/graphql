@@ -4,8 +4,9 @@ import java.lang.reflect.AnnotatedElement;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
+
+import io.zrz.graphql.zulu.binding.JavaBindingInvoker;
 
 /**
  * the specification for an input field on a zulu type.
@@ -38,8 +39,8 @@ public interface JavaOutputField {
    * any documentation for this field, if available.
    */
 
-  default ImmutableList<String> documentation() {
-    return ImmutableList.of();
+  default String documentation() {
+    return null;
   }
 
   /**
@@ -64,5 +65,13 @@ public interface JavaOutputField {
    */
 
   <T extends Object, C, V> T invoke(V request, C context, Object... args);
+
+  /**
+   * provides an handle for building invocations of this field.
+   */
+
+  default JavaBindingInvoker invoker() {
+    throw new RuntimeException("not implemented");
+  }
 
 }

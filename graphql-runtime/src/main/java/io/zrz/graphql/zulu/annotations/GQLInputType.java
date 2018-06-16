@@ -7,7 +7,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * indicates that the specified type is a ZuluType
+ * indicates that the element annotated with this is an input type.
  * 
  * @author theo
  *
@@ -16,5 +16,7 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target(TYPE)
 public @interface GQLInputType {
+
   String name() default "";
+
 }
