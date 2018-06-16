@@ -55,4 +55,9 @@ public class ResolvedInterfaceType extends ResolvedType implements SchemaType, R
     return this.named.get(fieldName);
   }
 
+  @Override
+  public ResolvedType targetType() {
+    return this;
+  }
+
 }

@@ -78,4 +78,9 @@ public class BoundNamedFragment implements BoundSelectionContainer, BoundFragmen
     return this.type;
   }
 
+  @Override
+  public ResolvedType selectionType() {
+    return this.type;
+  }
+
 }

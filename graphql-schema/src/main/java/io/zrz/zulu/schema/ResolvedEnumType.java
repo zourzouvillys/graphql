@@ -15,6 +15,7 @@ public class ResolvedEnumType extends ResolvedType implements SchemaType {
   private ImmutableSet<GQLEnumValue> values;
 
   public ResolvedEnumType(SchemaCompiler c, ResolvedSchema s, String t, GQLTypeDeclKind k, List<GQLEnumDeclaration> p) {
+
     super(c, s, t, k, p);
 
     this.ordered = p.stream()
@@ -47,6 +48,11 @@ public class ResolvedEnumType extends ResolvedType implements SchemaType {
   @Override
   public <T1, T2, R> R apply(BiFunctionVisitor<T1, T2, R> visitor, T1 arg1, T2 arg2) {
     return visitor.visit(this, arg1, arg2);
+  }
+
+  @Override
+  public ResolvedType targetType() {
+    return this;
   }
 
 }

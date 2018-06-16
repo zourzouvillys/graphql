@@ -41,4 +41,9 @@ public class ResolvedInputType extends ResolvedType implements SchemaType {
     return visitor.visit(this, arg1, arg2);
   }
 
+  @Override
+  public ResolvedType targetType() {
+    return this;
+  }
+
 }

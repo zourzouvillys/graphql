@@ -45,4 +45,9 @@ public class ResolvedUnionType extends ResolvedType implements SchemaType, Schem
     return visitor.visit(this, arg1, arg2);
   }
 
+  @Override
+  public ResolvedType targetType() {
+    return this;
+  }
+
 }
