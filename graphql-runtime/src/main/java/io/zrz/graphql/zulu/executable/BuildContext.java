@@ -18,7 +18,7 @@ class BuildContext implements OutputFieldFilter {
   Map<Symbol, ExecutableType> types = new HashMap<>();
   private ExecutableSchemaBuilder b;
   private Set<Symbol> target;
-  private Map<TypeToken<?>, Symbol> suppliers;
+  Map<TypeToken<?>, Symbol> suppliers;
   private ExecutableSchema schema;
 
   BuildContext(ExecutableSchemaBuilder b, ExecutableSchema schema) {

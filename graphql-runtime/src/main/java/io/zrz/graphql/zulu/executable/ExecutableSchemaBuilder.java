@@ -70,15 +70,18 @@ public final class ExecutableSchemaBuilder {
   private Multimap<LogicalTypeKind, Symbol> kinds = HashMultimap.create();
 
   public ExecutableSchemaBuilder() {
-    this.addScalar(String.class);
+
+    this.addScalar(String.class, "String");
+
     this.addScalar(Boolean.class, "Boolean");
-    this.addScalar(Integer.class);
-    this.addScalar(Long.class);
-    this.addScalar(Double.class);
+    this.addScalar(Integer.class, "Int");
+    this.addScalar(Long.class, "Int");
+    this.addScalar(Double.class, "Double");
+
     this.addScalar(Boolean.TYPE, "Boolean");
-    this.addScalar(Integer.TYPE);
-    this.addScalar(Long.TYPE);
-    this.addScalar(Double.TYPE);
+    this.addScalar(Integer.TYPE, "Int");
+    this.addScalar(Long.TYPE, "Int");
+    this.addScalar(Double.TYPE, "Double");
 
     this.addEnum(GQLTypeKind.class, "__TypeKind");
     this.addEnum(GQLDirectiveLocation.class, "__DirectiveLocation");
@@ -143,7 +146,7 @@ public final class ExecutableSchemaBuilder {
             + "' as a " + typeKind + " kind, already " + symbol.typeKind);
       }
 
-      if (!typeToken.equals(symbol.typeToken) && !typeToken.isPrimitive()) {
+      if (!typeToken.equals(symbol.typeToken) && !typeToken.isPrimitive() && symbol.typeKind != LogicalTypeKind.SCALAR) {
         throw new IllegalStateException("can't register symbol '" + typeName
             + "' as type " + typeToken + ", already '" + symbol.typeToken + "'");
       }
@@ -169,6 +172,16 @@ public final class ExecutableSchemaBuilder {
   }
 
   private Symbol addSymbol(TypeToken<?> typeToken, String typeName, LogicalTypeKind typeKind, JavaBindingType handle) {
+
+    if (handle == null && typeKind == LogicalTypeKind.SCALAR) {
+
+      Symbol symbol = this.types.get(typeToken);
+
+      if (symbol != null) {
+        // it's an additional name.
+      }
+
+    }
 
     Symbol symbol = new Symbol();
 
@@ -462,11 +475,7 @@ public final class ExecutableSchemaBuilder {
       if (!val.requires.isEmpty()) {
 
         if (strict) {
-          val.requires.values().forEach(err -> {
-
-            System.err.println(err.toString());
-
-          });
+          val.requires.values().forEach(err -> log.error("validation error: {}", err.toString()));
           throw new IllegalArgumentException("validation failed");
         }
 
@@ -557,7 +566,8 @@ public final class ExecutableSchemaBuilder {
   }
 
   Stream<Symbol> symbols() {
-    return this.names.values().stream();
+    // return from here so we get all symbols even when name conflicts.
+    return this.types.values().stream();
   }
 
   public void registerExtension(Class<?> klass) {

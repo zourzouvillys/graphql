@@ -6,6 +6,9 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.zrz.graphql.core.doc.GQLArgument;
 import io.zrz.graphql.core.doc.GQLFieldSelection;
 import io.zrz.graphql.core.parser.GQLSourceLocation;
@@ -18,6 +21,8 @@ import io.zrz.zulu.values.ZStructValueBuilder;
 import io.zrz.zulu.values.ZValue;
 
 class DefaultGQLPreparedSelection implements GQLPreparedSelection {
+
+  private static Logger log = LoggerFactory.getLogger(DefaultGQLPreparedSelection.class);
 
   private GQLSelectionTypeCriteria condition;
   private GQLFieldSelection selection;
@@ -219,7 +224,7 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
           .orElseGet(() -> e.getValue().defaultValue().orElse(null));
 
       if (value == null) {
-        System.err.println("unresolved: " + e);
+        log.warn("resolved field {}", e);
       }
 
       b.put(e.getKey(), value);

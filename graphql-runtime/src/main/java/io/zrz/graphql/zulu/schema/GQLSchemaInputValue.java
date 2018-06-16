@@ -29,10 +29,7 @@ public class GQLSchemaInputValue {
 
   public GQLSchemaType type() {
     if (field.fieldType().type() == null) {
-      System.err.println(field);
-      System.err.println(field.fieldType());
-      System.err.println(field.fieldType().type());
-      return null;
+      throw new IllegalStateException();
     }
     return new GQLSchemaType(field.fieldType().type());
   }

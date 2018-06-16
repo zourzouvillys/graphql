@@ -11,7 +11,6 @@ import com.google.common.collect.ImmutableMap.Builder;
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.runtime.GQLOperationType;
 import io.zrz.graphql.zulu.LogicalTypeKind;
-import io.zrz.graphql.zulu.executable.ExecutableSchemaBuilder.Symbol;
 import io.zrz.zulu.types.ZType;
 
 /**
@@ -30,8 +29,6 @@ public class ExecutableSchema implements ExecutableElement {
 
     BuildContext ctx = new BuildContext(b, this);
 
-    Map<Symbol, ExecutableType> types = ctx.types;
-
     Builder<GQLOperationType, ExecutableOutputType> roots = ImmutableMap.<GQLOperationType, ExecutableOutputType>builder();
 
     b.operationRoots()
@@ -39,10 +36,14 @@ public class ExecutableSchema implements ExecutableElement {
 
     this.operationRoots = roots.build();
 
-    this.types = types
+    this.types = ctx.types
         .entrySet()
         .stream()
-        .collect(ImmutableMap.toImmutableMap(k -> k.getKey().typeName, k -> k.getValue()));
+        .collect(ImmutableMap.toImmutableMap(k -> k.getKey().typeName, k -> k.getValue(), (t1, t2) -> {
+
+          return t1;
+
+        }));
 
   }
 

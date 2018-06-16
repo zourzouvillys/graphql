@@ -46,9 +46,6 @@ public class GQLSchemaType {
 
   // name: String
   public String name() {
-
-    System.err.println(type);
-
     return type.typeName();
   }
 

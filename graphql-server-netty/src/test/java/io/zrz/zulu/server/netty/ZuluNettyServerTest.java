@@ -28,6 +28,10 @@ public class ZuluNettyServerTest {
       return 1;
     }
 
+    public Integer maybecount() {
+      return null;
+    }
+
     @GQLDocumentation("test a flag")
     public boolean flag(@GQLField("test") String test) {
       return true;

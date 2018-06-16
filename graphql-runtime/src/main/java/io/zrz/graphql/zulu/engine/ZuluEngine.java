@@ -189,12 +189,8 @@ public class ZuluEngine {
     // compile the query. may use cache if it already exists.
     ZuluCompileResult compileResult = compile(q.query(), q.operationName());
 
-    log.debug("executing {}", compileResult);
-
     if (!compileResult.warnings().isEmpty()) {
-
       res.addAllNotes(compileResult.warnings());
-
     }
 
     ZuluExecutable doc = compileResult.executable();
