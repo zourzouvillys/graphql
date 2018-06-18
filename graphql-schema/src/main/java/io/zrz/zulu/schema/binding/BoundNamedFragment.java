@@ -83,4 +83,9 @@ public class BoundNamedFragment implements BoundSelectionContainer, BoundFragmen
     return this.type;
   }
 
+  @Override
+  public boolean apply(PredicateVisitor visitor) {
+    return visitor.apply(this);
+  }
+
 }

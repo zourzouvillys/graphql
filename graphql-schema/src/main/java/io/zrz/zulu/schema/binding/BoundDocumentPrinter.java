@@ -19,7 +19,7 @@ public class BoundDocumentPrinter implements BoundSelection.VoidVisitor {
 
   }
 
-  private void print(BoundOperation op) {
+  public void print(BoundOperation op) {
 
     w.println();
     w.print(op.operationType());
@@ -27,6 +27,36 @@ public class BoundDocumentPrinter implements BoundSelection.VoidVisitor {
     if (op.operationName() != null) {
       w.print(" ");
       w.print(op.operationName());
+    }
+
+    if (!op.vars().isEmpty()) {
+
+      w.print(" (");
+
+      for (int i = 0; i < op.vars().size(); ++i) {
+
+        if (i > 0) {
+          w.print(", ");
+        }
+
+        BoundVariable v = op.vars().get(i);
+
+        w.print("$");
+        w.print(v.name());
+
+        w.print(": ");
+
+        w.print(v.type());
+
+        if (v.defaultValue() != null) {
+          w.print(" = ");
+          w.print(v.defaultValue());
+        }
+
+      }
+
+      w.print(")");
+
     }
 
     w.print(" : ");
@@ -57,6 +87,7 @@ public class BoundDocumentPrinter implements BoundSelection.VoidVisitor {
     w.print(sel.fieldName());
 
     if (!sel.params().isEmpty()) {
+
       w.print("(");
 
       for (int i = 0; i < sel.params().size(); ++i) {
@@ -86,6 +117,7 @@ public class BoundDocumentPrinter implements BoundSelection.VoidVisitor {
       }
 
       w.print(")");
+
     }
 
     w.print(" : ");

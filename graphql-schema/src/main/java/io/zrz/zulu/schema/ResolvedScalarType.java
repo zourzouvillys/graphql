@@ -5,7 +5,7 @@ import java.util.List;
 import io.zrz.graphql.core.decl.GQLTypeDeclaration;
 import io.zrz.graphql.core.types.GQLTypeDeclKind;
 
-public class ResolvedScalarType extends ResolvedType implements SchemaType {
+public class ResolvedScalarType extends ResolvedType implements SchemaType, ResolvedOutputType {
 
   public ResolvedScalarType(SchemaCompiler c, ResolvedSchema s, String t, GQLTypeDeclKind k, List<GQLTypeDeclaration> p) {
     super(c, s, t, k, p);

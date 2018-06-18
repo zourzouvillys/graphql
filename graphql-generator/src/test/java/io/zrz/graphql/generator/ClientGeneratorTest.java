@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 
 import io.zrz.graphql.core.doc.GQLDocument;
@@ -12,7 +13,11 @@ import io.zrz.graphql.core.parser.DefaultGQLParser;
 import io.zrz.zulu.schema.ResolvedSchema;
 import io.zrz.zulu.schema.SchemaCompiler;
 import io.zrz.zulu.schema.binding.BoundDocument;
-import io.zrz.zulu.schema.binding.BoundDocumentPrinter;
+import io.zrz.zulu.schema.binding.BoundElementPrintingVisitor;
+import io.zrz.zulu.schema.binding.BoundOperation;
+import io.zrz.zulu.schema.model.ModelElementPrinter;
+import io.zrz.zulu.schema.model.ModelExtractor;
+import io.zrz.zulu.schema.model.ModelOperation;
 
 public class ClientGeneratorTest {
 
@@ -33,11 +38,32 @@ public class ClientGeneratorTest {
 
     BoundDocument bdoc = new BoundDocument(schema, doc);
 
+    BoundOperation op = bdoc.operation("repositoryLabels");
+
     // bdoc.operations()
     // .forEach(System.err::println);
 
-    new BoundDocumentPrinter(System.out)
-        .print(bdoc);
+    op.accept(new BoundElementPrintingVisitor(System.out));
+
+    ImmutableList<ModelOperation> roots = bdoc.operations()
+        .stream()
+        .map(e -> new ModelOperation(e, e.accept(new ModelExtractor())))
+        .collect(ImmutableList.toImmutableList());
+
+    ModelOperation root = new ModelOperation(op, op.accept(new ModelExtractor()));
+
+    root.element().accept(new ModelElementPrinter(System.out));
+
+    // new BoundDocumentPrinter(System.out)
+    // .print(op);
+
+    // ModelOperation mop = new ModelOperation(op);
+
+    // System.err.println("----------");
+    new ClientGenerator().addAll(roots).write(System.err);
+    // System.err.println("----------");
+
+    // System.err.println(mop);
 
   }
 

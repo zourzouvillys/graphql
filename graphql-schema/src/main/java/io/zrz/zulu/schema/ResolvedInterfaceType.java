@@ -10,7 +10,7 @@ import com.google.common.collect.ImmutableMap;
 import io.zrz.graphql.core.decl.GQLInterfaceTypeDeclaration;
 import io.zrz.graphql.core.types.GQLTypeDeclKind;
 
-public class ResolvedInterfaceType extends ResolvedType implements SchemaType, ResolvedObjectOrInterfaceType {
+public class ResolvedInterfaceType extends ResolvedType implements SchemaType, ResolvedObjectOrInterfaceType, ResolvedCompositeType, ResolvedOutputType {
 
   private final ImmutableList<ResolvedObjectField> fields;
   private final ImmutableMap<String, ResolvedObjectField> named;

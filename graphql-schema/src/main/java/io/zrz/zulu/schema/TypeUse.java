@@ -5,7 +5,7 @@ import java.util.Objects;
 import io.zrz.graphql.core.types.GQLTypeDeclKind;
 import io.zrz.graphql.core.types.GQLTypeKind;
 
-public class TypeUse implements ResolvedTypeUse, TypeRef {
+public class TypeUse implements ResolvedTypeUse, ResolvedTypeRef {
 
   private ResolvedSchema schema;
   private ResolvedType targetType;
@@ -51,6 +51,11 @@ public class TypeUse implements ResolvedTypeUse, TypeRef {
   @Override
   public String toString() {
     return this.targetType.toString();
+  }
+
+  @Override
+  public boolean isList() {
+    return this.dims > 0;
   }
 
 }

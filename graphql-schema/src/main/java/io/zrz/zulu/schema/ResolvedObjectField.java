@@ -30,7 +30,7 @@ public class ResolvedObjectField implements SchemaElement {
     return this.enclosing;
   }
 
-  public TypeRef returnType() {
+  public TypeUse returnType() {
     return this.returnType;
   }
 

@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableList;
 import io.zrz.graphql.core.decl.GQLInputTypeDeclaration;
 import io.zrz.graphql.core.types.GQLTypeDeclKind;
 
-public class ResolvedInputType extends ResolvedType implements SchemaType {
+public class ResolvedInputType extends ResolvedType implements SchemaType, ResolvedCompositeType {
 
   private ImmutableList<ResolvedInputField> fields;
 

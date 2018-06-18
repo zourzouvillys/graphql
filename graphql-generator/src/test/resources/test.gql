@@ -1,23 +1,34 @@
-query Test0 ($number_of_repos:Int!) {
+query listRepositories ($number_of_repos: Int! = 1) {
   viewer {
     name
-     repositories(last: $number_of_repos) {
-       nodes {
-         name
-       }
-     }
-   }
+    repositories(last: $number_of_repos) {
+      nodes {
+        name
+      }
+    }
+  }
 }
 
 
-query test2 {
-  repository(owner:"octocat", name:"Hello-World") {
+query repositoryLabels ($owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) {
+    repositoryId: id
+    repositoryName: name
+
     issues(last:20, states:CLOSED) {
+      totalCount
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage        
+      }
       edges {
+        cursor
         node {
-          title
-          url
-          labels(first:5) {
+          issueTitle: title
+          issueUrl: url
+          issueLabels: labels(first:5) {
             edges {
               node {
                 name
@@ -27,13 +38,37 @@ query test2 {
         }
       }
     }
+
+    moreIssues: issues(last:20, states:CLOSED) {
+      totalCount
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage        
+      }
+      edges {
+        cursor
+        node {
+          issueLabels: labels(first:5) {
+            edges {
+              node {
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    
   }
 }
 
 
-query FindIssueID {
+query findIssue ($issueId: Int!) {
   repository(owner:"octocat", name:"Hello-World") {
-    issue(number:349) {
+    issue(number:$issue) {
       id
     }
   }
@@ -129,7 +164,7 @@ query Test6 {
 
 
 
-query Test7 {
+query Test7 ($count: Int! = 10) {
   viewer {
     repositories(first: 50) {
       edges {
@@ -141,7 +176,7 @@ query Test7 {
               pullRequest:node {
                 title
 
-                comments(first: 10) {
+                comments(first: $count) {
                   edges {
                     comment:node {
                       bodyHTML
@@ -159,7 +194,7 @@ query Test7 {
                 title
                 bodyHTML
 
-                comments(first: 10) {
+                comments(first: $count) {
                   edges {
                     comment:node {
                       bodyHTML
@@ -173,7 +208,7 @@ query Test7 {
       }
     }
 
-    followers(first: 10) {
+    followers(first: $count) {
       edges {
         follower:node {
           login

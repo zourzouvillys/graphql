@@ -58,4 +58,9 @@ public class BoundInlineFragment implements BoundSelectionContainer, BoundFragme
     return this.type;
   }
 
+  @Override
+  public boolean apply(PredicateVisitor visitor) {
+    return visitor.apply(this);
+  }
+
 }

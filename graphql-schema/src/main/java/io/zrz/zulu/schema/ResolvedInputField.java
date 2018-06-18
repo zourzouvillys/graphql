@@ -6,7 +6,7 @@ public class ResolvedInputField implements SchemaElement {
 
   private ResolvedInputType enclosing;
   private GQLInputFieldDeclaration fdecl;
-  private TypeRef fieldType;
+  private ResolvedTypeRef fieldType;
 
   public ResolvedInputField(ResolvedInputType enclosing, GQLInputFieldDeclaration fdecl, SchemaCompiler c) {
     this.enclosing = enclosing;

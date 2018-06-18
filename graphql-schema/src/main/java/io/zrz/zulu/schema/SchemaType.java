@@ -4,6 +4,8 @@ import io.zrz.graphql.core.types.GQLTypeDeclKind;
 
 public interface SchemaType {
 
+  String typeName();
+
   GQLTypeDeclKind typeKind();
 
   void apply(VoidVisitor visitor);

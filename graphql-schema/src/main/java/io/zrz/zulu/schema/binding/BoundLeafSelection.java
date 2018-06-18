@@ -6,9 +6,10 @@ import com.google.common.base.Preconditions;
 
 import io.zrz.graphql.core.doc.GQLFieldSelection;
 import io.zrz.zulu.schema.ResolvedObjectField;
-import io.zrz.zulu.schema.TypeRef;
+import io.zrz.zulu.schema.ResolvedTypeRef;
+import io.zrz.zulu.schema.binding.BoundElementVisitor.SupplierVisitor;
 
-public class BoundLeafSelection implements BoundSelection {
+public class BoundLeafSelection implements BoundSelection, BoundFieldSelection {
 
   private String fieldName;
   private String outputName;
@@ -26,7 +27,7 @@ public class BoundLeafSelection implements BoundSelection {
     visitor.apply(this);
   }
 
-  public TypeRef fieldType() {
+  public ResolvedTypeRef fieldType() {
     return this.field.returnType();
   }
 
@@ -38,6 +39,7 @@ public class BoundLeafSelection implements BoundSelection {
     return this.fieldName;
   }
 
+  @Override
   public String outputName() {
     return this.outputName;
   }
@@ -45,6 +47,21 @@ public class BoundLeafSelection implements BoundSelection {
   @Override
   public boolean hasFragmentCycle(BoundNamedFragment frag) {
     return false;
+  }
+
+  @Override
+  public <R> R accept(SupplierVisitor<R> visitor) {
+    return visitor.visitLeaf(this);
+  }
+
+  @Override
+  public String toString() {
+    return this.outputName + ": " + fieldType() + "." + this.fieldName;
+  }
+
+  @Override
+  public boolean apply(PredicateVisitor visitor) {
+    return visitor.apply(this);
   }
 
 }

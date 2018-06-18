@@ -7,9 +7,15 @@ package io.zrz.zulu.schema.binding;
  *
  */
 
-public interface BoundSelection {
+public interface BoundSelection extends BoundElement {
 
   void apply(VoidVisitor visitor);
+
+  boolean apply(PredicateVisitor visitor);
+
+  /**
+   * 
+   */
 
   public interface VoidVisitor {
 
@@ -20,6 +26,18 @@ public interface BoundSelection {
     void apply(BoundInlineFragment sel);
 
     void apply(BoundNamedFragment sel);
+
+  }
+
+  public interface PredicateVisitor {
+
+    boolean apply(BoundLeafSelection sel);
+
+    boolean apply(BoundObjectSelection sel);
+
+    boolean apply(BoundInlineFragment sel);
+
+    boolean apply(BoundNamedFragment sel);
 
   }
 

@@ -5,7 +5,7 @@ import java.util.List;
 import io.zrz.graphql.core.decl.GQLTypeDeclaration;
 import io.zrz.graphql.core.types.GQLTypeDeclKind;
 
-public abstract class ResolvedType implements SchemaType, TypeRef {
+public abstract class ResolvedType implements SchemaType, ResolvedTypeRef {
 
   final ResolvedSchema schema;
   final String typeName;

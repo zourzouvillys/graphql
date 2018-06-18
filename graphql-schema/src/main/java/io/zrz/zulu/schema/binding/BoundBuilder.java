@@ -9,8 +9,12 @@ import io.zrz.graphql.core.doc.GQLFieldSelection;
 import io.zrz.graphql.core.doc.GQLFragmentSpreadSelection;
 import io.zrz.graphql.core.doc.GQLInlineFragmentSelection;
 import io.zrz.graphql.core.doc.GQLSelection;
+import io.zrz.graphql.core.lang.GQLTypeVisitor;
 import io.zrz.graphql.core.lang.GQLTypeVisitors;
 import io.zrz.graphql.core.types.GQLDeclarationRef;
+import io.zrz.graphql.core.types.GQLListType;
+import io.zrz.graphql.core.types.GQLNonNullType;
+import io.zrz.graphql.core.types.GQLTypeReference;
 import io.zrz.zulu.schema.ResolvedEnumType;
 import io.zrz.zulu.schema.ResolvedInputType;
 import io.zrz.zulu.schema.ResolvedInterfaceType;
@@ -21,6 +25,7 @@ import io.zrz.zulu.schema.ResolvedSchema;
 import io.zrz.zulu.schema.ResolvedType;
 import io.zrz.zulu.schema.ResolvedUnionType;
 import io.zrz.zulu.schema.SchemaType;
+import io.zrz.zulu.schema.TypeUse;
 
 class BoundBuilder {
 
@@ -178,6 +183,29 @@ class BoundBuilder {
 
   ResolvedSchema schema() {
     return this.schema;
+  }
+
+  public TypeUse resolve(GQLTypeReference type) {
+    return type.apply(new Visitor());
+  }
+
+  private class Visitor implements GQLTypeVisitor<TypeUse> {
+
+    @Override
+    public TypeUse visitNonNull(GQLNonNullType type) {
+      return type.type().apply(this);
+    }
+
+    @Override
+    public TypeUse visitList(GQLListType type) {
+      return type.type().apply(this);
+    }
+
+    @Override
+    public TypeUse visitDeclarationRef(GQLDeclarationRef type) {
+      return new TypeUse(schema(), resolve(type), true, 0);
+    }
+
   }
 
 }

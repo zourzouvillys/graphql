@@ -9,7 +9,7 @@ import io.zrz.graphql.core.decl.GQLEnumDeclaration;
 import io.zrz.graphql.core.decl.GQLEnumValue;
 import io.zrz.graphql.core.types.GQLTypeDeclKind;
 
-public class ResolvedEnumType extends ResolvedType implements SchemaType {
+public class ResolvedEnumType extends ResolvedType implements SchemaType, ResolvedOutputType {
 
   private ImmutableList<GQLEnumValue> ordered;
   private ImmutableSet<GQLEnumValue> values;

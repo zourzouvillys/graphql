@@ -8,15 +8,15 @@ import com.google.common.collect.ImmutableList;
 
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.doc.GQLOperationDefinition;
-import io.zrz.graphql.core.doc.GQLVariableDefinition;
 import io.zrz.graphql.core.runtime.GQLOperationType;
 import io.zrz.zulu.schema.ResolvedObjectType;
+import io.zrz.zulu.schema.binding.BoundElementVisitor.SupplierVisitor;
 
-public class BoundOperation implements BoundSelectionContainer {
+public class BoundOperation implements BoundSelectionContainer, BoundElement {
 
   private final BoundDocument doc;
   private final @Nullable String name;
-  private final List<GQLVariableDefinition> vars;
+  private final ImmutableList<BoundVariable> vars;
   private final @Nullable GQLOpType type;
   private final ImmutableList<BoundSelection> selections;
   private final ResolvedObjectType rootType;
@@ -31,8 +31,12 @@ public class BoundOperation implements BoundSelectionContainer {
 
     this.doc = doc;
     this.name = op.name();
-    this.vars = op.vars();
     this.type = op.type();
+
+    this.vars = op.vars()
+        .stream()
+        .map(var -> new BoundVariable(this, var, b))
+        .collect(ImmutableList.toImmutableList());
 
     this.selections = op.selections()
         .stream()
@@ -44,6 +48,10 @@ public class BoundOperation implements BoundSelectionContainer {
 
   public BoundDocument doc() {
     return this.doc;
+  }
+
+  public List<BoundVariable> vars() {
+    return this.vars;
   }
 
   public String operationName() {
@@ -76,6 +84,11 @@ public class BoundOperation implements BoundSelectionContainer {
   @Override
   public ResolvedObjectType selectionType() {
     return this.rootType;
+  }
+
+  @Override
+  public <R> R accept(SupplierVisitor<R> visitor) {
+    return visitor.visitOperation(this);
   }
 
 }

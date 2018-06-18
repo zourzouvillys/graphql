@@ -7,7 +7,7 @@ package io.zrz.zulu.schema;
  *
  */
 
-public interface TypeRef {
+public interface ResolvedTypeRef {
 
   ResolvedType targetType();
 

@@ -62,6 +62,12 @@ artifacts {
     archives javadocJar
 }
 
+//javadoc {
+//  title = "Pravega Client API"
+//  failOnError = false
+//  exclude "**/impl/**";
+//}
+
 // To specify a license in the pom:
 install {
   repositories.mavenInstaller {
