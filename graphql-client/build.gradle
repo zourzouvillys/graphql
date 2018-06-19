@@ -1,8 +1,0 @@
-
-dependencies {
-	compile libraries.unirest
-    compile group: project.group, name: "graphql-core", version: project.version
-    // todo: remove dep?
-    compile group: project.group, name: "graphql-server", version: project.version
-    testCompile 'com.github.tomakehurst:wiremock:1.57'
-}
