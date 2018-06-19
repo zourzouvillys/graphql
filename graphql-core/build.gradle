@@ -15,6 +15,8 @@ apply plugin: 'net.ltgt.apt'
 apply plugin: 'net.ltgt.apt-eclipse'
 apply plugin: 'maven'
 
+eclipse.project.name = 'graphql:core'
+
 dependencies {
   
   compileOnly         'com.google.errorprone:error_prone_annotations:2.3.1'

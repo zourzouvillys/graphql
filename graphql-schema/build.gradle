@@ -17,6 +17,8 @@ apply plugin: 'net.ltgt.apt'
 apply plugin: 'net.ltgt.apt-eclipse'
 apply plugin: 'maven'
 
+eclipse.project.name = 'graphql:schema'
+
 dependencies {
   
   // runtime shared dependencies.

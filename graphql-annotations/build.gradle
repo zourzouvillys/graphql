@@ -6,7 +6,6 @@ buildscript {
   }
   dependencies {
     classpath 'net.ltgt.gradle:gradle-apt-plugin:0.15'
-    classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
   }
 }
 
@@ -14,30 +13,14 @@ apply plugin: 'java-library'
 apply plugin: 'eclipse'
 apply plugin: 'net.ltgt.apt'
 apply plugin: 'net.ltgt.apt-eclipse'
-apply plugin: 'com.github.johnrengelman.plugin-shadow'
 apply plugin: 'maven'
 
-eclipse.project.name = 'graphql:jackson'
+eclipse.project.name = 'graphql:annotations'
 
 dependencies {
   
-  // runtime shared dependencies.
-  api                 'org.slf4j:slf4j-api:1.7.25'
-  
-  // these are internal only, shaded for deploy.
-  //implementation      'com.google.guava:guava:25.1-jre'
-  //implementation      'org.apache.commons:commons-lang3:3.7'
-  //implementation      'com.github.zourzouvillys:commons:950d929406'
-  //implementation      'org.apache.commons:commons-text:1.4'
-  //implementation      'net.jodah:typetools:0.5.0'
-  api                 project(':graphql:runtime')
-  
-  api                 'com.fasterxml.jackson.core:jackson-databind:2.9.6'
-
-  // compile time only dependencies
   compileOnly         'com.google.errorprone:error_prone_annotations:2.3.1'
   compileOnly         'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.100'
-
   compileOnly         'org.immutables:builder:2.6.1'
   compileOnly         'org.immutables:value:2.6.1:annotations'
 
@@ -46,45 +29,17 @@ dependencies {
 
   testImplementation  'junit:junit:4.12'
   testImplementation  'org.assertj:assertj-core:3.6.1'
-  testImplementation  'ch.qos.logback:logback-classic:1.2.3'
 
-}
-
-shadowJar {
-   baseName = 'shadow'
-   classifier = null
-   version = null
 }
 
 repositories {
   jcenter()
-  maven { url 'https://jitpack.io' }
 }
 
-sourceCompatibility = 9
-targetCompatibility = 9
+sourceCompatibility = 8
+targetCompatibility = 8
 
 
-
-// --------------------------------------------------
-// compile
-// --------------------------------------------------
-
-
-tasks.withType(JavaCompile) {
-    options.compilerArgs << '-parameters'
-}
-
-
-eclipse {
-  jdt {
-    file {
-      withProperties { properties ->
-        properties.setProperty("org.eclipse.jdt.core.compiler.codegen.methodParameters", "generate")
-      }
-    }
-  }
-}
 // --------------------------------------------------
 // install
 // --------------------------------------------------
@@ -108,6 +63,12 @@ artifacts {
     archives sourcesJar
     archives javadocJar
 }
+
+//javadoc {
+//  title = "Pravega Client API"
+//  failOnError = false
+//  exclude "**/impl/**";
+//}
 
 // To specify a license in the pom:
 install {

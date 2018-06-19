@@ -17,6 +17,8 @@ apply plugin: 'net.ltgt.apt-eclipse'
 apply plugin: 'com.github.johnrengelman.plugin-shadow'
 apply plugin: 'maven'
 
+eclipse.project.name = 'graphql:netty'
+
 dependencies {
   
   // netty
