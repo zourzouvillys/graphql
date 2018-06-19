@@ -361,9 +361,9 @@ public class ZuluHttpResponder implements HttpResponder {
               gen.writeStringField("file", stack.getFileName());
             }
 
-            if (stack.getModuleName() != null) {
-              gen.writeStringField("module", stack.getModuleName());
-            }
+//            if (stack.getModuleName() != null) {
+//              gen.writeStringField("module", stack.getModuleName());
+//            }
 
             gen.writeEndObject();
 
