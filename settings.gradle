@@ -1,19 +1,18 @@
+rootProject.name = 'graphql'
+
 
 [
- 'graphql-core',
- 'graphql-runtime'
-// 'graphql-converter',
-// 'graphql-server',
-// 'graphql-generator',
-// 'graphql-cli',
-// 'graphql-client',
-// 'graphql-jersey',
-// 'graphql-grpc',
-// 'graphql-schema'
+ 'annotations',
+ 'core',
+ 'runtime',
+ 'generator',
+ 'schema',
+ 'jackson',
+ 'netty'
  ].each { _ ->
 
 
-  include _
-  project(':' + _).projectDir = file(_)
+  include 'graphql-' + _
+  project(':graphql-' + _).projectDir = file('graphql-' + _)
 
 }
