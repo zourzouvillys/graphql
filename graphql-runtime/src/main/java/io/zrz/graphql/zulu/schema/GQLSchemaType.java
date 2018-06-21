@@ -9,11 +9,11 @@ import org.eclipse.jdt.annotation.NonNull;
 
 import io.zrz.graphql.core.types.GQLTypeKind;
 import io.zrz.graphql.zulu.LogicalTypeKind;
-import io.zrz.graphql.zulu.annotations.GQLOutputType;
+import io.zrz.graphql.zulu.annotations.GQLObjectType;
 import io.zrz.graphql.zulu.executable.ExecutableOutputType;
 import io.zrz.graphql.zulu.executable.ExecutableType;
 
-@GQLOutputType(name = "__Type")
+@GQLObjectType(name = "__Type")
 public class GQLSchemaType {
 
   private final ExecutableType type;

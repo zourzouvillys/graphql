@@ -59,7 +59,7 @@ public class ParseContext {
 
   private final Lexer lexer;
 
-  public ParseContext(final String doc, GQLSourceInput source) {
+  public ParseContext(final String doc, final GQLSourceInput source) {
     this.lexer = new Lexer(doc, source);
   }
 
@@ -357,9 +357,7 @@ public class ParseContext {
 
     this.require("schema");
 
-    if (!this.is("{")) {
-      builder.name(this.require(TokenType.NAME));
-    }
+    // TODO: directives
 
     this.require("{");
 

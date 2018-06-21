@@ -5,8 +5,9 @@ rootProject.name = 'graphql'
  'annotations',
  'core',
  'runtime',
- 'generator',
  'schema',
+ 'validator',
+ 'generator',
  'jackson',
  'server-netty'
  ].each { _ ->

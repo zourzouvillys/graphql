@@ -10,18 +10,18 @@ import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.zulu.annotations.GQLContext;
 import io.zrz.graphql.zulu.annotations.GQLDocumentation;
 import io.zrz.graphql.zulu.annotations.GQLField;
-import io.zrz.graphql.zulu.annotations.GQLOutputExtension;
-import io.zrz.graphql.zulu.annotations.GQLOutputType;
+import io.zrz.graphql.zulu.annotations.GQLObjectType;
+import io.zrz.graphql.zulu.annotations.GQLExtension;
 import io.zrz.graphql.zulu.executable.ExecutableSchema;
 import io.zrz.graphql.zulu.executable.ExecutableType;
 
-@GQLOutputType(name = "__Schema")
+@GQLObjectType(name = "__Schema")
 @GQLDocumentation("schema")
 public class GQLSchema {
 
   private ExecutableSchema schema;
 
-  public GQLSchema(ExecutableSchema schema) {
+  public GQLSchema(final ExecutableSchema schema) {
     this.schema = schema;
   }
 
@@ -45,7 +45,7 @@ public class GQLSchema {
         .collect(Collectors.toList());
   }
 
-  private boolean isBuiltin(ExecutableType type) {
+  private boolean isBuiltin(final ExecutableType type) {
     switch (type.logicalKind()) {
       case SCALAR:
         switch (type.typeName()) {
@@ -74,38 +74,38 @@ public class GQLSchema {
 
   /**
    * the magic extensions foe __typename
-   * 
+   *
    * @param instance
    * @return
    */
 
-  @GQLOutputExtension
-  public static String __typename(Object instance, @GQLContext ExecutableSchema schema) {
+  @GQLExtension
+  public static String __typename(final Object instance, @GQLContext final ExecutableSchema schema) {
     return schema.type(TypeToken.of(instance.getClass())).typeName();
   }
 
   /**
-   * 
+   *
    * @param instance
    * @param schema
    * @return
    */
 
-  @GQLOutputExtension
-  public static GQLSchema __schema(Object instance, @GQLContext ExecutableSchema schema) {
+  @GQLExtension
+  public static GQLSchema __schema(final Object instance, @GQLContext final ExecutableSchema schema) {
     return new GQLSchema(schema);
   }
 
   /**
-   * 
+   *
    * @param schema
    * @param typeName
    * @return
    */
 
-  @GQLOutputExtension
-  public static GQLSchemaType __type(Object instance, @GQLContext ExecutableSchema schema, @GQLField("name") String typeName) {
-    ExecutableType type = schema.resolveType(typeName);
+  @GQLExtension
+  public static GQLSchemaType __type(final Object instance, @GQLContext final ExecutableSchema schema, @GQLField("name") final String typeName) {
+    final ExecutableType type = schema.resolveType(typeName);
     if (type == null) {
       return null;
     }

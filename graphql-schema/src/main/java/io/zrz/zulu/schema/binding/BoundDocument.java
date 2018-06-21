@@ -10,6 +10,8 @@ import com.google.common.collect.ImmutableMap;
 import io.zrz.graphql.core.doc.GQLDocument;
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.zulu.schema.ResolvedSchema;
+import io.zrz.zulu.schema.validation.DiagnosticListener;
+import io.zrz.zulu.schema.validation.StreamDiagnosticListener;
 
 public class BoundDocument {
 
@@ -21,11 +23,15 @@ public class BoundDocument {
   private final ImmutableMap<String, BoundFragment> fragments;
   private final BoundOperation defaultOperation;
 
-  public BoundDocument(ResolvedSchema schema, GQLDocument doc) {
+  public BoundDocument(final ResolvedSchema schema, final GQLDocument doc) {
+    this(schema, doc, new StreamDiagnosticListener(System.err));
+  }
+
+  public BoundDocument(final ResolvedSchema schema, final GQLDocument doc, final DiagnosticListener<BoundElement> listener) {
 
     this.schema = schema;
 
-    BoundBuilder b = new BoundBuilder(schema, doc, this);
+    final BoundBuilder b = new BoundBuilder(schema, doc, this, listener);
 
     this.fragments = b.fragments == null
         ? ImmutableMap.of()
@@ -34,19 +40,20 @@ public class BoundDocument {
     this.ops = doc.operations()
         .stream()
         .sequential()
-        .map(op -> new BoundOperation(this, op, b))
+        .map(op -> b.createOperation(op))
+        .filter(op -> op != null)
         .collect(ImmutableList.toImmutableList());
 
     BoundOperation dop = null;
 
-    for (BoundOperation op : this.ops) {
+    for (final BoundOperation op : this.ops) {
 
       if (StringUtils.isBlank(op.operationName())) {
         if (dop != null) {
-          throw new IllegalArgumentException("more than one default query in document");
+          b.report(BoundDiagnostic.documentScope(BoundDiagnosticCode.MULTIPLY_DEFAULT_QUERIES));
         }
         if (op.operationType() != GQLOpType.Query) {
-          throw new IllegalArgumentException("the default (unnamed) query may only be a query");
+          b.report(BoundDiagnostic.documentScope(BoundDiagnosticCode.DEFAULT_OP_NOT_QUERY));
         }
         dop = op;
       }
@@ -67,7 +74,7 @@ public class BoundDocument {
     return this.ops;
   }
 
-  public BoundOperation operation(String operationName) {
+  public BoundOperation operation(final String operationName) {
     return this.named.get(operationName);
   }
 

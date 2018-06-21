@@ -1,8 +1,8 @@
 package io.zrz.graphql.zulu.schema;
 
-import io.zrz.graphql.zulu.annotations.GQLOutputType;
+import io.zrz.graphql.zulu.annotations.GQLObjectType;
 
-@GQLOutputType(name = "__EnumValue")
+@GQLObjectType(name = "__EnumValue")
 public class GQLSchemaEnumValue {
 
   public String name() {

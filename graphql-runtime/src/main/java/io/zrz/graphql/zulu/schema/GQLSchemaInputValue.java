@@ -2,10 +2,10 @@ package io.zrz.graphql.zulu.schema;
 
 import org.eclipse.jdt.annotation.NonNull;
 
-import io.zrz.graphql.zulu.annotations.GQLOutputType;
+import io.zrz.graphql.zulu.annotations.GQLObjectType;
 import io.zrz.graphql.zulu.executable.ExecutableInputField;
 
-@GQLOutputType(name = "__InputValue")
+@GQLObjectType(name = "__InputValue")
 public class GQLSchemaInputValue {
 
   private final ExecutableInputField field;

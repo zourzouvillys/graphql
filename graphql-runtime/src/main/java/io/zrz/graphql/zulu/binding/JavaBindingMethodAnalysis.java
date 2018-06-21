@@ -21,7 +21,7 @@ import io.zrz.graphql.zulu.JavaInputField;
 import io.zrz.graphql.zulu.JavaOutputField;
 import io.zrz.graphql.zulu.annotations.GQLDocumentation;
 import io.zrz.graphql.zulu.annotations.GQLField;
-import io.zrz.graphql.zulu.annotations.GQLOutputExtension;
+import io.zrz.graphql.zulu.annotations.GQLExtension;
 import io.zrz.graphql.zulu.annotations.GQLTypeUse;
 
 /**
@@ -78,7 +78,7 @@ public class JavaBindingMethodAnalysis implements JavaOutputField {
    */
 
   public boolean isExtensionMethod() {
-    return this.owner.isExtensionClass() || (method.getAnnotationsByType(GQLOutputExtension.class).length > 0);
+    return this.owner.isExtensionClass() || (method.getAnnotationsByType(GQLExtension.class).length > 0);
   }
 
   /**

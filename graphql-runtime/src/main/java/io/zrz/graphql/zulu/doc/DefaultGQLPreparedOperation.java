@@ -10,6 +10,7 @@ import io.zrz.graphql.core.doc.GQLFragmentDefinition;
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.doc.GQLOperationDefinition;
 import io.zrz.graphql.core.doc.GQLSelectedOperation;
+import io.zrz.graphql.core.value.GQLValue;
 import io.zrz.zulu.types.ZAnnotation;
 import io.zrz.zulu.types.ZField;
 import io.zrz.zulu.types.ZPrimitiveScalarType;
@@ -28,7 +29,7 @@ class DefaultGQLPreparedOperation implements GQLPreparedOperation {
   private GQLTypeResolver resolver;
   private DefaultGQLPreparedDocument doc;
 
-  public DefaultGQLPreparedOperation(DefaultGQLPreparedDocument doc, GQLTypeResolver resolver, GQLSelectedOperation op) {
+  public DefaultGQLPreparedOperation(final DefaultGQLPreparedDocument doc, final GQLTypeResolver resolver, final GQLSelectedOperation op) {
     this.doc = doc;
     this.resolver = resolver;
     this.op = op;
@@ -100,7 +101,11 @@ class DefaultGQLPreparedOperation implements GQLPreparedOperation {
 
               @Override
               public Optional<ZValue> defaultValue() {
-                return x.defaultValue().apply(new ConstantZValueValueExtractor(DefaultGQLPreparedOperation.this, null, null));
+                final GQLValue defaultValue = x.defaultValue();
+                if (defaultValue == null)
+                  return Optional.empty();
+                return defaultValue
+                    .apply(new ConstantZValueValueExtractor(DefaultGQLPreparedOperation.this, null, null));
               }
 
               @Override
@@ -130,7 +135,7 @@ class DefaultGQLPreparedOperation implements GQLPreparedOperation {
         .collect(Collectors.toList());
   }
 
-  GQLFragmentDefinition fragment(String name) {
+  GQLFragmentDefinition fragment(final String name) {
     return this.op.doc().fragment(name);
   }
 

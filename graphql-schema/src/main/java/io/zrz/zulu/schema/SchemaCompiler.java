@@ -32,69 +32,80 @@ import io.zrz.graphql.core.types.GQLListType;
 import io.zrz.graphql.core.types.GQLTypeDeclKind;
 import io.zrz.graphql.core.types.GQLTypeRefKind;
 import io.zrz.graphql.core.types.GQLTypeReference;
+import io.zrz.zulu.schema.validation.Diagnostic;
+import io.zrz.zulu.schema.validation.DiagnosticListener;
 
 /**
  * container for reading multiple schema units (files) and processing into a "compiled unit".
- * 
+ *
  * @author theo
  *
  */
 
-public class SchemaCompiler {
+public class SchemaCompiler implements DiagnosticListener<ResolutionDiagnostic> {
 
-  private GQLParser parser = new DefaultGQLParser();
-  private List<GQLTypeRegistry> units = new LinkedList<>();
+  private final GQLParser parser = new DefaultGQLParser();
+  private final List<GQLTypeRegistry> units = new LinkedList<>();
   Multimap<String, GQLTypeDeclaration> names = HashMultimap.create();
   Map<String, ResolvedType> registered = new HashMap<>();
 
-  void addSchema(GQLTypeRegistry unit) {
+  void addSchema(final GQLTypeRegistry unit) {
 
     unit.types()
         .stream()
-        .forEach(t -> names.put(t.name(), t));
+        .forEach(t -> this.names.put(t.name(), t));
 
     this.units.add(unit);
 
   }
 
-  public void addUnit(CharSource source) throws IOException {
-    GQLTypeRegistry unit = parser.parseSchema(source.read(), GQLSourceInput.of(source.toString()));
-    addSchema(unit);
+  public void addUnit(final CharSource source) throws IOException {
+    final GQLTypeRegistry unit = this.parser.parseSchema(source.read(), GQLSourceInput.of(source.toString()));
+    this.addSchema(unit);
   }
 
-  public ResolvedSchema compile(Map<GQLOperationType, String> ops) {
+  public void addUnit(final String source) {
+    final GQLTypeRegistry unit = this.parser.parseSchema(source, GQLSourceInput.emptySource());
+    this.addSchema(unit);
+  }
+
+  public ResolvedSchema compile() {
+    return new ResolvedSchema(this, ImmutableMap.of());
+  }
+
+  public ResolvedSchema compile(final Map<GQLOperationType, String> ops) {
     return new ResolvedSchema(this, ops);
   }
 
-  public ResolvedSchema compile(String queryRoot) {
-    Map<GQLOperationType, String> roots = ImmutableMap.of(GQLOpType.Query, queryRoot);
-    return compile(roots);
+  public ResolvedSchema compile(final String queryRoot) {
+    final Map<GQLOperationType, String> roots = ImmutableMap.of(GQLOpType.Query, queryRoot);
+    return this.compile(roots);
   }
 
-  public ResolvedSchema compile(String queryRoot, String mutationRoot) {
-    Map<GQLOperationType, String> roots = ImmutableMap.of(
+  public ResolvedSchema compile(final String queryRoot, final String mutationRoot) {
+    final Map<GQLOperationType, String> roots = ImmutableMap.of(
         GQLOpType.Query, queryRoot,
         GQLOpType.Mutation, mutationRoot);
-    return compile(roots);
+    return this.compile(roots);
   }
 
-  public ResolvedSchema compile(String queryRoot, String mutationRoot, String subscriptionRoot) {
-    Map<GQLOperationType, String> roots = ImmutableMap.of(
+  public ResolvedSchema compile(final String queryRoot, final String mutationRoot, final String subscriptionRoot) {
+    final Map<GQLOperationType, String> roots = ImmutableMap.of(
         GQLOpType.Query, queryRoot,
         GQLOpType.Mutation, mutationRoot,
         GQLOpType.Subscription, subscriptionRoot);
-    return compile(roots);
+    return this.compile(roots);
   }
 
-  public TypeUse use(SchemaElement element, GQLTypeReference type) {
+  public TypeUse use(final SchemaElement element, final GQLTypeReference type) {
 
-    boolean notNull = (type.typeRefKind() == GQLTypeRefKind.NOT_NULL);
+    final boolean notNull = type.typeRefKind() == GQLTypeRefKind.NOT_NULL;
 
     switch (type.typeRefKind()) {
       case LIST: {
-        GQLListType listtype = (GQLListType) type;
-        GQLTypeDeclaration res = listtype.apply(GQLTypeVisitors.rootType());
-        return new TypeUse(element.schema(), build(element.schema(), res.name()), !notNull, 1);
+        final GQLListType listtype = (GQLListType) type;
+        final GQLTypeDeclaration res = listtype.apply(GQLTypeVisitors.rootType());
+        return new TypeUse(element.schema(), this.build(element.schema(), res.name()), !notNull, 1);
       }
       case DECL:
         break;
@@ -105,38 +116,38 @@ public class SchemaCompiler {
 
     }
 
-    GQLTypeDeclaration res = type.apply(GQLTypeVisitors.rootType());
+    final GQLTypeDeclaration res = type.apply(GQLTypeVisitors.rootType());
 
-    String typeName = res.name();
+    final String typeName = res.name();
 
-    return new TypeUse(element.schema(), build(element.schema(), typeName), !notNull, 0);
+    return new TypeUse(element.schema(), this.build(element.schema(), typeName), !notNull, 0);
 
   }
 
-  public ResolvedType build(ResolvedSchema schema, String typeName) {
+  public ResolvedType build(final ResolvedSchema schema, final String typeName) {
 
-    if (registered.containsKey(typeName)) {
-      return registered.get(typeName);
+    if (this.registered.containsKey(typeName)) {
+      return this.registered.get(typeName);
     }
 
-    ArrayList<GQLTypeDeclaration> parts = new ArrayList<>(names.get(typeName));
+    final ArrayList<GQLTypeDeclaration> parts = new ArrayList<>(this.names.get(typeName));
 
     if (parts.isEmpty()) {
       throw new InvalidSchemaException("missing type '" + typeName + "'");
     }
 
-    GQLTypeDeclKind typeKind = parts.get(0).typeKind();
+    final GQLTypeDeclKind typeKind = parts.get(0).typeKind();
 
     if (!parts.stream().allMatch(s -> s.typeKind() == typeKind)) {
       throw new InvalidSchemaException("mismatched type kinds for '" + typeName + "'");
     }
 
-    if (names.containsKey("__OBJECT") && (typeKind == GQLTypeDeclKind.OBJECT)) {
-      parts.addAll(names.get("__OBJECT"));
+    if (this.names.containsKey("__OBJECT") && typeKind == GQLTypeDeclKind.OBJECT) {
+      parts.addAll(this.names.get("__OBJECT"));
     }
 
-    if (names.containsKey("__INTERFACE") && (typeKind == GQLTypeDeclKind.INTERFACE)) {
-      parts.addAll(names.get("__INTERFACE"));
+    if (this.names.containsKey("__INTERFACE") && typeKind == GQLTypeDeclKind.INTERFACE) {
+      parts.addAll(this.names.get("__INTERFACE"));
     }
 
     switch (typeKind) {
@@ -159,9 +170,14 @@ public class SchemaCompiler {
 
   }
 
-  public void register(String typeName, ResolvedType resolvedType) {
+  public void register(final String typeName, final ResolvedType resolvedType) {
     Preconditions.checkState(!this.registered.containsKey(typeName));
     this.registered.put(typeName, resolvedType);
+  }
+
+  @Override
+  public void report(final Diagnostic<ResolutionDiagnostic> diag) {
+    System.err.println(diag);
   }
 
 }

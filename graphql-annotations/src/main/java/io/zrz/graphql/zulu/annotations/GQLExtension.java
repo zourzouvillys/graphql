@@ -14,6 +14,6 @@ import java.lang.annotation.Target;
  */
 @Retention(RUNTIME)
 @Target({ ElementType.TYPE, ElementType.METHOD })
-public @interface GQLOutputExtension {
+public @interface GQLExtension {
 
 }

@@ -12,7 +12,7 @@ import org.junit.Test;
 import io.zrz.graphql.zulu.User;
 import io.zrz.graphql.zulu.annotations.GQLField;
 import io.zrz.graphql.zulu.annotations.GQLNull;
-import io.zrz.graphql.zulu.annotations.GQLOutputExtension;
+import io.zrz.graphql.zulu.annotations.GQLExtension;
 
 public class JavaClassAnalysisTest {
 
@@ -69,7 +69,7 @@ public class JavaClassAnalysisTest {
 
   }
 
-  @GQLOutputExtension
+  @GQLExtension
   public static class TestUserExtension {
 
     public static int testField() {
@@ -80,7 +80,7 @@ public class JavaClassAnalysisTest {
 
   public static class TestUserMethodExtension<R> {
 
-    @GQLOutputExtension
+    @GQLExtension
     @GQLField(value = "hello")
     public static <T extends TestUser & User> @GQLNull int testField(T receiver, int x, List<? super T> names) {
       return 1;

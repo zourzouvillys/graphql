@@ -9,7 +9,7 @@ import com.google.common.reflect.TypeToken;
 
 import io.zrz.graphql.zulu.Team;
 import io.zrz.graphql.zulu.User;
-import io.zrz.graphql.zulu.annotations.GQLOutputExtension;
+import io.zrz.graphql.zulu.annotations.GQLExtension;
 import io.zrz.graphql.zulu.annotations.RelayAutoConnection;
 import io.zrz.graphql.zulu.binding.JavaBindingProvider;
 
@@ -63,7 +63,7 @@ public class JavaClassContributorTest {
    * a static extension field.
    */
 
-  @GQLOutputExtension
+  @GQLExtension
   public static class MyUserExtension {
 
     public static String name(User user) {

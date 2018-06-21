@@ -25,7 +25,7 @@ import io.zrz.graphql.core.types.GQLTypeKind;
 import io.zrz.graphql.zulu.JavaInputField;
 import io.zrz.graphql.zulu.JavaOutputField;
 import io.zrz.graphql.zulu.LogicalTypeKind;
-import io.zrz.graphql.zulu.annotations.GQLOutputType;
+import io.zrz.graphql.zulu.annotations.GQLObjectType;
 import io.zrz.graphql.zulu.binding.JavaBindingProvider;
 import io.zrz.graphql.zulu.binding.JavaBindingType;
 import io.zrz.graphql.zulu.binding.JavaBindingUtils;
@@ -555,7 +555,7 @@ public final class ExecutableSchemaBuilder {
       return false;
     }
 
-    if (type.getRawType().isAnnotationPresent(GQLOutputType.class)) {
+    if (type.getRawType().isAnnotationPresent(GQLObjectType.class)) {
       log.debug("auto registering {}", type);
       return true;
     }
@@ -575,7 +575,7 @@ public final class ExecutableSchemaBuilder {
 
     if (handle != null) {
       // TODO: also for enum, scalar, etc ...
-      for (GQLOutputType a : handle.analysis().annotations(GQLOutputType.class)) {
+      for (GQLObjectType a : handle.analysis().annotations(GQLObjectType.class)) {
         if (!StringUtils.isEmpty(a.name())) {
           return a.name();
         }
@@ -628,7 +628,7 @@ public final class ExecutableSchemaBuilder {
    */
 
   Symbol autoload(TypeToken<?> javaType, ExecutableElement user) {
-    if (!javaType.getRawType().isAnnotationPresent(GQLOutputType.class)) {
+    if (!javaType.getRawType().isAnnotationPresent(GQLObjectType.class)) {
       return null;
     }
     JavaBindingType handle = this.binder.registerType(javaType);

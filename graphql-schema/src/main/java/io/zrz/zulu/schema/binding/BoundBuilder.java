@@ -8,6 +8,7 @@ import io.zrz.graphql.core.doc.GQLDocument;
 import io.zrz.graphql.core.doc.GQLFieldSelection;
 import io.zrz.graphql.core.doc.GQLFragmentSpreadSelection;
 import io.zrz.graphql.core.doc.GQLInlineFragmentSelection;
+import io.zrz.graphql.core.doc.GQLOperationDefinition;
 import io.zrz.graphql.core.doc.GQLSelection;
 import io.zrz.graphql.core.lang.GQLTypeVisitor;
 import io.zrz.graphql.core.lang.GQLTypeVisitors;
@@ -26,8 +27,10 @@ import io.zrz.zulu.schema.ResolvedType;
 import io.zrz.zulu.schema.ResolvedUnionType;
 import io.zrz.zulu.schema.SchemaType;
 import io.zrz.zulu.schema.TypeUse;
+import io.zrz.zulu.schema.validation.Diagnostic;
+import io.zrz.zulu.schema.validation.DiagnosticListener;
 
-class BoundBuilder {
+class BoundBuilder implements DiagnosticListener<BoundElement> {
 
   Map<String, BoundFragment> fragments;
 
@@ -35,26 +38,32 @@ class BoundBuilder {
   private final BoundDocument doc;
   private final GQLDocument input;
 
-  private ResolvedSchema schema;
+  private final ResolvedSchema schema;
 
-  BoundBuilder(ResolvedSchema schema, GQLDocument input, BoundDocument doc) {
+  /**
+   * listens for messages.
+   */
+  private final DiagnosticListener<BoundElement> listener;
+
+  BoundBuilder(final ResolvedSchema schema, final GQLDocument input, final BoundDocument doc, final DiagnosticListener<BoundElement> listener) {
     this.schema = schema;
     this.input = input;
     this.doc = doc;
+    this.listener = listener;
   }
 
-  BoundFragment fragment(String name) {
+  BoundFragment fragment(final String name) {
 
     if (this.fragments != null) {
 
-      BoundFragment frag = fragments.get(name);
+      final BoundFragment frag = this.fragments.get(name);
 
       if (frag != null)
         return frag;
 
     }
 
-    BoundNamedFragment frag = new BoundNamedFragment(input.fragment(name), this);
+    final BoundNamedFragment frag = new BoundNamedFragment(this.input.fragment(name), this);
 
     // ensure there are no cycles in this fragment.
     if (frag.selections().stream().anyMatch(sel -> sel.hasFragmentCycle(frag))) {
@@ -74,22 +83,22 @@ class BoundBuilder {
       SchemaType.BiFunctionVisitor<BoundSelectionContainer, GQLFieldSelection, BoundSelection> {
 
     @Override
-    public BoundSelection visitFieldSelection(GQLFieldSelection field, BoundSelectionContainer parent) {
+    public BoundSelection visitFieldSelection(final GQLFieldSelection field, final BoundSelectionContainer parent) {
 
       // note that the parent type can be a union or interface if we're in a fragment spread.
-      ResolvedType resultType = parent.selectionType();
+      final ResolvedType resultType = parent.selectionType();
 
       return resultType.apply(this, parent, field);
 
     }
 
     @Override
-    public BoundSelection visitFragmentSelection(GQLFragmentSpreadSelection frag, BoundSelectionContainer parent) {
-      return fragment(frag.name());
+    public BoundSelection visitFragmentSelection(final GQLFragmentSpreadSelection frag, final BoundSelectionContainer parent) {
+      return BoundBuilder.this.fragment(frag.name());
     }
 
     @Override
-    public BoundSelection visitInlineFragment(GQLInlineFragmentSelection inline, BoundSelectionContainer parent) {
+    public BoundSelection visitInlineFragment(final GQLInlineFragmentSelection inline, final BoundSelectionContainer parent) {
       return new BoundInlineFragment(inline, parent, BoundBuilder.this);
     }
 
@@ -98,9 +107,29 @@ class BoundBuilder {
     // select a field value.
 
     @Override
-    public BoundSelection visit(ResolvedObjectType type, BoundSelectionContainer parent, GQLFieldSelection sel) {
+    public BoundSelection visit(final ResolvedObjectType type, final BoundSelectionContainer parent, final GQLFieldSelection sel) {
 
-      ResolvedObjectField field = type.field(sel.name());
+      final ResolvedObjectField field = type.field(sel.name());
+
+      if (field == null) {
+        BoundBuilder.this.report(BoundDiagnosticCode.UNKNOWN_FIELD, sel, type);
+        return null;
+      }
+
+      // if we're a type of interface, allow fields. union is also allowed but only for a spread to a potential type.
+
+      if (sel.selections().isEmpty()) {
+        return new BoundLeafSelection(field, sel, BoundBuilder.this);
+      }
+
+      return new BoundObjectSelection(parent, field, sel, BoundBuilder.this);
+
+    }
+
+    @Override
+    public BoundSelection visit(final ResolvedInterfaceType type, final BoundSelectionContainer parent, final GQLFieldSelection sel) {
+
+      final ResolvedObjectField field = type.field(sel.name());
 
       if (field == null) {
         throw new IllegalArgumentException("field '" + sel.name() + "' doesn't exist on '" + type.typeName() + "'");
@@ -117,48 +146,30 @@ class BoundBuilder {
     }
 
     @Override
-    public BoundSelection visit(ResolvedInterfaceType type, BoundSelectionContainer parent, GQLFieldSelection sel) {
-
-      ResolvedObjectField field = type.field(sel.name());
-
-      if (field == null) {
-        throw new IllegalArgumentException("field '" + sel.name() + "' doesn't exist on '" + type.typeName() + "'");
-      }
-
-      // if we're a type of interface, allow fields. union is also allowed but only for a spread to a potential type.
-
-      if (sel.selections().isEmpty()) {
-        return new BoundLeafSelection(field, sel, BoundBuilder.this);
-      }
-
-      return new BoundObjectSelection(parent, field, sel, BoundBuilder.this);
-
-    }
-
-    @Override
-    public BoundSelection visit(ResolvedEnumType type, BoundSelectionContainer arg1, GQLFieldSelection arg2) {
+    public BoundSelection visit(final ResolvedEnumType type, final BoundSelectionContainer arg1, final GQLFieldSelection arg2) {
       throw new IllegalArgumentException();
     }
 
     @Override
-    public BoundSelection visit(ResolvedInputType type, BoundSelectionContainer arg1, GQLFieldSelection arg2) {
+    public BoundSelection visit(final ResolvedInputType type, final BoundSelectionContainer arg1, final GQLFieldSelection arg2) {
       throw new IllegalArgumentException();
     }
 
     @Override
-    public BoundSelection visit(ResolvedScalarType type, BoundSelectionContainer arg1, GQLFieldSelection arg2) {
-      throw new IllegalArgumentException();
+    public BoundSelection visit(final ResolvedScalarType type, final BoundSelectionContainer arg1, final GQLFieldSelection arg2) {
+      BoundBuilder.this.report(BoundDiagnostic.selectionScope(BoundDiagnosticCode.SUBSELECTION_ON_SCALAR, arg2));
+      return null;
     }
 
     @Override
-    public BoundSelection visit(ResolvedUnionType type, BoundSelectionContainer arg1, GQLFieldSelection arg2) {
+    public BoundSelection visit(final ResolvedUnionType type, final BoundSelectionContainer arg1, final GQLFieldSelection arg2) {
       throw new IllegalArgumentException();
     }
 
   }
 
-  void add(BoundNamedFragment frag, String name) {
-    if (fragments == null) {
+  void add(final BoundNamedFragment frag, final String name) {
+    if (this.fragments == null) {
       this.fragments = new HashMap<>();
     }
 
@@ -172,9 +183,9 @@ class BoundBuilder {
 
   }
 
-  ResolvedType resolve(GQLDeclarationRef namedType) {
-    String typeName = namedType.apply(GQLTypeVisitors.rootType()).name();
-    ResolvedType type = this.schema.type(Objects.requireNonNull(typeName, namedType.toString()));
+  ResolvedType resolve(final GQLDeclarationRef namedType) {
+    final String typeName = namedType.apply(GQLTypeVisitors.rootType()).name();
+    final ResolvedType type = this.schema.type(Objects.requireNonNull(typeName, namedType.toString()));
     if (type == null) {
       throw new IllegalArgumentException("invalid named type '" + typeName + "'");
     }
@@ -185,27 +196,48 @@ class BoundBuilder {
     return this.schema;
   }
 
-  public TypeUse resolve(GQLTypeReference type) {
+  public TypeUse resolve(final GQLTypeReference type) {
     return type.apply(new Visitor());
   }
 
   private class Visitor implements GQLTypeVisitor<TypeUse> {
 
     @Override
-    public TypeUse visitNonNull(GQLNonNullType type) {
+    public TypeUse visitNonNull(final GQLNonNullType type) {
       return type.type().apply(this);
     }
 
     @Override
-    public TypeUse visitList(GQLListType type) {
+    public TypeUse visitList(final GQLListType type) {
       return type.type().apply(this);
     }
 
     @Override
-    public TypeUse visitDeclarationRef(GQLDeclarationRef type) {
-      return new TypeUse(schema(), resolve(type), true, 0);
+    public TypeUse visitDeclarationRef(final GQLDeclarationRef type) {
+      return new TypeUse(BoundBuilder.this.schema(), BoundBuilder.this.resolve(type), true, 0);
     }
 
   }
 
+  @Override
+  public void report(final Diagnostic<BoundElement> diag) {
+    this.listener.report(diag);
+  }
+
+  public BoundOperation createOperation(final GQLOperationDefinition op) {
+    final ResolvedObjectType rootType = (ResolvedObjectType) this.schema().operationType(op.type());
+    if (rootType == null) {
+      this.report(op, BoundDiagnosticCode.UNKNOWN_TYPE);
+      return null;
+    }
+    return new BoundOperation(this.doc, op, rootType, this);
+  }
+
+  private void report(final GQLOperationDefinition op, final BoundDiagnosticCode code) {
+    this.listener.report(BoundDiagnostic.operationScope(code, op));
+  }
+
+  public void report(final BoundDiagnosticCode code, final GQLFieldSelection selection, final ResolvedObjectType type) {
+    this.listener.report(BoundDiagnostic.selectionScope(code, selection));
+  }
 }

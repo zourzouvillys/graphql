@@ -6,10 +6,10 @@ import java.util.List;
 import org.eclipse.jdt.annotation.NonNull;
 
 import io.zrz.graphql.core.decl.GQLDirectiveLocation;
-import io.zrz.graphql.zulu.annotations.GQLOutputType;
+import io.zrz.graphql.zulu.annotations.GQLObjectType;
 import io.zrz.graphql.zulu.executable.ExecutableType;
 
-@GQLOutputType(name = "__Directive")
+@GQLObjectType(name = "__Directive")
 public class GQLSchemaDirective {
 
   public GQLSchemaDirective(ExecutableType directive) {

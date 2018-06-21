@@ -7,15 +7,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * indicates that the specified type is a ZuluType
- * 
+ * indicates that the specified type is a GQL object type
+ *
  * @author theo
  *
  */
 
 @Retention(RUNTIME)
 @Target(TYPE)
-public @interface GQLOutputType {
+public @interface GQLObjectType {
 
   String name() default "";
 

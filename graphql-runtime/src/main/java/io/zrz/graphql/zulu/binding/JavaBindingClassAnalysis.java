@@ -12,7 +12,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 
 import io.zrz.graphql.zulu.annotations.GQLAutoScan;
-import io.zrz.graphql.zulu.annotations.GQLOutputExtension;
+import io.zrz.graphql.zulu.annotations.GQLExtension;
 
 /**
  * given a class, scans to generate an analysis of it for later processing.
@@ -71,7 +71,7 @@ public class JavaBindingClassAnalysis {
    */
 
   public boolean isExtensionClass() {
-    return (rawClass.getAnnotationsByType(GQLOutputExtension.class).length > 0);
+    return (rawClass.getAnnotationsByType(GQLExtension.class).length > 0);
   }
 
   /**

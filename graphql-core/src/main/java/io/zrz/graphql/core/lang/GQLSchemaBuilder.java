@@ -25,12 +25,12 @@ public class GQLSchemaBuilder {
     return type.apply(new GQLDeclarationVisitor<GQLSchemaBuilder>() {
 
       @Override
-      public GQLSchemaBuilder visitTypeDeclaration(GQLTypeDeclaration typedecl) {
+      public GQLSchemaBuilder visitTypeDeclaration(final GQLTypeDeclaration typedecl) {
         return GQLSchemaBuilder.this.add(typedecl);
       }
 
       @Override
-      public GQLSchemaBuilder visitSchemaDeclaration(GQLSchemaDeclaration gqlSchemaDeclaration) {
+      public GQLSchemaBuilder visitSchemaDeclaration(final GQLSchemaDeclaration gqlSchemaDeclaration) {
         // ignored for this
         return null;
       }
@@ -47,11 +47,9 @@ public class GQLSchemaBuilder {
       throw new IllegalArgumentException("empty name");
 
     }
-    else if (this.types.containsKey(type.name())) {
-
-      throw new DuplicateTypeNameException(type.name());
-
-    }
+    // else if (this.types.containsKey(type.name())) {
+    // throw new DuplicateTypeNameException(type.name());
+    // }
 
     this.types.put(type.name(), type);
 

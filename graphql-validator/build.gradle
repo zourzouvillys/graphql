@@ -1,0 +1,19 @@
+
+eclipse.project.name = 'graphql:validator'
+
+dependencies {
+  
+  implementation       project(':graphql-schema')
+  
+  compileOnly         'com.google.errorprone:error_prone_annotations:2.3.1'
+  compileOnly         'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.100'
+  compileOnly         'org.immutables:builder:2.6.1'
+  compileOnly         'org.immutables:value:2.6.1:annotations'
+
+  annotationProcessor 'org.immutables:builder:2.6.1'
+  annotationProcessor 'org.immutables:value:2.6.1'
+
+  testImplementation  'junit:junit:4.12'
+  testImplementation  'org.assertj:assertj-core:3.6.1'
+
+}

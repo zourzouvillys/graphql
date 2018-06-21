@@ -6,10 +6,10 @@ import org.eclipse.jdt.annotation.NonNull;
 
 import com.google.common.collect.ImmutableList;
 
-import io.zrz.graphql.zulu.annotations.GQLOutputType;
+import io.zrz.graphql.zulu.annotations.GQLObjectType;
 import io.zrz.graphql.zulu.executable.ExecutableOutputField;
 
-@GQLOutputType(name = "__Field")
+@GQLObjectType(name = "__Field")
 public class GQLSchemaField {
 
   private final ExecutableOutputField field;

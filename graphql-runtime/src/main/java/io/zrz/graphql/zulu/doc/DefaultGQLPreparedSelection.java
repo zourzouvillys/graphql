@@ -29,8 +29,8 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
   private DefaultGQLPreparedOperation req;
   private DefaultGQLPreparedSelection parent;
 
-  public DefaultGQLPreparedSelection(DefaultGQLPreparedOperation req, DefaultGQLPreparedSelection parent, GQLSelectionTypeCriteria condition,
-      GQLFieldSelection selection) {
+  public DefaultGQLPreparedSelection(final DefaultGQLPreparedOperation req, final DefaultGQLPreparedSelection parent, final GQLSelectionTypeCriteria condition,
+      final GQLFieldSelection selection) {
     this.req = req;
     this.parent = parent;
     this.condition = condition;
@@ -114,7 +114,7 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
   }
 
   /**
-   * 
+   *
    */
 
   private final static class ParamField implements ZField {
@@ -122,7 +122,7 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
     private DefaultGQLPreparedOperation req;
     private GQLArgument arg;
 
-    public ParamField(DefaultGQLPreparedOperation req, GQLArgument arg) {
+    public ParamField(final DefaultGQLPreparedOperation req, final GQLArgument arg) {
       this.req = req;
       this.arg = arg;
     }
@@ -147,7 +147,7 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
       return fieldType() + (Optional.ofNullable(constantValue().orElse(defaultValue().orElse(null))).map(val -> " = " + val).orElse(""));
     }
 
-    public Optional<ZValue> resolve(GQLVariableProvider provider) {
+    public Optional<ZValue> resolve(final GQLVariableProvider provider) {
       return arg.value().apply(new ConstantZValueValueExtractor(req, arg, provider));
     }
 
@@ -155,7 +155,7 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
   /**
    * each of the arguments for this selection node (if any) along with the type.
-   * 
+   *
    * @return
    */
 
@@ -193,22 +193,22 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
    */
 
   @Override
-  public Optional<ZStructValue> arguments(GQLVariableProvider provider) {
+  public Optional<ZStructValue> arguments(final GQLVariableProvider provider) {
     return this.parameters().map(struct -> resolve(struct, provider));
   }
 
   /**
-   * 
+   *
    * @param struct
    * @param provider
    * @return
    */
 
-  private ZStructValue resolve(ZStructType struct, GQLVariableProvider provider) {
+  private ZStructValue resolve(final ZStructType struct, final GQLVariableProvider provider) {
 
-    ZStructValueBuilder b = new ZStructValueBuilder(struct);
+    final ZStructValueBuilder b = new ZStructValueBuilder(struct);
 
-    for (Entry<String, ? extends ZField> e : struct.fields().entrySet()) {
+    for (final Entry<String, ? extends ZField> e : struct.fields().entrySet()) {
 
       // constant values don't need anything done. already set.
       if (e.getValue().constantValue().isPresent()) {
@@ -217,9 +217,13 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
       //
 
-      ParamField field = (ParamField) e.getValue();
+      final ParamField field = (ParamField) e.getValue();
 
-      ZValue value = field
+      if (field == null) {
+        return null;
+      }
+
+      final ZValue value = field
           .resolve(provider)
           .orElseGet(() -> e.getValue().defaultValue().orElse(null));
 

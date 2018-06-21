@@ -18,7 +18,7 @@ import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.zulu.annotations.GQLAutoScan;
 import io.zrz.graphql.zulu.annotations.GQLInputType;
 import io.zrz.graphql.zulu.annotations.GQLMixin;
-import io.zrz.graphql.zulu.annotations.GQLOutputType;
+import io.zrz.graphql.zulu.annotations.GQLObjectType;
 import io.zrz.graphql.zulu.annotations.GQLSpread;
 import io.zrz.graphql.zulu.executable.ExecutableInvoker;
 import io.zrz.graphql.zulu.executable.ExecutableSchema;
@@ -39,7 +39,7 @@ public class JavaSchemaBuilderTest {
   }
 
   @GQLAutoScan
-  @GQLOutputType(name = "BaseQueryRoot")
+  @GQLObjectType(name = "BaseQueryRoot")
   public static class AbstractQueryRoot {
 
     public String hsello() {

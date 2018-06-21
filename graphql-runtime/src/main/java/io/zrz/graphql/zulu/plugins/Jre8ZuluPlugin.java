@@ -2,7 +2,7 @@ package io.zrz.graphql.zulu.plugins;
 
 import java.time.Instant;
 
-import io.zrz.graphql.zulu.annotations.GQLOutputExtension;
+import io.zrz.graphql.zulu.annotations.GQLExtension;
 import io.zrz.graphql.zulu.engine.ZuluEngineBuilder;
 
 /**
@@ -16,7 +16,7 @@ public class Jre8ZuluPlugin implements ZuluPlugin {
 
   public static class ZuluInstant {
 
-    @GQLOutputExtension
+    @GQLExtension
     public static String isoValue(Instant instant) {
       return instant.toString();
     }

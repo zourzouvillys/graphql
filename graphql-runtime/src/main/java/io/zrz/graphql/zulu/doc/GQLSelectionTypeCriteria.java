@@ -1,5 +1,6 @@
 package io.zrz.graphql.zulu.doc;
 
+import io.zrz.graphql.core.decl.GQLTypeDeclaration;
 import io.zrz.graphql.core.types.GQLDeclarationRef;
 
 /**
@@ -10,7 +11,7 @@ public class GQLSelectionTypeCriteria {
 
   private GQLDeclarationRef decl;
 
-  public GQLSelectionTypeCriteria(GQLDeclarationRef decl) {
+  public GQLSelectionTypeCriteria(final GQLDeclarationRef decl) {
     this.decl = decl;
   }
 
@@ -19,7 +20,10 @@ public class GQLSelectionTypeCriteria {
    */
 
   public String type() {
-    return decl.ref().name();
+    final GQLTypeDeclaration ref = decl.ref();
+    if (ref == null)
+      return null;
+    return ref.name();
   }
 
   @Override

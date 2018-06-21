@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import io.zrz.graphql.zulu.annotations.GQLDocumentation;
 import io.zrz.graphql.zulu.annotations.GQLField;
-import io.zrz.graphql.zulu.annotations.GQLOutputType;
+import io.zrz.graphql.zulu.annotations.GQLObjectType;
 import io.zrz.graphql.zulu.engine.ZuluEngine;
 import io.zrz.graphql.zulu.plugins.Jre8ZuluPlugin;
 import io.zrz.graphql.zulu.schema.GQLSchema;
@@ -67,7 +67,7 @@ public class ZuluNettyServerTest {
    * 
    */
 
-  @GQLOutputType
+  @GQLObjectType
   public static class MyOther {
 
     public String another() {

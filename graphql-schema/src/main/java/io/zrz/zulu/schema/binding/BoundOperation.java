@@ -1,6 +1,7 @@
 package io.zrz.zulu.schema.binding;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -21,13 +22,9 @@ public class BoundOperation implements BoundSelectionContainer, BoundElement {
   private final ImmutableList<BoundSelection> selections;
   private final ResolvedObjectType rootType;
 
-  public BoundOperation(BoundDocument doc, GQLOperationDefinition op, BoundBuilder b) {
+  public BoundOperation(final BoundDocument doc, final GQLOperationDefinition op, final ResolvedObjectType rootType, final BoundBuilder b) {
 
-    this.rootType = (ResolvedObjectType) b.schema().operationType(op.type());
-
-    if (this.rootType == null) {
-      throw new IllegalArgumentException("can't find root type for '" + op.type() + "' in schema");
-    }
+    this.rootType = Objects.requireNonNull(rootType);
 
     this.doc = doc;
     this.name = op.name();
@@ -42,6 +39,7 @@ public class BoundOperation implements BoundSelectionContainer, BoundElement {
         .stream()
         .sequential()
         .map(sel -> BoundUtils.bind(this, sel, b))
+        .filter(sel -> sel != null)
         .collect(ImmutableList.toImmutableList());
 
   }
@@ -78,7 +76,7 @@ public class BoundOperation implements BoundSelectionContainer, BoundElement {
 
   @Override
   public String toString() {
-    return type + " " + name;
+    return this.type + " " + this.name;
   }
 
   @Override
@@ -87,7 +85,7 @@ public class BoundOperation implements BoundSelectionContainer, BoundElement {
   }
 
   @Override
-  public <R> R accept(SupplierVisitor<R> visitor) {
+  public <R> R accept(final SupplierVisitor<R> visitor) {
     return visitor.visitOperation(this);
   }
 

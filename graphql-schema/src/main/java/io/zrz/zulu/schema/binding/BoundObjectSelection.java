@@ -13,7 +13,7 @@ import io.zrz.zulu.schema.binding.BoundElementVisitor.SupplierVisitor;
 
 /**
  * a selection on a object field which itself has selections.
- * 
+ *
  * @author theo
  *
  */
@@ -30,9 +30,9 @@ public class BoundObjectSelection implements BoundSelection, BoundFieldSelection
   private final String fieldName;
   private final String outputName;
   private final ResolvedObjectField field;
-  private ImmutableList<BoundFieldArgument> params;
+  private final ImmutableList<BoundFieldArgument> params;
 
-  public BoundObjectSelection(BoundSelectionContainer parent, ResolvedObjectField field, GQLFieldSelection sel, BoundBuilder b) {
+  public BoundObjectSelection(final BoundSelectionContainer parent, final ResolvedObjectField field, final GQLFieldSelection sel, final BoundBuilder b) {
 
     this.parent = parent;
     this.fieldName = sel.name();
@@ -43,6 +43,7 @@ public class BoundObjectSelection implements BoundSelection, BoundFieldSelection
         .stream()
         .sequential()
         .map(subsel -> BoundUtils.bind(this, subsel, b))
+        .filter(subsel -> subsel != null)
         .collect(ImmutableList.toImmutableList());
 
     this.params = field.parameters()
@@ -57,7 +58,7 @@ public class BoundObjectSelection implements BoundSelection, BoundFieldSelection
   }
 
   /**
-   * 
+   *
    */
 
   @Override
@@ -88,12 +89,12 @@ public class BoundObjectSelection implements BoundSelection, BoundFieldSelection
   }
 
   @Override
-  public boolean hasFragmentCycle(BoundNamedFragment frag) {
-    return selections.stream().anyMatch(sel -> sel.hasFragmentCycle(frag));
+  public boolean hasFragmentCycle(final BoundNamedFragment frag) {
+    return this.selections.stream().anyMatch(sel -> sel.hasFragmentCycle(frag));
   }
 
   @Override
-  public void apply(VoidVisitor visitor) {
+  public void apply(final VoidVisitor visitor) {
     visitor.apply(this);
   }
 
@@ -103,12 +104,12 @@ public class BoundObjectSelection implements BoundSelection, BoundFieldSelection
   }
 
   @Override
-  public <R> R accept(SupplierVisitor<R> visitor) {
+  public <R> R accept(final SupplierVisitor<R> visitor) {
     return visitor.visitObject(this);
   }
 
   @Override
-  public boolean apply(PredicateVisitor visitor) {
+  public boolean apply(final PredicateVisitor visitor) {
     return visitor.apply(this);
   }
 
