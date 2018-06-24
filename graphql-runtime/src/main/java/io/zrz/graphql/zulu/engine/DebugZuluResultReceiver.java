@@ -27,4 +27,25 @@ public class DebugZuluResultReceiver extends DefaultZuluResultReceiver implement
     log.debug("FIELD[{}]: {}", field.outputName(), value);
   }
 
+  @Override
+  public void startList(ZuluSelection container, Object context) {
+    log.debug("START LIST: {} [{}]", container, context);
+  }
+
+  @Override
+  public void endList(ZuluSelection container, Object context) {
+    log.debug("END LIST: {} [{}]", container, context);
+  }
+
+  @Override
+  public void startStruct(ZuluSelectionContainer container, Object context) {
+    log.debug("START STRUCT: {} [{}]", container, context);
+
+  }
+
+  @Override
+  public void endStruct(ZuluSelectionContainer container, Object context) {
+    log.debug("END STRUCT: {} [{}]", container, context);
+  }
+
 }

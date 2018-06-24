@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import io.zrz.graphql.core.runtime.GQLOperationType;
+import io.zrz.graphql.zulu.doc.DefaultGQLPreparedOperation.OpInputType;
 import io.zrz.zulu.types.ZAnnotation;
 import io.zrz.zulu.types.ZStructType;
 
@@ -31,7 +32,7 @@ public interface GQLPreparedOperation {
    * the input type expected for this operation.
    */
 
-  ZStructType inputType();
+  OpInputType inputType();
 
   /**
    * the return selections made on the operation.

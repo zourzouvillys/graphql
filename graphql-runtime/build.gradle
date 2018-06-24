@@ -9,12 +9,12 @@ dependencies {
   // these are internal only, shaded for deploy.
   implementation      'com.google.guava:guava:25.1-jre'
   implementation      'org.apache.commons:commons-lang3:3.7'
-  implementation      'com.github.zourzouvillys:commons:950d929406'
+  api      'com.github.zourzouvillys:commons:950d929406'
   implementation      'org.apache.commons:commons-text:1.4'
   implementation      'net.jodah:typetools:0.5.0'
   
-  implementation      project(':graphql-annotations')
-  implementation      project(':graphql-core')
+  api      project(':graphql-annotations')
+  api      project(':graphql-core')
   
   // compile time only dependencies
   compileOnly         'com.google.errorprone:error_prone_annotations:2.3.1'

@@ -16,4 +16,24 @@ public class MapCollectingZuluResultsReceiver extends DefaultZuluResultReceiver 
     results.put(field, value);
   }
 
+  @Override
+  public void startList(ZuluSelection container, Object context) {
+  }
+
+  @Override
+  public void endList(ZuluSelection container, Object context) {
+  }
+
+  @Override
+  public void startStruct(ZuluSelectionContainer container, Object context) {
+    // TODO Auto-generated method stub
+
+  }
+
+  @Override
+  public void endStruct(ZuluSelectionContainer container, Object context) {
+    // TODO Auto-generated method stub
+
+  }
+
 }

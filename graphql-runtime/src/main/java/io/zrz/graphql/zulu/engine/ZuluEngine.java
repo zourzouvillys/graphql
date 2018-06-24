@@ -2,6 +2,7 @@ package io.zrz.graphql.zulu.engine;
 
 import java.lang.reflect.Type;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +72,26 @@ public class ZuluEngine {
   public ZuluCompileResult compile(String queryString) {
     return compile(docs.prepareDocument(docs.parse(queryString)).defaultOperation().get());
   }
+
+  /**
+   * 
+   * @param documentString
+   * @return
+   */
+
+  public Stream<ZuluCompileResult> compileDocument(String documentString) {
+    GQLPreparedDocument doc = docs.prepareDocument(docs.parse(documentString));
+    return doc
+        .operations()
+        .map(op -> compile(op));
+  }
+
+  /**
+   * 
+   * @param queryString
+   * @param operationName
+   * @return
+   */
 
   public ZuluCompileResult compile(String queryString, String operationName) {
 
@@ -218,7 +239,7 @@ public class ZuluEngine {
     // bind to the context for this caller.
     ZuluContext ctx = doc.executable().bind(instance);
 
-    ZuluExecutionResult execres = ctx.execute(receiver);
+    ZuluExecutionResult execres = ctx.execute(new ZuluRequest(q.variables()), receiver);
 
     res.addAllNotes(execres.notes());
 

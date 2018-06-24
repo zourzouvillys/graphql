@@ -6,6 +6,7 @@ import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,8 +14,11 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 
+import io.zrz.graphql.core.runtime.GQLOperationType;
+import io.zrz.graphql.zulu.doc.DefaultGQLPreparedOperation.OpInputType;
 import io.zrz.graphql.zulu.doc.GQLPreparedOperation;
 import io.zrz.graphql.zulu.doc.GQLPreparedSelection;
+import io.zrz.graphql.zulu.doc.RuntimeParameterHolder;
 import io.zrz.graphql.zulu.executable.ExecutableInputContext;
 import io.zrz.graphql.zulu.executable.ExecutableInputField;
 import io.zrz.graphql.zulu.executable.ExecutableInputType;
@@ -22,7 +26,10 @@ import io.zrz.graphql.zulu.executable.ExecutableInvoker;
 import io.zrz.graphql.zulu.executable.ExecutableOutputField;
 import io.zrz.graphql.zulu.executable.ExecutableOutputType;
 import io.zrz.graphql.zulu.executable.ExecutableSchema;
+import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
 import io.zrz.zulu.types.ZField;
+import io.zrz.zulu.types.ZStructType;
+import io.zrz.zulu.types.ZTypeUse;
 
 /**
  * state specific to building.
@@ -33,6 +40,8 @@ import io.zrz.zulu.types.ZField;
 
 class ExecutableBuilder {
 
+  private static final int CONTEXT_ARGS = 2;
+
   private static Logger log = LoggerFactory.getLogger(ExecutableBuilder.class);
 
   private ZuluEngine engine;
@@ -42,6 +51,10 @@ class ExecutableBuilder {
   ExecutableBuilder(ZuluEngine engine, GQLPreparedOperation op) {
     this.engine = engine;
     this.op = op;
+  }
+
+  Optional<String> operationName() {
+    return this.op.operationName();
   }
 
   /**
@@ -116,7 +129,7 @@ class ExecutableBuilder {
       return null;
     }
 
-    MethodHandle handle = applyField(sel, field);
+    TypeTokenMethodHandle handle = applyField(sel, field);
 
     if (handle == null) {
       // field apply will have generated warning/error if invalid.
@@ -172,13 +185,13 @@ class ExecutableBuilder {
    * returns a handle for invoking this field. the handle takes the receiver context & request. it returns the result.
    * 
    * @param sel
-   *          The selection to execute.
+   *                The selection to execute.
    * 
    * @param field
    * @return
    */
 
-  private MethodHandle applyField(GQLPreparedSelection sel, ExecutableOutputField field) {
+  private TypeTokenMethodHandle applyField(GQLPreparedSelection sel, ExecutableOutputField field) {
 
     Objects.requireNonNull(field);
 
@@ -194,14 +207,14 @@ class ExecutableBuilder {
         .parameters()
         .orElse(null);
 
-    MethodHandle handle = invocationHandle(field, field.invoker().methodHandle());
+    TypeTokenMethodHandle handle = invocationHandle(field, field.invoker().methodHandle());
 
     if (params == null) {
       // no parameters, so just return the method handle directly.
       return checkHandlerSignature(field, handle);
     }
 
-    int offset = field.contextParameters().size() - 2;
+    int offset = field.contextParameters().size() - CONTEXT_ARGS;
 
     for (ExecutableInputField param : params.fieldValues()) {
 
@@ -210,7 +223,7 @@ class ExecutableBuilder {
       offset++;
 
       if (handle == null) {
-        // parameter mapper will have generated the error code.
+        // parameter mapper will have generated the error/warning note.
         return null;
       }
 
@@ -220,7 +233,7 @@ class ExecutableBuilder {
 
   }
 
-  private MethodHandle checkHandlerSignature(ExecutableOutputField field, MethodHandle handle) {
+  private TypeTokenMethodHandle checkHandlerSignature(ExecutableOutputField field, TypeTokenMethodHandle handle) {
 
     MethodType type = handle.type();
 
@@ -235,7 +248,7 @@ class ExecutableBuilder {
 
     }
 
-    if (params.size() != 2) {
+    if (params.size() != CONTEXT_ARGS) {
       throw new IllegalArgumentException("failed to bind all parameters: " + params);
     }
 
@@ -255,17 +268,17 @@ class ExecutableBuilder {
    * @return
    */
 
-  public MethodHandle invocationHandle(ExecutableOutputField field, MethodHandle mh) {
+  public TypeTokenMethodHandle invocationHandle(ExecutableOutputField field, MethodHandle mh) {
 
-    mh = MethodHandles.dropArguments(mh, 0, ZuluResultReceiver.class);
+    mh = MethodHandles.dropArguments(mh, 0, ZuluRequestContext.class);
 
     for (ExecutableInputContext ctx : field.contextParameters()) {
 
-      mh = insertContextParam(mh, ctx.index() + 2, ctx);
+      mh = insertContextParam(mh, ctx.index() + CONTEXT_ARGS, ctx);
 
     }
 
-    return mh;
+    return new TypeTokenMethodHandle(mh);
   }
 
   private MethodHandle insertContextParam(MethodHandle mh, int index, ExecutableInputContext ctx) {
@@ -286,13 +299,13 @@ class ExecutableBuilder {
    * inserts an argument that provides the required value.
    * 
    * @param param
-   *          the input parameter definition.
+   *                the input parameter definition.
    * @param sel
-   *          the selection on the field.
+   *                the selection on the field.
    * 
    */
 
-  private MethodHandle map(ExecutableInputField param, GQLPreparedSelection sel, MethodHandle target, int offset) {
+  private TypeTokenMethodHandle map(ExecutableInputField param, GQLPreparedSelection sel, TypeTokenMethodHandle target, int offset) {
 
     if (target == null) {
       throw new IllegalArgumentException("target");
@@ -315,23 +328,71 @@ class ExecutableBuilder {
 
     // if the value is constant, we can bind now and avoid doing anything at invocation time.
     if (provided.constantValue().isPresent()) {
-      return MethodHandles.insertArguments(target, param.index() - offset, engine.get(param, provided.constantValue().get()));
+      return target.insertArguments(param.index() - offset, engine.get(param, provided.constantValue().get()));
     }
 
     // the value is a variable (or depends on the output of another field/operation), so we need to defer to runtime.
     // however we do know the type, so let's check to make sure it's valid.
 
-    addWarning(new ZuluWarning.MissingRequiredParameter(param, sel));
+    ExecutableTypeUse targetType = param.fieldType();
+    ZTypeUse providedType = provided.fieldType();
 
-    return null;
+    RuntimeParameterHolder holder = (RuntimeParameterHolder) provided;
 
+    // if (false) {
+    // return target.insertArgument(param.index() - offset, holder.parameterName(), targetType);
+    // }
+
+    MethodHandle mh;
+    try {
+
+      mh = MethodHandles
+          .lookup()
+          .findStatic(
+              ExecutableBuilder.class,
+              "resolveParameter",
+              MethodType.methodType(Object.class, ZuluRequestContext.class, ExecutableTypeUse.class, String.class));
+
+      mh = MethodHandles.insertArguments(mh, 1, targetType, holder.parameterName());
+
+      mh = mh.asType(mh.type().changeReturnType(targetType.javaType().getRawType()));
+
+    }
+    catch (NoSuchMethodException | IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+
+    MethodHandle mapped = MethodHandles.collectArguments(target.handle(), param.index() - offset, mh);
+
+    // map the arguments.
+
+    int mapping[] = new int[mapped.type().parameterCount()];
+    mapping[0] = 0;
+    mapping[1] = 1;
+    mapping[2] = 0;
+
+    for (int i = 3; i < mapped.type().parameterCount(); ++i) {
+      mapping[i] = i - 1;
+    }
+
+    mapped = MethodHandles.permuteArguments(
+        mapped,
+        mapped.type().dropParameterTypes(2, 3), // new handle type with 1 less param
+        mapping);
+
+    return new TypeTokenMethodHandle(mapped);
+
+  }
+
+  public static Object resolveParameter(ZuluRequestContext ctx, ExecutableTypeUse targetType, String name) {
+    return ctx.parameter(name, targetType);
   }
 
   /**
    * adds a warning generated during compilation.
    * 
    * @param warning
-   *          the warning to add.
+   *                  the warning to add.
    */
 
   private void addWarning(ZuluWarning warning) {
@@ -339,6 +400,14 @@ class ExecutableBuilder {
       this.warnings = new ArrayList<>();
     }
     this.warnings.add(warning);
+  }
+
+  public GQLOperationType operationType() {
+    return op.type();
+  }
+
+  public OpInputType inputType() {
+    return op.inputType();
   }
 
 }

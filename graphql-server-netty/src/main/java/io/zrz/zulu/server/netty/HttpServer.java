@@ -20,8 +20,10 @@ public class HttpServer extends AbstractService {
   private List<ChannelFuture> channels = Lists.newArrayList();
 
   private NettyServerConnector connector;
+  private int port;
 
-  public HttpServer(HttpResponder responder) {
+  public HttpServer(int port, HttpResponder responder) {
+    this.port = port;
     this.connector = new HttpServerConnector(responder);
   }
 
@@ -36,7 +38,7 @@ public class HttpServer extends AbstractService {
         .childOption(ChannelOption.SO_KEEPALIVE, true);
 
     try {
-      channels.add(bootstrap.bind(8888).sync());
+      channels.add(bootstrap.bind(this.port).sync());
       super.notifyStarted();
     }
     catch (final InterruptedException e) {

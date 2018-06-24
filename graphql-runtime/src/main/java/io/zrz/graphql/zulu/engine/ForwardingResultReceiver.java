@@ -67,4 +67,24 @@ public class ForwardingResultReceiver extends AbstractZuluResultReceiver impleme
     target.write(field, value);
   }
 
+  @Override
+  public void startList(ZuluSelection container, Object context) {
+    target.startList(container, context);
+  }
+
+  @Override
+  public void endList(ZuluSelection container, Object context) {
+    target.endList(container, context);
+  }
+
+  @Override
+  public void startStruct(ZuluSelectionContainer container, Object context) {
+    target.startStruct(container, context);
+  }
+
+  @Override
+  public void endStruct(ZuluSelectionContainer container, Object context) {
+    target.endStruct(container, context);
+  }
+
 }

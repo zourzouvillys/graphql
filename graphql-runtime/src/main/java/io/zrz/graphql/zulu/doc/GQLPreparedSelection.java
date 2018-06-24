@@ -51,6 +51,7 @@ public interface GQLPreparedSelection {
 
   List<? extends GQLPreparedSelection> subselections();
 
+  
   /**
    * resolves the provided arguments for this prepared selection, returning the {@link ZStructValue} representing it.
    * 

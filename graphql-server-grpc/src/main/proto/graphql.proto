@@ -1,0 +1,161 @@
+syntax = "proto3";
+
+option java_multiple_files = false;
+option java_package = "io.zrz.zulu.graphql";
+option java_outer_classname = "GraphQLProtos";
+
+package zulu.graphql.v1;
+
+import "google/protobuf/struct.proto";
+
+/**
+ * generic interface for querying graphql
+ */
+
+service GraphQL {
+
+  /**
+   * binds a query for the client.
+   */
+
+  rpc Prepare (PrepareRequest) returns (stream PrepareReply) {
+    option idempotency_level = IDEMPOTENT;  
+  }
+
+  /**
+   * executes a query.
+   */
+
+  rpc Query (QueryRequest) returns (stream QueryReply) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  rpc Execute (ExecuteRequest) returns (stream QueryReply);
+
+}
+
+message Note {
+  string message = 1;
+}
+
+/**
+ * 
+ */
+
+message PrepareRequest {
+  string document = 1;
+}
+
+enum OperationType {
+  UNDEFINED = 0;
+  QUERY = 1;  
+  MUTATION = 2;
+  SUBSCRIPTION = 3;
+}
+
+message PrepareReply {
+  message PreparedOperation {
+    string operationId = 1;
+    string operationName = 2;
+    OperationType operationType = 3;
+    InputType inputType = 4;
+    StructType outputType = 5;
+    repeated Note errors = 6;
+    repeated Note warnings = 7;
+  }
+  repeated PreparedOperation operations = 1;
+}
+
+message InputType {
+
+  repeated InputParameter parameters = 1;
+
+}
+
+message InputParameter {
+
+  // the name of this parameter.
+  string parameterName = 1;
+  
+  // if it is optional or not.
+  bool nullable = 2;
+  
+  // the type name
+  string typeName = 3;
+
+}
+
+message QueryRequest {
+  string query = 1;
+  string operationName = 2;
+  google.protobuf.Struct variables = 3;
+}
+
+message QueryReply {
+  string path = 1;
+  google.protobuf.Value data = 2;  
+  repeated Note warnings = 3;
+  repeated Note errors = 4;
+}
+
+message ExecuteRequest {
+  string operationId = 1;
+  google.protobuf.Struct variables = 2;
+}
+
+//----
+
+message FieldValueType {
+
+  // unique within a single struct
+  uint32 fieldId = 1;
+    
+  // unique across the result set
+  uint32 pathId = 2;
+  
+  uint32 dimensions = 3;
+  
+  bool nullable = 5;
+
+  oneof kind {
+    StructType structType = 10;
+    ScalarType scalarType = 11;
+    FieldValueType outputType = 12;
+  }
+  
+}
+
+message Field {
+  string outputName = 1;
+  string fieldName = 2;
+  FieldValueType fieldType = 3;
+}
+
+message StructType {
+
+  string typeName = 1;
+  uint32 typeId = 2;
+  
+  repeated Field fields = 3;
+
+}
+
+
+message ScalarType {
+
+  string typeName = 1;
+  ScalarTypeKind typeKind = 2;
+  
+}
+
+
+enum ScalarTypeKind {
+
+  TYPE_ANY = 0;
+  TYPE_STRING = 1;
+  TYPE_INT = 2;
+  TYPE_DOUBLE = 3;
+  TYPE_BOOLEAN = 4;
+  TYPE_ENUM = 5;
+
+}

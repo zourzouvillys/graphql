@@ -10,6 +10,7 @@ import io.zrz.graphql.core.doc.GQLFragmentDefinition;
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.doc.GQLOperationDefinition;
 import io.zrz.graphql.core.doc.GQLSelectedOperation;
+import io.zrz.graphql.core.doc.GQLVariableDefinition;
 import io.zrz.graphql.core.value.GQLValue;
 import io.zrz.zulu.types.ZAnnotation;
 import io.zrz.zulu.types.ZField;
@@ -23,16 +24,18 @@ import io.zrz.zulu.values.ZValue;
  * a prepared GQL operation, which has performed rudimentary variable resolution and binding.
  */
 
-class DefaultGQLPreparedOperation implements GQLPreparedOperation {
+public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
 
   private GQLSelectedOperation op;
   private GQLTypeResolver resolver;
   private DefaultGQLPreparedDocument doc;
+  private OpInputType inputType;
 
   public DefaultGQLPreparedOperation(final DefaultGQLPreparedDocument doc, final GQLTypeResolver resolver, final GQLSelectedOperation op) {
     this.doc = doc;
     this.resolver = resolver;
     this.op = op;
+    this.inputType = new OpInputType();
   }
 
   /**
@@ -79,46 +82,63 @@ class DefaultGQLPreparedOperation implements GQLPreparedOperation {
         .collect(Collectors.toList());
   }
 
+  public class OpInputField implements ZField {
+
+    private GQLVariableDefinition var;
+    private final Optional<ZValue> defaultValue;
+
+    public OpInputField(GQLVariableDefinition var) {
+      this.var = var;
+      final GQLValue defaultValue = var.defaultValue();
+      if (defaultValue == null)
+        this.defaultValue = Optional.empty();
+      else
+        this.defaultValue = defaultValue
+            .apply(new ConstantZValueValueExtractor(DefaultGQLPreparedOperation.this, null, null));
+    }
+
+    @Override
+    public ZTypeUse fieldType() {
+      return ZTypeUse.of(ZPrimitiveScalarType.STRING);
+    }
+
+    @Override
+    public Optional<ZValue> defaultValue() {
+      return this.defaultValue;
+    }
+
+    @Override
+    public List<ZAnnotation> annotations() {
+      // TODO Auto-generated method stub
+      return Collections.emptyList();
+    }
+
+  }
+
+  public class OpInputType implements ZStructType {
+
+    private Map<String, OpInputField> fields;
+
+    public OpInputType() {
+      this.fields = op.operation().vars()
+          .stream()
+          .collect(Collectors.toMap(x -> x.name(), x -> new OpInputField(x)));
+    }
+
+    @Override
+    public Map<String, OpInputField> fields() {
+      return this.fields;
+    }
+
+  }
+
   /**
    * the expected input variables, as an anonymous {@link ZStructType} instance.
    */
 
   @Override
-  public ZStructType inputType() {
-
-    return new ZStructType() {
-
-      @Override
-      public Map<String, ZField> fields() {
-        return op.operation().vars()
-            .stream()
-            .collect(Collectors.toMap(x -> x.name(), x -> new ZField() {
-
-              @Override
-              public ZTypeUse fieldType() {
-                return ZTypeUse.of(ZPrimitiveScalarType.STRING);
-              }
-
-              @Override
-              public Optional<ZValue> defaultValue() {
-                final GQLValue defaultValue = x.defaultValue();
-                if (defaultValue == null)
-                  return Optional.empty();
-                return defaultValue
-                    .apply(new ConstantZValueValueExtractor(DefaultGQLPreparedOperation.this, null, null));
-              }
-
-              @Override
-              public List<ZAnnotation> annotations() {
-                // TODO Auto-generated method stub
-                return Collections.emptyList();
-              }
-
-            }));
-      }
-
-    };
-
+  public OpInputType inputType() {
+    return this.inputType;
   }
 
   /**

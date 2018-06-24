@@ -2,6 +2,8 @@ package io.zrz.graphql.zulu.engine;
 
 import java.lang.invoke.MethodHandle;
 
+import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
+
 /**
  * inputs are in JSON by default, but other formats are supported - e.g, BSON.
  * 
@@ -16,5 +18,7 @@ import java.lang.invoke.MethodHandle;
  */
 
 public interface ZuluParameterReader {
+
+  Object get(String parameterName, ExecutableTypeUse targetType);
 
 }

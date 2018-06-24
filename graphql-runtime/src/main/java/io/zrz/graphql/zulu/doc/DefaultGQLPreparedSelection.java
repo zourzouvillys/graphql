@@ -117,7 +117,7 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
    *
    */
 
-  private final static class ParamField implements ZField {
+  private final static class ParamField implements ZField, RuntimeParameterHolder {
 
     private DefaultGQLPreparedOperation req;
     private GQLArgument arg;
@@ -149,6 +149,11 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
     public Optional<ZValue> resolve(final GQLVariableProvider provider) {
       return arg.value().apply(new ConstantZValueValueExtractor(req, arg, provider));
+    }
+
+    @Override
+    public String parameterName() {
+      return arg.value().apply(new VariableNameExtractor(req, arg));
     }
 
   }

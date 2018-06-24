@@ -20,13 +20,13 @@ public class ZuluContainerSelection extends AbstractZuluSelection implements Zul
   private ZuluExecutable executable;
   private ImmutableList<ZuluSelection> selections;
   private ExecutableOutputType returnType;
-  private MethodHandle handle;
+  private TypeTokenMethodHandle handle;
 
   public ZuluContainerSelection(
       ZuluSelectionContainer parent,
       ExecutableOutputField field,
       GQLPreparedSelection sel,
-      MethodHandle handle,
+      TypeTokenMethodHandle handle,
       ExecutableBuilder b) {
 
     super(field, sel, parent.outputType());
@@ -67,7 +67,7 @@ public class ZuluContainerSelection extends AbstractZuluSelection implements Zul
 
   @Override
   public MethodHandle invoker() {
-    return handle;
+    return handle.handle();
   }
 
   @Override

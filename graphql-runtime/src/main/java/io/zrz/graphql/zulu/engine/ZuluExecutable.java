@@ -2,13 +2,17 @@ package io.zrz.graphql.zulu.engine;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 
+import io.zrz.graphql.core.runtime.GQLOperationType;
+import io.zrz.graphql.zulu.doc.DefaultGQLPreparedOperation.OpInputType;
 import io.zrz.graphql.zulu.executable.ExecutableOutputType;
+import io.zrz.zulu.types.ZStructType;
 
 public class ZuluExecutable implements ZuluSelectionContainer {
 
@@ -16,6 +20,9 @@ public class ZuluExecutable implements ZuluSelectionContainer {
   private ExecutableOutputType outputType;
   private ImmutableMap<String, ZuluSelection> fields;
   private ImmutableList<String> outputNames;
+  private Optional<String> operationName;
+  private GQLOperationType operationType;
+  private OpInputType inputType;
 
   /**
    * builds an immutable version in a single shot. delegates to the builder.
@@ -26,8 +33,11 @@ public class ZuluExecutable implements ZuluSelectionContainer {
   ZuluExecutable(ExecutableBuilder builder, ExecutableOutputType type) {
     this.outputType = type;
     this.selections = builder.build(this);
+    this.operationName = builder.operationName();
+    this.operationType = builder.operationType();
     this.outputNames = this.selections.stream().sequential().map(s -> s.outputName()).collect(ImmutableList.toImmutableList());
     this.fields = this.selections.stream().sequential().collect(ImmutableBiMap.toImmutableBiMap(s -> s.outputName(), s -> s));
+    this.inputType = builder.inputType();
   }
 
   public ImmutableList<ZuluSelection> selections() {
@@ -79,6 +89,18 @@ public class ZuluExecutable implements ZuluSelectionContainer {
   @Override
   public boolean isList() {
     return false;
+  }
+
+  public Optional<String> operationName() {
+    return this.operationName;
+  }
+
+  public GQLOperationType operationType() {
+    return this.operationType;
+  }
+
+  public OpInputType inputType() {
+    return this.inputType;
   }
 
 }

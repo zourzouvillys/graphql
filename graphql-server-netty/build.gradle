@@ -1,4 +1,4 @@
-eclipse.project.name = 'graphql:netty'
+eclipse.project.name = 'graphql:server-netty'
 
 dependencies {
   
@@ -17,6 +17,11 @@ dependencies {
   api                 project(':graphql-runtime')
   api                 project(':graphql-jackson')
   
+
+  implementation      'com.google.guava:guava:25.1-jre'
+  implementation      'com.github.zourzouvillys:commons:950d929406'
+  implementation      'org.apache.commons:commons-lang3:3.7'
+
 
   // compile time only dependencies
   compileOnly         'com.google.errorprone:error_prone_annotations:2.3.1'

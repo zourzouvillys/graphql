@@ -10,6 +10,7 @@ import io.zrz.graphql.zulu.ZOutputField;
 import io.zrz.graphql.zulu.doc.GQLPreparedSelection;
 import io.zrz.graphql.zulu.executable.ExecutableElement;
 import io.zrz.graphql.zulu.executable.ExecutableType;
+import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
 import io.zrz.zulu.types.ZAnnotation;
 
 /**
@@ -20,6 +21,8 @@ import io.zrz.zulu.types.ZAnnotation;
  */
 
 public interface ZuluSelection extends GQLPreparedSelection, ExecutableType, ZOutputField {
+
+  public ExecutableTypeUse fieldType();
 
   @Override
   default List<ZAnnotation> annotations() {
@@ -51,7 +54,7 @@ public interface ZuluSelection extends GQLPreparedSelection, ExecutableType, ZOu
    * @return
    */
 
-  default Object invoke(ZuluResultReceiver receiver, Object parentContext) {
+  default Object invoke(ZuluRequestContext receiver, Object parentContext) {
     try {
       return this.invoker().invoke(Objects.requireNonNull(receiver), Objects.requireNonNull(parentContext));
     }

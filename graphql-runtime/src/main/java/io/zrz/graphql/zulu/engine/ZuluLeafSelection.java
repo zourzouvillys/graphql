@@ -12,10 +12,10 @@ import io.zrz.graphql.zulu.executable.ExecutableOutputField;
 
 public class ZuluLeafSelection extends AbstractZuluSelection implements ZuluSelection {
 
-  private MethodHandle handle;
+  private TypeTokenMethodHandle handle;
   private Optional<? extends AnnotatedElement> origin;
 
-  public ZuluLeafSelection(ZuluSelectionContainer parent, ExecutableOutputField field, GQLPreparedSelection sel, MethodHandle handle) {
+  public ZuluLeafSelection(ZuluSelectionContainer parent, ExecutableOutputField field, GQLPreparedSelection sel, TypeTokenMethodHandle handle) {
     super(field, sel, parent.outputType());
     this.handle = Objects.requireNonNull(handle);
     Preconditions.checkState(sel.isLeaf());
@@ -24,7 +24,7 @@ public class ZuluLeafSelection extends AbstractZuluSelection implements ZuluSele
 
   @Override
   public MethodHandle invoker() {
-    return this.handle;
+    return this.handle.handle();
   }
 
   @Override

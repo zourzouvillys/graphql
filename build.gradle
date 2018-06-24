@@ -110,6 +110,10 @@ eclipse {
     from javadoc.destinationDir
   }
 
+  javadoc {
+    options.addBooleanOption('html5', true)
+  }  
+
   artifacts {
     archives sourcesJar
     archives javadocJar

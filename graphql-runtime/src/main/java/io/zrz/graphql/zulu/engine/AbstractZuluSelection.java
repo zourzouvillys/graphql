@@ -11,6 +11,7 @@ import io.zrz.graphql.zulu.doc.GQLVariableProvider;
 import io.zrz.graphql.zulu.executable.ExecutableElement;
 import io.zrz.graphql.zulu.executable.ExecutableOutputField;
 import io.zrz.graphql.zulu.executable.ExecutableOutputType;
+import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
 import io.zrz.zulu.types.ZAnnotation;
 import io.zrz.zulu.types.ZField;
 import io.zrz.zulu.types.ZStructType;
@@ -34,16 +35,16 @@ public abstract class AbstractZuluSelection implements ZuluSelection {
   /**
    * 
    * @param exec
-   *          The executable builder creating this selection.
+   *                The executable builder creating this selection.
    * 
    * @param field
-   *          The field represented by this selection.
+   *                The field represented by this selection.
    * 
    * @param sel
-   *          The raw underlying selection field.
+   *                The raw underlying selection field.
    * 
    * @param type
-   *          the type that this selection is being made on.
+   *                the type that this selection is being made on.
    */
 
   protected AbstractZuluSelection(ExecutableOutputField field, GQLPreparedSelection sel, ExecutableOutputType type) {
@@ -123,7 +124,7 @@ public abstract class AbstractZuluSelection implements ZuluSelection {
   }
 
   @Override
-  public ZTypeUse fieldType() {
+  public ExecutableTypeUse fieldType() {
     return this.field.fieldType();
   }
 

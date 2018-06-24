@@ -31,7 +31,21 @@ public abstract class DefaultZuluResultReceiver extends AbstractZuluResultReceiv
   public void next(Object instance) {
   }
 
-  //
+  @Override
+  public void startStruct(ZuluSelectionContainer container, Object context) {
+  }
+
+  @Override
+  public void endStruct(ZuluSelectionContainer container, Object context) {
+  }
+
+  @Override
+  public void startList(ZuluSelection container, Object context) {
+  }
+
+  @Override
+  public void endList(ZuluSelection container, Object context) {
+  }
 
   @Override
   public void write(ZuluSelection field) {

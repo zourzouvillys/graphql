@@ -91,7 +91,7 @@ public class ZuluNettyServerTest {
         .build();
 
     // start up.
-    ZuluNettyServer.create(engine)
+    ZuluNettyServer.create(9999, engine)
         .startAsync()
         .awaitTerminated(15, TimeUnit.SECONDS);
 

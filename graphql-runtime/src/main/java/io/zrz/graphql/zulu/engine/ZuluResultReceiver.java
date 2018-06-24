@@ -12,7 +12,7 @@ public interface ZuluResultReceiver {
    * called every time a node in the selection set is entered, before invocation of it.
    * 
    * @param ctx
-   *          The context that has been entered.
+   *              The context that has been entered.
    */
 
   void push(ZuluSelectionContainer container, Object instance);
@@ -23,6 +23,12 @@ public interface ZuluResultReceiver {
 
   void pop(ZuluSelectionContainer container, Object instance);
 
+  void startStruct(ZuluSelectionContainer container, Object instance);
+
+  void endStruct(ZuluSelectionContainer container, Object instance);
+
+  void startList(ZuluSelection container, Object instance);
+
   /**
    * called each time an instance context has been entered.
    * 
@@ -32,10 +38,12 @@ public interface ZuluResultReceiver {
    * note that further pushes may occur if the selection has sub selections.
    * 
    * @param instance
-   *          the underlying java instance (or instance token).
+   *                   the underlying java instance (or instance token).
    */
 
   void next(Object instance);
+
+  void endList(ZuluSelection container, Object instance);
 
   ///
   /// --- [ fields ] ---
