@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -269,9 +270,65 @@ class ExecutableBuilder {
     }
 
     if (params == null) {
+
       // no parameters, so just return the method handle directly.
+
+      if (sel.parameters().isPresent()) {
+
+        // providing parameters when we don't need any?
+
+        final List<String> extras = sel.parameters().get()
+            .fieldNames()
+            .collect(Collectors.toList());
+
+        if (!extras.isEmpty()) {
+
+          this.addWarning(new ZuluWarning.OutputFieldWarning(ZuluWarningKind.UNKNOWN_PARAMETER, field, sel,
+              "unknown parameter"
+                  + (extras.size() == 1 ? "" : "s")
+                  + " "
+                  + (extras.size() == 1 ? "'" + extras.get(0) + "'" : extras.toString())
+                  + " for selection on field '"
+                  + sel.fieldName() + "' in type '"
+                  + receiverType.typeName()
+                  + "'"));
+
+          return null;
+
+        }
+
+      }
+
       return this.checkHandlerSignature(field, handle);
     }
+
+    //
+    if (sel.parameters().isPresent()) {
+
+      final List<String> extras = sel.parameters()
+          .get()
+          .fieldNames()
+          .filter(a -> !params.contains(a))
+          .collect(Collectors.toList());
+
+      if (!extras.isEmpty()) {
+
+        this.addWarning(new ZuluWarning.OutputFieldWarning(ZuluWarningKind.UNKNOWN_PARAMETER, field, sel,
+            "unknown parameter"
+                + (extras.size() == 1 ? "" : "s")
+                + " "
+                + (extras.size() == 1 ? "'" + extras.get(0) + "'" : extras.toString())
+                + " for selection on field '"
+                + sel.fieldName() + "' in type '"
+                + receiverType.typeName()
+                + "'"));
+
+        return null;
+
+      }
+
+    }
+    //
 
     int offset = field.contextParameters().size() - CONTEXT_ARGS;
 
@@ -370,11 +427,23 @@ class ExecutableBuilder {
       throw new IllegalArgumentException("target");
     }
 
-    final ZField provided = sel.parameters()
+    final ZField provided = sel
+        .parameters()
         .flatMap(selparams -> selparams.field(param.fieldName()))
         .orElse(null);
 
     if (provided == null) {
+
+      if (param.isNullable()) {
+
+        // hack for Optional
+        if (param.javaType().getRawType().equals(Optional.class)) {
+          return target.insertArguments(param.index() - offset, new Object[] { Optional.empty() });
+        }
+
+        return target.insertArguments(param.index() - offset, new Object[] { null });
+      }
+
       this.addWarning(new ZuluWarning.MissingRequiredParameter(param, sel));
       return null;
     }
@@ -394,13 +463,13 @@ class ExecutableBuilder {
     // however we do know the type, so let's check to make sure it's valid.
 
     final ExecutableTypeUse targetType = param.fieldType();
+
+    // the actual type we need to provide, before logical unwrapping (e.g, Optional, List, etc).
+    final TypeToken<?> javaType = param.javaType();
+
     final ZTypeUse providedType = provided.fieldType();
 
     final RuntimeParameterHolder holder = (RuntimeParameterHolder) provided;
-
-    // if (false) {
-    // return target.insertArgument(param.index() - offset, holder.parameterName(), targetType);
-    // }
 
     MethodHandle mh;
     try {
@@ -410,11 +479,11 @@ class ExecutableBuilder {
           .findStatic(
               ExecutableBuilder.class,
               "resolveParameter",
-              MethodType.methodType(Object.class, ZuluRequestContext.class, ExecutableTypeUse.class, String.class));
+              MethodType.methodType(Object.class, ZuluRequestContext.class, ExecutableInputField.class, String.class));
 
-      mh = MethodHandles.insertArguments(mh, 1, targetType, holder.parameterName());
+      mh = MethodHandles.insertArguments(mh, 1, param, holder.parameterName());
 
-      mh = mh.asType(mh.type().changeReturnType(targetType.javaType().getRawType()));
+      mh = mh.asType(mh.type().changeReturnType(javaType.getRawType()));
 
     }
     catch (NoSuchMethodException | IllegalAccessException e) {
@@ -443,7 +512,7 @@ class ExecutableBuilder {
 
   }
 
-  public static Object resolveParameter(final ZuluRequestContext ctx, final ExecutableTypeUse targetType, final String name) {
+  public static Object resolveParameter(final ZuluRequestContext ctx, final ExecutableInputField targetType, final String name) {
     return ctx.parameter(name, targetType);
   }
 

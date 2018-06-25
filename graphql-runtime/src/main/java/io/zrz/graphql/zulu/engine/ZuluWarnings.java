@@ -6,12 +6,13 @@ import io.zrz.graphql.zulu.doc.GQLPreparedSelection;
 import io.zrz.graphql.zulu.engine.ZuluWarning.DocumentWarning;
 import io.zrz.graphql.zulu.engine.ZuluWarning.ExecutionError;
 import io.zrz.graphql.zulu.engine.ZuluWarning.OutputFieldWarning;
+import io.zrz.graphql.zulu.executable.ExecutableElement;
 import io.zrz.graphql.zulu.executable.ExecutableOutputField;
 import io.zrz.graphql.zulu.executable.ExecutableType;
 
 public class ZuluWarnings {
 
-  public static String format(ZuluWarning warning, String template) {
+  public static String format(final ZuluWarning warning, final String template) {
 
     ExecutableOutputField efield = null;
 
@@ -31,8 +32,14 @@ public class ZuluWarnings {
       selection = ((ExecutionError) warning).selection();
     }
 
-    ExecutableType type = warning.context();
-    GQLPreparedSelection field = warning.selection();
+    final ExecutableElement element = warning.context();
+
+    ExecutableType type = null;
+    if (element instanceof ExecutableType) {
+      type = (ExecutableType) element;
+    }
+
+    final GQLPreparedSelection field = warning.selection();
 
     return StringUtils.replaceEach(
         template,
@@ -45,7 +52,7 @@ public class ZuluWarnings {
         new String[] {
             field == null ? "" : field.fieldName(),
             type == null ? "" : type.typeName(),
-            (efield == null ? "<unknown>" : efield.fieldType().logicalType()),
+            efield == null ? "<unknown>" : efield.fieldType().logicalType(),
             operationName == null ? "<default>" : operationName
         });
 

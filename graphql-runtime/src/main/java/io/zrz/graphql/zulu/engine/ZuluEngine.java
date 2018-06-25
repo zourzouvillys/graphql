@@ -38,7 +38,7 @@ public class ZuluEngine {
   private static Logger log = LoggerFactory.getLogger(ZuluEngine.class);
 
   private final Cache<String, ZuluCompileResult> cache = CacheBuilder.newBuilder()
-      .maximumSize(10000)
+      .maximumSize(1_000)
       .build();
 
   // private final Map<String, ZuluCompileResult> cache = new HashMap<>();
@@ -116,7 +116,7 @@ public class ZuluEngine {
       }
 
       if (queryString == null) {
-        System.err.println("Missing persisted query " + persistedQuery);
+        // add warn?
         return ZuluCompileResult.withErrors(
             new ZuluWarning.ParseWarning(ZuluWarningKind.PERSISTED_QUERY_NOT_FOUND, queryString, null));
       }
@@ -237,8 +237,6 @@ public class ZuluEngine {
 
   private ZuluExecutionResult processRequest(final ImmutableZuluServerRequest req, final ImmutableQuery q) {
 
-    final Stopwatch timer = Stopwatch.createStarted();
-
     final ExecutionResult.Builder res = ExecutionResult.builder();
 
     final ZuluResultReceiver receiver = q.resultReceiver();
@@ -258,8 +256,7 @@ public class ZuluEngine {
       return res.build();
     }
 
-    System.err.println("compiled in " + timer);
-    timer.reset().start();
+    final Stopwatch timer = Stopwatch.createStarted();
 
     Object instance;
     try {
@@ -287,9 +284,13 @@ public class ZuluEngine {
     }
     finally {
       timer.stop();
-      System.err.println("executed in " + timer);
+      this.addTiming(timer);
     }
 
+  }
+
+  private void addTiming(final Stopwatch timer) {
+    // todo
   }
 
   public static ZuluEngineBuilder builder() {

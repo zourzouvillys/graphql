@@ -26,10 +26,10 @@ import io.zrz.zulu.values.ZValue;
 
 public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
 
-  private GQLSelectedOperation op;
-  private GQLTypeResolver resolver;
-  private DefaultGQLPreparedDocument doc;
-  private OpInputType inputType;
+  private final GQLSelectedOperation op;
+  private final GQLTypeResolver resolver;
+  private final DefaultGQLPreparedDocument doc;
+  private final OpInputType inputType;
 
   public DefaultGQLPreparedOperation(final DefaultGQLPreparedDocument doc, final GQLTypeResolver resolver, final GQLSelectedOperation op) {
     this.doc = doc;
@@ -44,7 +44,7 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
 
   @Override
   public Optional<String> operationName() {
-    return Optional.ofNullable(op.operationName());
+    return Optional.ofNullable(this.op.operationName());
   }
 
   GQLOperationDefinition operation() {
@@ -57,7 +57,7 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
 
   @Override
   public GQLOpType type() {
-    return op.operation().type();
+    return this.op.operation().type();
   }
 
   /**
@@ -66,7 +66,7 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
 
   @Override
   public List<ZAnnotation> annotations() {
-    return op.operation().directives().stream().map(x -> new ZAnnotation() {
+    return this.op.operation().directives().stream().map(x -> new ZAnnotation() {
 
       @Override
       public Optional<ZStructValue> value() {
@@ -84,10 +84,10 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
 
   public class OpInputField implements ZField {
 
-    private GQLVariableDefinition var;
+    private final GQLVariableDefinition var;
     private final Optional<ZValue> defaultValue;
 
-    public OpInputField(GQLVariableDefinition var) {
+    public OpInputField(final GQLVariableDefinition var) {
       this.var = var;
       final GQLValue defaultValue = var.defaultValue();
       if (defaultValue == null)
@@ -113,14 +113,18 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
       return Collections.emptyList();
     }
 
+    public String fieldName() {
+      return this.var.name();
+    }
+
   }
 
   public class OpInputType implements ZStructType {
 
-    private Map<String, OpInputField> fields;
+    private final Map<String, OpInputField> fields;
 
     public OpInputType() {
-      this.fields = op.operation().vars()
+      this.fields = DefaultGQLPreparedOperation.this.op.operation().vars()
           .stream()
           .collect(Collectors.toMap(x -> x.name(), x -> new OpInputField(x)));
     }
@@ -147,7 +151,7 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
 
   @Override
   public List<DefaultGQLPreparedSelection> selection() {
-    return op
+    return this.op
         .operation()
         .selections()
         .stream()

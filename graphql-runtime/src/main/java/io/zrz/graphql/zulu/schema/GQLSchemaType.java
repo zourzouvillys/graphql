@@ -19,18 +19,24 @@ public class GQLSchemaType {
 
   private final ExecutableType type;
   private final int arity;
+  private final boolean nullable;
 
   public GQLSchemaType(final ExecutableType type) {
-    this(type, 0);
+    this(type, 0, true);
   }
 
-  public GQLSchemaType(final ExecutableType type, final int arity) {
+  public GQLSchemaType(final ExecutableType type, final int arity, final boolean nullable) {
     this.type = Objects.requireNonNull(type);
     this.arity = arity;
+    this.nullable = nullable;
   }
 
   // kind: __TypeKind!
   public @NonNull GQLTypeKind kind() {
+
+    if (!this.nullable) {
+      return GQLTypeKind.NON_NULL;
+    }
 
     if (this.arity > 0) {
       return GQLTypeKind.LIST;
@@ -149,8 +155,12 @@ public class GQLSchemaType {
   // ofType: __Type
   public GQLSchemaType ofType() {
 
+    if (!this.nullable) {
+      return new GQLSchemaType(this.type, this.arity, true);
+    }
+
     if (this.arity > 0) {
-      return new GQLSchemaType(this.type, this.arity - 1);
+      return new GQLSchemaType(this.type, this.arity - 1, true);
     }
 
     return null;

@@ -59,10 +59,22 @@ public enum ZuluWarningKind {
       "type '${symbol}' does not exist"),
 
   /**
+   * an unknown parameter was provided
+   */
+
+  UNKNOWN_PARAMETER(SELECTION),
+
+  /**
    * a required parameter was missing in the query.
    */
 
   MISSING_PARAMETER(SELECTION),
+
+  /**
+   * a required variable was missing in the query.
+   */
+
+  MISSING_VARIABLE(INPUT),
 
   /**
    * the input type provided did not match the type expected, and it is not possible to perform a conversion.

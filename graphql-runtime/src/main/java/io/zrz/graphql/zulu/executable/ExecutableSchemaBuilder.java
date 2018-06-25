@@ -187,7 +187,6 @@ public final class ExecutableSchemaBuilder {
     symbol.exported = true;
 
     if (handle == null) {
-      System.err.println(typeToken);
       symbol.handle = this.binder.include(typeToken);
     }
 
@@ -676,7 +675,7 @@ public final class ExecutableSchemaBuilder {
 
     final JavaBindingType handle = this.binder.registerType(javaType);
     final String typeName = this.generateName(javaType, handle);
-    log.info("autoloading " + kind.get() + " type {} = {} (used by {})", typeName, javaType, user);
+    log.debug("autoloading {} type {} = {} (used by {})", kind.get(), typeName, javaType, user);
     return this.addSymbol(
         javaType,
         typeName,

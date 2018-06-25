@@ -10,14 +10,14 @@ public class GQLSchemaInputValue {
 
   private final ExecutableInputField field;
 
-  public GQLSchemaInputValue(ExecutableInputField field) {
+  public GQLSchemaInputValue(final ExecutableInputField field) {
     this.field = field;
   }
 
   // name: String!
 
   public @NonNull String name() {
-    return field.fieldName();
+    return this.field.fieldName();
   }
 
   // description: String
@@ -28,16 +28,16 @@ public class GQLSchemaInputValue {
   // type: __Type!
 
   public GQLSchemaType type() {
-    if (field.fieldType().type() == null) {
+    if (this.field.fieldType().type() == null) {
       throw new IllegalStateException();
     }
-    return new GQLSchemaType(field.fieldType().type());
+    return new GQLSchemaType(this.field.fieldType().type(), this.field.fieldType().arity(), this.field.isNullable());
   }
 
   // defaultValue: String
   public String defaultValue() {
     // TODO: output correctly.
-    return field.defaultValue().map(val -> val.toString()).orElse(null);
+    return this.field.defaultValue().map(val -> val.toString()).orElse(null);
   }
 
 }

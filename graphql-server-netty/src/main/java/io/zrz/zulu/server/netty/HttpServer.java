@@ -17,12 +17,12 @@ public class HttpServer extends AbstractService {
   private final EventLoopGroup masterGroup = new NioEventLoopGroup();
   private final EventLoopGroup slaveGroup = new NioEventLoopGroup();
 
-  private List<ChannelFuture> channels = Lists.newArrayList();
+  private final List<ChannelFuture> channels = Lists.newArrayList();
 
-  private NettyServerConnector connector;
-  private int port;
+  private final NettyServerConnector connector;
+  private final int port;
 
-  public HttpServer(int port, HttpResponder responder) {
+  public HttpServer(final int port, final HttpResponder responder) {
     this.port = port;
     this.connector = new HttpServerConnector(responder);
   }
@@ -31,14 +31,15 @@ public class HttpServer extends AbstractService {
   protected void doStart() {
 
     final ServerBootstrap bootstrap = new ServerBootstrap()
-        .group(masterGroup, slaveGroup)
+        .group(this.masterGroup, this.slaveGroup)
         .channel(NioServerSocketChannel.class)
-        .childHandler(connector.channelInitializer())
+        .childHandler(this.connector.channelInitializer())
         .option(ChannelOption.SO_BACKLOG, 128)
+        .childOption(ChannelOption.TCP_NODELAY, true)
         .childOption(ChannelOption.SO_KEEPALIVE, true);
 
     try {
-      channels.add(bootstrap.bind(this.port).sync());
+      this.channels.add(bootstrap.bind(this.port).sync());
       super.notifyStarted();
     }
     catch (final InterruptedException e) {
@@ -50,10 +51,10 @@ public class HttpServer extends AbstractService {
   @Override
   protected void doStop() {
 
-    slaveGroup.shutdownGracefully();
-    masterGroup.shutdownGracefully();
+    this.slaveGroup.shutdownGracefully();
+    this.masterGroup.shutdownGracefully();
 
-    for (final ChannelFuture channel : channels) {
+    for (final ChannelFuture channel : this.channels) {
       try {
         channel.channel().closeFuture().sync();
       }
@@ -61,7 +62,7 @@ public class HttpServer extends AbstractService {
       }
     }
 
-    notifyStopped();
+    this.notifyStopped();
 
   }
 

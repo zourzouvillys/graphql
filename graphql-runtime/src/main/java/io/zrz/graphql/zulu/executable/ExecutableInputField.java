@@ -84,4 +84,8 @@ public final class ExecutableInputField implements ZField, ExecutableElement {
     return this.param.annotation(klass);
   }
 
+  public boolean isNullable() {
+    return this.fieldTypeUse.isNullable();
+  }
+
 }

@@ -12,12 +12,6 @@ public interface ExecutableReceiverType extends ExecutableType, ExecutableElemen
 
   Map<String, ExecutableOutputField> fields();
 
-  @Override
-  default String documentation() {
-    // TODO Auto-generated method stub
-    return ExecutableElement.super.documentation();
-  }
-
   Optional<ExecutableOutputField> field(String fieldName);
 
   TypeToken<?> javaType();

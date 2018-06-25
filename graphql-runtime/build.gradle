@@ -15,10 +15,12 @@ dependencies {
   
   api      project(':graphql-annotations')
   api      project(':graphql-core')
+
+  // also used at runtime ...
+  compile         'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.100'
   
   // compile time only dependencies
   compileOnly         'com.google.errorprone:error_prone_annotations:2.3.1'
-  compileOnly         'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.100'
   compileOnly         'org.glassfish:javax.annotation:10.0-b28'
 
   compileOnly         'org.immutables:builder:2.6.1'

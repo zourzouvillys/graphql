@@ -2,12 +2,16 @@ package io.zrz.graphql.zulu.engine;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
-import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
+import io.zrz.graphql.zulu.doc.DefaultGQLPreparedOperation.OpInputField;
+import io.zrz.graphql.zulu.executable.ExecutableInputField;
 
 class DefaultExecutionContext<RootT> implements ZuluContext {
 
@@ -32,6 +36,28 @@ class DefaultExecutionContext<RootT> implements ZuluContext {
   public ZuluExecutionResult execute(final ZuluRequest req, final ZuluResultReceiver receiver) {
 
     final DefaultExecutionContext<RootT>.ExecutionState state = new ExecutionState(req, receiver);
+
+    if (this.exec.inputType() != null) {
+
+      Set<String> missing = null;
+
+      for (final Entry<String, OpInputField> field : this.exec.inputType().fields().entrySet()) {
+
+        if (!req.hasVariable(field.getKey())) {
+          if (missing == null) {
+            missing = new HashSet<>();
+          }
+          missing.add(field.getKey());
+          state.note(new ZuluWarning.MissingRequiredVariable(field.getValue(), this.exec), null);
+        }
+
+      }
+
+      if (missing != null) {
+        return state;
+      }
+
+    }
 
     receiver.push(this.exec, this.root);
 
@@ -185,7 +211,7 @@ class DefaultExecutionContext<RootT> implements ZuluContext {
     }
 
     @Override
-    public Object parameter(final String parameterName, final ExecutableTypeUse targetType) {
+    public Object parameter(final String parameterName, final ExecutableInputField targetType) {
       return this.req.parameter(parameterName, targetType);
     }
 

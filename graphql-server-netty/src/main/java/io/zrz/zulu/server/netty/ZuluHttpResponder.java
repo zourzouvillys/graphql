@@ -22,6 +22,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
+import com.google.common.net.MediaType;
 import com.google.common.reflect.TypeToken;
 
 import io.netty.buffer.ByteBuf;
@@ -34,6 +37,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.zrz.graphql.plugins.jackson.JacksonResultReceiver;
@@ -43,6 +47,7 @@ import io.zrz.graphql.zulu.engine.ZuluEngine;
 import io.zrz.graphql.zulu.engine.ZuluExecutionResult;
 import io.zrz.graphql.zulu.engine.ZuluWarning;
 import io.zrz.graphql.zulu.engine.ZuluWarning.ExecutionError;
+import io.zrz.graphql.zulu.executable.ExecutableElement;
 import io.zrz.graphql.zulu.executable.ExecutableType;
 import io.zrz.graphql.zulu.server.ImmutableQuery;
 import io.zrz.graphql.zulu.server.ImmutableZuluServerRequest;
@@ -68,35 +73,48 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
   @Override
   public FullHttpResponse processRequest(final FullHttpRequest request) {
 
-    if (request.method().equals(HttpMethod.OPTIONS)) {
+    try {
 
-      final FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
+      if (request.method().equals(HttpMethod.OPTIONS)) {
 
-      res.headers().set(HttpHeaderNames.CONTENT_LENGTH, 0);
+        final FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
+
+        res.headers().set(HttpHeaderNames.CONTENT_LENGTH, 0);
+
+        if (request.headers().getAsString(HttpHeaderNames.ORIGIN) != null) {
+          res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+          res.headers().add(HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS, "content-type,ETag,Vary,Content-Encoding,Authorization");
+          res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+          res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, "POST,GET,OPTIONS");
+          res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, "content-type,Accept,if-none-match,Authorization");
+          res.headers().add(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, 600);
+        }
+
+        return res;
+
+      }
+
+      final FullHttpResponse res = this.handleRequest(request);
 
       if (request.headers().getAsString(HttpHeaderNames.ORIGIN) != null) {
-        res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, request.headers().getAsString(HttpHeaderNames.ORIGIN));
+        res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+        res.headers().add(HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS, "Content-Type,ETag,Vary,Content-Encoding,Authorization");
         res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
         res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, "POST, GET, OPTIONS");
-        res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, "Content-Type, Accept");
-        res.headers().add(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, 3600);
+        res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, "content-type,Accept,if-none-match,Authorization");
+        res.headers().add(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, 600);
       }
 
       return res;
 
     }
+    finally {
 
-    final FullHttpResponse res = this.handleRequest(request);
+      if (request.refCnt() > 0) {
+        request.release();
+      }
 
-    if (request.headers().getAsString(HttpHeaderNames.ORIGIN) != null) {
-      res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, request.headers().getAsString(HttpHeaderNames.ORIGIN));
-      res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
-      res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, "POST, GET, OPTIONS");
-      res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, "Content-Type, Accept");
-      res.headers().add(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, 3600);
     }
-
-    return res;
 
   }
 
@@ -104,7 +122,7 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
     try {
 
-      log.debug("processing request {}", request.uri());
+      log.trace("processing request {}", request.uri());
 
       final QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
 
@@ -130,7 +148,10 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
               decoder.parameters().get("extensions").get(0),
               mapper.getTypeFactory().constructMapType(Map.class, String.class, JsonNode.class));
 
-        return this.process(path, new RequestParams[] { params }, HttpMethod.GET);
+        // If-None-Match
+        final String ifNoneMatch = request.headers().get(HttpHeaderNames.IF_NONE_MATCH);
+
+        return this.process(path, new RequestParams[] { params }, HttpMethod.GET, ifNoneMatch);
 
       }
       else if (request.method().equals(HttpMethod.POST)) {
@@ -142,7 +163,9 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
         final RequestParams[] params = this.process(path, contentLength, contentType, charset, request.content());
 
-        return this.process(path, params, HttpMethod.POST);
+        final String ifNoneMatch = request.headers().get(HttpHeaderNames.IF_NONE_MATCH);
+
+        return this.process(path, params, HttpMethod.POST, ifNoneMatch);
 
       }
       else {
@@ -177,7 +200,11 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
     public Map<String, JsonNode> variables;
   }
 
-  private RequestParams[] process(final String path, final long contentLength, final CharSequence contentType, final CharSequence charset,
+  private RequestParams[] process(
+      final String path,
+      final long contentLength,
+      final CharSequence contentType,
+      final CharSequence charset,
       final ByteBuf byteBuf) {
 
     try (ByteBufInputStream in = new ByteBufInputStream(byteBuf, true)) {
@@ -207,11 +234,12 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
    *
    * @param path
    * @param params
+   * @param ifNoneMatch
    * @param get
    * @return
    */
 
-  private FullHttpResponse process(final String path, final RequestParams[] params, final HttpMethod method) throws Throwable {
+  private FullHttpResponse process(final String path, final RequestParams[] params, final HttpMethod method, final String ifNoneMatch) throws Throwable {
 
     final ImmutableZuluServerRequest.Builder b = ImmutableZuluServerRequest.builder();
 
@@ -262,6 +290,8 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
     final ByteBuf buffer = Unpooled.buffer();
 
+    String dataHash = null;
+
     try (final ByteBufOutputStream os = new ByteBufOutputStream(buffer)) {
 
       final JsonGenerator gen = mapper.getFactory().createGenerator((OutputStream) os);
@@ -276,7 +306,8 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
         if (buffers[i].isReadable()) {
           gen.writeFieldName("data");
-          gen.writeRawValue(new String(ByteBufUtil.getBytes(buffers[i]), StandardCharsets.UTF_8));
+          final String rawValue = new String(ByteBufUtil.getBytes(buffers[i]), StandardCharsets.UTF_8);
+          gen.writeRawValue(rawValue);
         }
 
         buffers[i].release();
@@ -299,10 +330,46 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
     }
 
+    final Hasher hasher = Hashing.sha256().newHasher();
+
+    buffer.forEachByte(proc -> {
+      hasher.putByte(proc);
+      return true;
+    });
+
+    dataHash = hasher.hash().toString();
+
+    if (dataHash != null && ifNoneMatch != null) {
+
+      if (StringUtils.equals(dataHash, ifNoneMatch)) {
+
+        // no need for it ...
+        buffer.release();
+
+        final FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.NOT_MODIFIED);
+
+        if (dataHash != null) {
+          response.headers().set(HttpHeaderNames.ETAG, dataHash);
+          response.headers().set(HttpHeaderNames.VARY, "Accept-Encoding");
+        }
+
+        return response;
+
+      }
+
+    }
+
     //
     final int contentLength = buffer.readableBytes();
 
     final FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, buffer);
+
+    if (dataHash != null && method == HttpMethod.GET) {
+      response.headers().set(HttpHeaderNames.ETAG, dataHash);
+      response.headers().set(HttpHeaderNames.VARY, "Accept-Encoding,Origin,Authorization");
+    }
+
+    response.headers().set(HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8);
     response.headers().set(HttpHeaderNames.CONTENT_LENGTH, contentLength);
 
     return response;
@@ -327,12 +394,18 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
         gen.writeEndArray();
       }
 
-      final ExecutableType context = warn.context();
+      final ExecutableElement context = warn.context();
 
       if (context != null) {
+
         gen.writeObjectFieldStart("context");
-        gen.writeStringField("typeName", context.typeName());
-        gen.writeStringField("typeKind", context.logicalKind().name());
+
+        if (context instanceof ExecutableType) {
+
+          gen.writeStringField("typeName", ((ExecutableType) context).typeName());
+          gen.writeStringField("typeKind", ((ExecutableType) context).logicalKind().name());
+
+        }
 
         if (warn instanceof ZuluWarning.OutputFieldWarning) {
           gen.writeStringField("fieldName", ((ZuluWarning.OutputFieldWarning) warn).element().fieldName());

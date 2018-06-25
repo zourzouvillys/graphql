@@ -5,6 +5,7 @@ import io.zrz.graphql.core.parser.GQLSourceLocation;
 import io.zrz.graphql.core.parser.ImmutableGQLSourceLocation;
 import io.zrz.graphql.core.parser.ImmutableLineInfo;
 import io.zrz.graphql.core.parser.SyntaxErrorException;
+import io.zrz.graphql.zulu.doc.DefaultGQLPreparedOperation.OpInputField;
 import io.zrz.graphql.zulu.doc.GQLPreparedDocument;
 import io.zrz.graphql.zulu.doc.GQLPreparedSelection;
 import io.zrz.graphql.zulu.executable.ExecutableElement;
@@ -184,7 +185,7 @@ public interface ZuluWarning {
 
   GQLSourceLocation sourceLocation();
 
-  ExecutableType context();
+  ExecutableElement context();
 
   GQLPreparedSelection selection();
 
@@ -216,7 +217,10 @@ public interface ZuluWarning {
 
     @Override
     public GQLSourceLocation sourceLocation() {
-      return sel.sourceLocation();
+      if (sel != null) {
+        return sel.sourceLocation();
+      }
+      return null;
     }
 
     public T element() {
@@ -358,6 +362,27 @@ public interface ZuluWarning {
     @Override
     public ExecutableType context() {
       return this.param.enclosingType();
+    }
+
+  }
+
+  public class MissingRequiredVariable extends AbstractWarning<ZuluExecutable> {
+
+    private final OpInputField param;
+
+    public MissingRequiredVariable(final OpInputField param, final ZuluExecutable executable) {
+      super(ZuluWarningKind.MISSING_VARIABLE, executable);
+      this.param = param;
+    }
+
+    @Override
+    public String detail() {
+      return "missing required input variable '" + param.fieldName() + "'";
+    }
+
+    @Override
+    public ExecutableElement context() {
+      return null;
     }
 
   }

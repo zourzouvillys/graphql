@@ -1,9 +1,9 @@
 package io.zrz.graphql.zulu.engine;
 
-import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
+import io.zrz.graphql.zulu.executable.ExecutableInputField;
 
 public interface ZuluRequestContext {
 
-  Object parameter(String parameterName, ExecutableTypeUse targetType);
+  Object parameter(String parameterName, ExecutableInputField targetType);
 
 }

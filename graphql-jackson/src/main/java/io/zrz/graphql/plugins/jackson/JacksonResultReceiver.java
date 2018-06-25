@@ -76,7 +76,6 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   @Override
   public void write(final ZuluSelection field) {
     try {
-      System.err.println(field);
       this.jg.writeNullField(field.outputName());
     }
     catch (final IOException e) {

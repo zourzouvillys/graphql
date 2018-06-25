@@ -5,26 +5,26 @@ import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
 
 import io.zrz.graphql.zulu.engine.ZuluParameterReader;
-import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
+import io.zrz.graphql.zulu.executable.ExecutableInputField;
 import io.zrz.zulu.graphql.GraphQLProtos.QueryRequest;
 
 public class GrpcParameterProvider implements ZuluParameterReader {
 
   private static final ObjectMapper mapper = new ObjectMapper();
-  private Struct req;
+  private final Struct req;
 
-  public GrpcParameterProvider(QueryRequest req) {
+  public GrpcParameterProvider(final QueryRequest req) {
     this.req = req.getVariables();
   }
 
-  public GrpcParameterProvider(Struct variables) {
+  public GrpcParameterProvider(final Struct variables) {
     this.req = variables;
   }
 
   @Override
-  public Object get(String parameterName, ExecutableTypeUse targetType) {
+  public Object get(final String parameterName, final ExecutableInputField targetType) {
 
-    Value value = req.getFieldsMap().get(parameterName);
+    final Value value = this.req.getFieldsMap().get(parameterName);
 
     switch (value.getKindCase()) {
       case BOOL_VALUE:
@@ -44,6 +44,11 @@ public class GrpcParameterProvider implements ZuluParameterReader {
 
     }
 
+  }
+
+  @Override
+  public boolean has(final String parameterName) {
+    return this.req.getFieldsMap().containsKey(parameterName);
   }
 
 }

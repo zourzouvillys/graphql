@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import com.google.common.reflect.TypeToken;
 
+import io.zrz.graphql.zulu.JavaInputField;
+import io.zrz.graphql.zulu.annotations.GQLNullable;
 import io.zrz.graphql.zulu.annotations.GQLType;
 import io.zrz.graphql.zulu.annotations.GQLType.Kind;
 
@@ -56,6 +58,18 @@ public class JavaExecutableUtils {
   public static ExecutableOutputField merge(final ExecutableReceiverType receiver, final ExecutableOutputField a, final ExecutableOutputField b) {
     // simplest solution for now: return the first.
     return a;
+  }
+
+  public static boolean isNullableInput(final JavaInputField spec) {
+
+    if (spec.annotation(GQLNullable.class).isPresent()) {
+      return true;
+    }
+    else if (spec.inputType().getRawType().equals(Optional.class)) {
+      return true;
+    }
+
+    return false;
   }
 
 }

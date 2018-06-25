@@ -14,25 +14,25 @@ public class GQLSchemaField {
 
   private final ExecutableOutputField field;
 
-  public GQLSchemaField(ExecutableOutputField field) {
+  public GQLSchemaField(final ExecutableOutputField field) {
     this.field = field;
   }
 
   // name: String!
 
   public String name() {
-    return field.fieldName();
+    return this.field.fieldName();
   }
 
   // description: String
   public String description() {
-    return field.documentation();
+    return this.field.documentation();
   }
 
   // args: [__InputValue!]!
 
   public @NonNull List<io.zrz.graphql.zulu.schema.GQLSchemaInputValue> args() {
-    return field
+    return this.field
         .parameters()
         .map(p -> p.fieldValues())
         .orElse(ImmutableList.of())
@@ -45,13 +45,13 @@ public class GQLSchemaField {
 
   public GQLSchemaType type() {
 
-    if (field.fieldType().arity() > 0) {
+    if (this.field.fieldType().arity() > 0) {
 
-      return new GQLSchemaType(field.fieldType().type(), field.fieldType().arity());
+      return new GQLSchemaType(this.field.fieldType().type(), this.field.fieldType().arity(), true);
 
     }
 
-    return new GQLSchemaType(field.fieldType().type());
+    return new GQLSchemaType(this.field.fieldType().type());
   }
 
   // isDeprecated: Boolean!

@@ -1,17 +1,21 @@
 package io.zrz.graphql.zulu.engine;
 
-import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
+import io.zrz.graphql.zulu.executable.ExecutableInputField;
 
 public class ZuluRequest {
 
-  private ZuluParameterReader vars;
+  private final ZuluParameterReader vars;
 
-  public ZuluRequest(ZuluParameterReader variables) {
+  public ZuluRequest(final ZuluParameterReader variables) {
     this.vars = variables;
   }
 
-  public Object parameter(String parameterName, ExecutableTypeUse targetType) {
-    return vars.get(parameterName, targetType);
+  public Object parameter(final String parameterName, final ExecutableInputField targetType) {
+    return this.vars.get(parameterName, targetType);
+  }
+
+  public boolean hasVariable(final String key) {
+    return this.vars.has(key);
   }
 
 }
