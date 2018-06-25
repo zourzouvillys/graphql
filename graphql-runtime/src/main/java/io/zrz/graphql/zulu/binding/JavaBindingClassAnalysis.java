@@ -16,34 +16,34 @@ import io.zrz.graphql.zulu.annotations.GQLExtension;
 
 /**
  * given a class, scans to generate an analysis of it for later processing.
- * 
+ *
  * results from this class are always a direct reflection of the code, so caching is enabled by default.
- * 
+ *
  * @author theo
  *
  */
 public class JavaBindingClassAnalysis {
 
   private static final Map<Type, JavaBindingClassAnalysis> cache = new HashMap<>();
-  private TypeToken<?> type;
-  private ImmutableList<JavaBindingMethodAnalysis> methods;
-  private Class<?> rawClass;
+  private final TypeToken<?> type;
+  private final ImmutableList<JavaBindingMethodAnalysis> methods;
+  private final Class<?> rawClass;
   private Optional<JavaBindingTypeUse> superclass;
-  private ImmutableList<JavaBindingTypeUse> ifaces;
+  private final ImmutableList<JavaBindingTypeUse> ifaces;
 
-  public JavaBindingClassAnalysis(Type type) {
+  public JavaBindingClassAnalysis(final Type type) {
 
     this.type = TypeToken.of(type);
     this.rawClass = this.type.getRawType();
 
-    if (rawClass.getAnnotatedSuperclass() != null) {
-      this.superclass = Optional.of(new JavaBindingTypeUse(this.type, rawClass.getAnnotatedSuperclass()));
+    if (this.rawClass.getAnnotatedSuperclass() != null) {
+      this.superclass = Optional.of(new JavaBindingTypeUse(this.type, this.rawClass.getAnnotatedSuperclass()));
     }
     else {
       this.superclass = Optional.empty();
     }
 
-    this.ifaces = Arrays.stream(rawClass.getAnnotatedInterfaces())
+    this.ifaces = Arrays.stream(this.rawClass.getAnnotatedInterfaces())
         .map(iface -> new JavaBindingTypeUse(this.type, iface))
         .collect(ImmutableList.toImmutableList());
 
@@ -71,26 +71,26 @@ public class JavaBindingClassAnalysis {
    */
 
   public boolean isExtensionClass() {
-    return (rawClass.getAnnotationsByType(GQLExtension.class).length > 0);
+    return this.rawClass.getAnnotationsByType(GQLExtension.class).length > 0;
   }
 
   /**
    * true if this class should be included for auto-scanning of fields.
-   * 
+   *
    * this is true if we were manually registered, or have a GQLAutoScan method.
-   * 
+   *
    */
 
   public boolean isAutoInclude() {
     return Arrays
-        .stream(rawClass.getAnnotationsByType(GQLAutoScan.class))
+        .stream(this.rawClass.getAnnotationsByType(GQLAutoScan.class))
         .findAny()
         .map(x -> x.value())
         .orElse(false);
   }
 
-  public <T extends Annotation> boolean isAnnotationPresent(Class<T> annotationClass) {
-    return rawClass.isAnnotationPresent(annotationClass);
+  public <T extends Annotation> boolean isAnnotationPresent(final Class<T> annotationClass) {
+    return this.rawClass.isAnnotationPresent(annotationClass);
   }
 
   /**
@@ -114,11 +114,11 @@ public class JavaBindingClassAnalysis {
 
   //// ----
 
-  private static JavaBindingClassAnalysis analize(Type type) {
+  private static JavaBindingClassAnalysis analize(final Type type) {
     return new JavaBindingClassAnalysis(type);
   }
 
-  public static JavaBindingClassAnalysis lookup(Type type) {
+  public static JavaBindingClassAnalysis lookup(final Type type) {
     return cache.computeIfAbsent(type, JavaBindingClassAnalysis::analize);
   }
 
@@ -129,11 +129,11 @@ public class JavaBindingClassAnalysis {
   @Override
   public String toString() {
 
-    return "JavaClassAnalysis{" + javaType() + "}";
+    return "JavaClassAnalysis{" + this.javaType() + "}";
 
   }
 
-  public <T extends Annotation> ImmutableList<T> annotations(Class<T> annotationClass) {
+  public <T extends Annotation> ImmutableList<T> annotations(final Class<T> annotationClass) {
     return ImmutableList.copyOf(this.type.getRawType().getAnnotationsByType(annotationClass));
   }
 

@@ -10,20 +10,20 @@ import io.zrz.graphql.zulu.JavaInputField;
 
 /**
  * a single input field in the parameters.
- * 
+ *
  * @author theo
  *
  */
 
 public final class ExecutableInputContext implements ExecutableElement {
 
-  private String name;
-  private TypeToken<?> javaType;
-  private ExecutableOutputField field;
-  private int index;
-  private JavaInputField param;
+  private final String name;
+  private final TypeToken<?> javaType;
+  private final ExecutableOutputField field;
+  private final int index;
+  private final JavaInputField param;
 
-  public ExecutableInputContext(ExecutableOutputField field, JavaInputField spec, BuildContext types) {
+  public ExecutableInputContext(final ExecutableOutputField field, final JavaInputField spec, final BuildContext types) {
     this.field = field;
     this.name = spec.fieldName();
     this.javaType = Objects.requireNonNull(spec.inputType());
@@ -31,12 +31,12 @@ public final class ExecutableInputContext implements ExecutableElement {
     this.param = spec;
   }
 
-  public ExecutableType enclosingType() {
-    return field.receiverType();
+  public ExecutableReceiverType enclosingType() {
+    return this.field.receiverType();
   }
 
   public ExecutableOutputField enclosingField() {
-    return field;
+    return this.field;
   }
 
   public TypeToken<?> javaType() {
@@ -52,7 +52,7 @@ public final class ExecutableInputContext implements ExecutableElement {
   }
 
   /**
-   * 
+   *
    */
 
   @Override
@@ -65,7 +65,7 @@ public final class ExecutableInputContext implements ExecutableElement {
     return this.index;
   }
 
-  public <T extends Annotation> Optional<T> annotation(Class<T> klass) {
+  public <T extends Annotation> Optional<T> annotation(final Class<T> klass) {
     return this.param.annotation(klass);
   }
 

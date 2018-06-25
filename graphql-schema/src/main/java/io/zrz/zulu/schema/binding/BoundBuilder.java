@@ -202,9 +202,19 @@ class BoundBuilder implements DiagnosticListener<BoundElement> {
 
   private class Visitor implements GQLTypeVisitor<TypeUse> {
 
+    private final boolean nullable;
+
+    public Visitor() {
+      this(true);
+    }
+
+    public Visitor(final boolean nullable) {
+      this.nullable = nullable;
+    }
+
     @Override
     public TypeUse visitNonNull(final GQLNonNullType type) {
-      return type.type().apply(this);
+      return type.type().apply(new Visitor(false));
     }
 
     @Override
@@ -214,7 +224,7 @@ class BoundBuilder implements DiagnosticListener<BoundElement> {
 
     @Override
     public TypeUse visitDeclarationRef(final GQLDeclarationRef type) {
-      return new TypeUse(BoundBuilder.this.schema(), BoundBuilder.this.resolve(type), true, 0);
+      return new TypeUse(BoundBuilder.this.schema(), BoundBuilder.this.resolve(type), this.nullable, 0);
     }
 
   }

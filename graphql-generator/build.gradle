@@ -1,7 +1,17 @@
 
+plugins {
+  id 'application'
+}
+
+mainClassName = 'io.zrz.graphql.generator.Main'
 eclipse.project.name = 'graphql:generator'
 
 dependencies {
+  
+  compile             'com.google.protobuf:protobuf-java:3.6.0'
+  compile             'com.google.protobuf:protobuf-java-util:3.6.0'
+  
+  compile             'com.github.rvesse:airline:2.5.0'
   
   // runtime shared dependencies.
   api                 'org.slf4j:slf4j-api:1.7.25'

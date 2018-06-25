@@ -4,6 +4,7 @@ import com.google.protobuf.Struct;
 
 import io.grpc.ManagedChannel;
 import io.reactivex.Flowable;
+import io.zrz.zulu.graphql.GraphQLProtos.ExecuteRequest;
 import io.zrz.zulu.graphql.GraphQLProtos.PrepareReply;
 import io.zrz.zulu.graphql.GraphQLProtos.PrepareRequest;
 import io.zrz.zulu.graphql.GraphQLProtos.QueryReply;
@@ -41,6 +42,13 @@ public class ZuluGrpcClient {
   public Flowable<PrepareReply> prepare(String document) {
     return stub.prepare(PrepareRequest.newBuilder()
         .setDocument(document)
+        .build());
+  }
+
+  public Flowable<QueryReply> execute(String operationId, Struct params) {
+    return stub.execute(ExecuteRequest.newBuilder()
+        .setOperationId(operationId)
+        .setVariables(params)
         .build());
   }
 

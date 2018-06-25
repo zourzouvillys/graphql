@@ -9,10 +9,14 @@ import io.zrz.graphql.core.types.GQLDeclarationRef;
 
 public class GQLSelectionTypeCriteria {
 
-  private GQLDeclarationRef decl;
+  private final GQLDeclarationRef decl;
 
   public GQLSelectionTypeCriteria(final GQLDeclarationRef decl) {
     this.decl = decl;
+  }
+
+  public GQLDeclarationRef refType() {
+    return this.decl;
   }
 
   /**
@@ -20,7 +24,7 @@ public class GQLSelectionTypeCriteria {
    */
 
   public String type() {
-    final GQLTypeDeclaration ref = decl.ref();
+    final GQLTypeDeclaration ref = this.decl.ref();
     if (ref == null)
       return null;
     return ref.name();

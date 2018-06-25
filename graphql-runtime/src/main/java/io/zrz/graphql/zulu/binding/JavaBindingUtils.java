@@ -11,12 +11,18 @@ import com.google.common.reflect.TypeToken;
 
 public class JavaBindingUtils {
 
-  public static Stream<Method> listMethods(TypeToken<?> klass) {
+  /**
+   *
+   * @param klass
+   * @return
+   */
+
+  public static Stream<Method> listMethods(final TypeToken<?> klass) {
     return Arrays.stream(klass.getRawType().getDeclaredMethods())
         .filter(JavaBindingUtils::matches);
   }
 
-  private static boolean matches(Method method) {
+  private static boolean matches(final Method method) {
 
     if (!Modifier.isPublic(method.getModifiers())) {
       return false;
@@ -28,33 +34,33 @@ public class JavaBindingUtils {
 
   /**
    * attempt to generate a zulu name for this type token.
-   * 
+   *
    * @param typeToken
    * @return
    */
 
-  public static String autoTypeName(TypeToken<?> typeToken) {
+  public static String autoTypeName(final TypeToken<?> typeToken) {
     return typeToken.getRawType().getSimpleName();
   }
 
   /**
-   * 
+   *
    */
 
-  public static String normalizeTypeName(String typeName) {
+  public static String normalizeTypeName(final String typeName) {
     return typeName.toLowerCase();
   }
 
   /**
    * for diagnostics.
-   * 
+   *
    * @param method
    * @return
    */
 
-  public static String toString(Method method) {
+  public static String toString(final Method method) {
 
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
     sb.append(method.getDeclaringClass().getPackage().getName());
     sb.append(".");
@@ -65,16 +71,16 @@ public class JavaBindingUtils {
     return sb.toString();
   }
 
-  public static String toString(AnnotatedElement origin) {
+  public static String toString(final AnnotatedElement origin) {
     if (origin instanceof Method) {
-      Method method = (Method) origin;
+      final Method method = (Method) origin;
       return JavaBindingUtils.toString(method);
     }
     return origin.toString();
   }
 
   @SuppressWarnings("serial")
-  public static <T> TypeToken<?> resolveIterableType(TypeToken<T> returnType) {
+  public static <T> TypeToken<?> resolveIterableType(final TypeToken<T> returnType) {
     return new TypeToken<Iterable<T>>() {}
         .where(new TypeParameter<T>() {}, returnType);
 

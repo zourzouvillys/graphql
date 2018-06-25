@@ -2,7 +2,9 @@ package io.zrz.zulu.schema.binding;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jdt.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
@@ -10,6 +12,7 @@ import com.google.common.collect.ImmutableList;
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.doc.GQLOperationDefinition;
 import io.zrz.graphql.core.runtime.GQLOperationType;
+import io.zrz.graphql.core.utils.NormalizedDefinitionPrinter;
 import io.zrz.zulu.schema.ResolvedObjectType;
 import io.zrz.zulu.schema.binding.BoundElementVisitor.SupplierVisitor;
 
@@ -21,6 +24,8 @@ public class BoundOperation implements BoundSelectionContainer, BoundElement {
   private final @Nullable GQLOpType type;
   private final ImmutableList<BoundSelection> selections;
   private final ResolvedObjectType rootType;
+  private final String raw;
+  private final String normalized;
 
   public BoundOperation(final BoundDocument doc, final GQLOperationDefinition op, final ResolvedObjectType rootType, final BoundBuilder b) {
 
@@ -29,6 +34,9 @@ public class BoundOperation implements BoundSelectionContainer, BoundElement {
     this.doc = doc;
     this.name = op.name();
     this.type = op.type();
+
+    this.raw = StringUtils.trimToNull(op.range().content());
+    this.normalized = NormalizedDefinitionPrinter.normalize(op, true);
 
     this.vars = op.vars()
         .stream()
@@ -42,6 +50,18 @@ public class BoundOperation implements BoundSelectionContainer, BoundElement {
         .filter(sel -> sel != null)
         .collect(ImmutableList.toImmutableList());
 
+  }
+
+  public Stream<BoundVariable> mandatoryParameters() {
+    return this.vars()
+        .stream()
+        .filter(var -> !var.type().isNullable() && var.defaultValue() == null);
+  }
+
+  public Stream<BoundVariable> optionalParameters() {
+    return this.vars()
+        .stream()
+        .filter(var -> var.type().isNullable() || var.defaultValue() != null);
   }
 
   public BoundDocument doc() {
@@ -87,6 +107,14 @@ public class BoundOperation implements BoundSelectionContainer, BoundElement {
   @Override
   public <R> R accept(final SupplierVisitor<R> visitor) {
     return visitor.visitOperation(this);
+  }
+
+  public String rawQuery() {
+    return this.raw;
+  }
+
+  public String normalizedQuery() {
+    return this.normalized;
   }
 
 }

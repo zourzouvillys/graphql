@@ -8,7 +8,9 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +22,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.reflect.TypeToken;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
@@ -43,17 +46,18 @@ import io.zrz.graphql.zulu.engine.ZuluWarning.ExecutionError;
 import io.zrz.graphql.zulu.executable.ExecutableType;
 import io.zrz.graphql.zulu.server.ImmutableQuery;
 import io.zrz.graphql.zulu.server.ImmutableZuluServerRequest;
+import io.zrz.graphql.zulu.server.ZuluInjector;
 import io.zrz.graphql.zulu.server.ZuluRequestProcessor;
 
-public class ZuluHttpResponder implements HttpResponder {
+public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
   private static Logger log = LoggerFactory.getLogger(ZuluHttpResponder.class);
 
   private static ObjectMapper mapper = new ObjectMapper();
-
+  private final Map<TypeToken<?>, Object> instances = new HashMap<>();
   private final ZuluEngine zulu;
 
-  public ZuluHttpResponder(ZuluEngine zulu) {
+  public ZuluHttpResponder(final ZuluEngine zulu) {
     this.zulu = zulu;
   }
 
@@ -82,7 +86,7 @@ public class ZuluHttpResponder implements HttpResponder {
 
     }
 
-    FullHttpResponse res = handleRequest(request);
+    final FullHttpResponse res = this.handleRequest(request);
 
     if (request.headers().getAsString(HttpHeaderNames.ORIGIN) != null) {
       res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, request.headers().getAsString(HttpHeaderNames.ORIGIN));
@@ -99,54 +103,62 @@ public class ZuluHttpResponder implements HttpResponder {
   public FullHttpResponse handleRequest(final FullHttpRequest request) {
 
     try {
+
       log.debug("processing request {}", request.uri());
 
-      QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
+      final QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
 
-      String path = decoder.path();
+      final String path = decoder.path();
 
       if (request.method().equals(HttpMethod.GET)) {
 
-        RequestParams params = new RequestParams();
+        final RequestParams params = new RequestParams();
 
         if (decoder.parameters().containsKey("query"))
           params.query = decoder.parameters().get("query").get(0);
+
         if (decoder.parameters().containsKey("operationName"))
           params.operationName = decoder.parameters().get("operationName").get(0);
+
         if (decoder.parameters().containsKey("variables"))
           params.variables = mapper.readValue(
               decoder.parameters().get("variables").get(0),
               mapper.getTypeFactory().constructMapType(Map.class, String.class, JsonNode.class));
 
-        return process(path, new RequestParams[] { params }, HttpMethod.GET);
+        if (decoder.parameters().containsKey("extensions"))
+          params.extensions = mapper.readValue(
+              decoder.parameters().get("extensions").get(0),
+              mapper.getTypeFactory().constructMapType(Map.class, String.class, JsonNode.class));
+
+        return this.process(path, new RequestParams[] { params }, HttpMethod.GET);
 
       }
       else if (request.method().equals(HttpMethod.POST)) {
 
-        long contentLength = HttpUtil.getContentLength(request, 0L);
+        final long contentLength = HttpUtil.getContentLength(request, 0L);
 
-        CharSequence contentType = HttpUtil.getMimeType(request);
-        CharSequence charset = HttpUtil.getCharsetAsSequence(request);
+        final CharSequence contentType = HttpUtil.getMimeType(request);
+        final CharSequence charset = HttpUtil.getCharsetAsSequence(request);
 
-        RequestParams[] params = process(path, contentLength, contentType, charset, request.content());
+        final RequestParams[] params = this.process(path, contentLength, contentType, charset, request.content());
 
-        return process(path, params, HttpMethod.POST);
+        return this.process(path, params, HttpMethod.POST);
 
       }
       else {
 
-        DefaultFullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, METHOD_NOT_ALLOWED);
+        final DefaultFullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, METHOD_NOT_ALLOWED);
         response.headers().set(HttpHeaderNames.CONTENT_LENGTH, 0);
         return response;
 
       }
 
     }
-    catch (Throwable ex) {
+    catch (final Throwable ex) {
 
       log.error("error processing request", ex);
 
-      DefaultFullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, INTERNAL_SERVER_ERROR);
+      final DefaultFullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, INTERNAL_SERVER_ERROR);
       response.headers().set(HttpHeaderNames.CONTENT_LENGTH, 0);
       return response;
 
@@ -156,6 +168,8 @@ public class ZuluHttpResponder implements HttpResponder {
 
   public static class RequestParams {
     @JsonProperty(required = false)
+    public Map<String, JsonNode> extensions;
+    @JsonProperty(required = false)
     public String query;
     @JsonProperty(required = false)
     public String operationName;
@@ -163,11 +177,12 @@ public class ZuluHttpResponder implements HttpResponder {
     public Map<String, JsonNode> variables;
   }
 
-  private RequestParams[] process(String path, long contentLength, CharSequence contentType, CharSequence charset, ByteBuf byteBuf) {
+  private RequestParams[] process(final String path, final long contentLength, final CharSequence contentType, final CharSequence charset,
+      final ByteBuf byteBuf) {
 
     try (ByteBufInputStream in = new ByteBufInputStream(byteBuf, true)) {
 
-      JsonNode tree = mapper.readTree(in);
+      final JsonNode tree = mapper.readTree(in);
 
       if (tree.isArray()) {
         return mapper.convertValue(tree, mapper.getTypeFactory().constructArrayType(RequestParams.class));
@@ -177,7 +192,7 @@ public class ZuluHttpResponder implements HttpResponder {
       }
 
     }
-    catch (IOException e) {
+    catch (final IOException e) {
       throw new RuntimeException(e);
     }
 
@@ -189,35 +204,43 @@ public class ZuluHttpResponder implements HttpResponder {
 
   /**
    * actually process the request.
-   * 
+   *
    * @param path
    * @param params
    * @param get
    * @return
    */
 
-  private FullHttpResponse process(String path, RequestParams[] params, HttpMethod method) throws Throwable {
+  private FullHttpResponse process(final String path, final RequestParams[] params, final HttpMethod method) throws Throwable {
 
-    ImmutableZuluServerRequest.Builder b = ImmutableZuluServerRequest.builder();
+    final ImmutableZuluServerRequest.Builder b = ImmutableZuluServerRequest.builder();
 
-    ByteBuf[] buffers = new ByteBuf[params.length];
-    JacksonResultReceiver[] jgs = new JacksonResultReceiver[params.length];
+    b.injector(this);
+
+    final ByteBuf[] buffers = new ByteBuf[params.length];
+    final JacksonResultReceiver[] jgs = new JacksonResultReceiver[params.length];
 
     for (int i = 0; i < params.length; ++i) {
 
-      RequestParams param = params[i];
+      final RequestParams param = params[i];
 
-      ImmutableQuery.Builder q = ImmutableQuery.builder();
+      final ImmutableQuery.Builder q = ImmutableQuery.builder();
 
       q.operationName(param.operationName);
       q.query(param.query);
       q.variables(new ZuluJacksonParameterProvider(param.variables));
 
+      if (param.extensions != null && param.extensions.containsKey("persistedQuery")) {
+
+        q.persistedQuery(param.extensions.get("persistedQuery").get("sha256Hash").asText());
+
+      }
+
       buffers[i] = Unpooled.buffer();
 
-      ByteBufOutputStream os = new ByteBufOutputStream(buffers[i]);
+      final ByteBufOutputStream os = new ByteBufOutputStream(buffers[i]);
 
-      JsonGenerator jg = mapper.getFactory().createGenerator((OutputStream) os);
+      final JsonGenerator jg = mapper.getFactory().createGenerator((OutputStream) os);
       jg.enable(Feature.AUTO_CLOSE_TARGET);
 
       jgs[i] = new JacksonResultReceiver(jg);
@@ -229,7 +252,7 @@ public class ZuluHttpResponder implements HttpResponder {
 
     }
 
-    ZuluExecutionResult[] results = zulu.processRequestBatch(b.build());
+    final ZuluExecutionResult[] results = this.zulu.processRequestBatch(b.build());
 
     for (int i = 0; i < params.length; ++i) {
       jgs[i].generator().close();
@@ -237,53 +260,56 @@ public class ZuluHttpResponder implements HttpResponder {
 
     // --
 
-    ByteBuf buffer = Unpooled.buffer();
+    final ByteBuf buffer = Unpooled.buffer();
 
-    ByteBufOutputStream os = new ByteBufOutputStream(buffer);
+    try (final ByteBufOutputStream os = new ByteBufOutputStream(buffer)) {
 
-    JsonGenerator gen = mapper.getFactory().createGenerator((OutputStream) os);
+      final JsonGenerator gen = mapper.getFactory().createGenerator((OutputStream) os);
 
-    if (params.length > 1) {
-      gen.writeStartArray();
-    }
-
-    for (int i = 0; i < params.length; ++i) {
-
-      gen.writeStartObject();
-
-      if (buffers[i].isReadable()) {
-        gen.writeFieldName("data");
-        gen.writeRawValue(new String(ByteBufUtil.getBytes(buffers[i]), StandardCharsets.UTF_8));
+      if (params.length > 1) {
+        gen.writeStartArray();
       }
 
-      buffers[i].release();
+      for (int i = 0; i < params.length; ++i) {
 
-      if (!results[i].notes().isEmpty()) {
-        gen.writeArrayFieldStart("errors");
-        results[i].notes().forEach(warn -> writeError(gen, warn));
+        gen.writeStartObject();
+
+        if (buffers[i].isReadable()) {
+          gen.writeFieldName("data");
+          gen.writeRawValue(new String(ByteBufUtil.getBytes(buffers[i]), StandardCharsets.UTF_8));
+        }
+
+        buffers[i].release();
+
+        if (!results[i].notes().isEmpty()) {
+          gen.writeArrayFieldStart("errors");
+          results[i].notes().forEach(warn -> this.writeError(gen, warn));
+          gen.writeEndArray();
+        }
+
+        gen.writeEndObject();
+
+      }
+
+      if (params.length > 1) {
         gen.writeEndArray();
       }
 
-      gen.writeEndObject();
+      gen.close();
 
     }
-
-    if (params.length > 1) {
-      gen.writeEndArray();
-    }
-
-    gen.close();
 
     //
-    int contentLength = buffer.readableBytes();
+    final int contentLength = buffer.readableBytes();
 
     final FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, buffer);
     response.headers().set(HttpHeaderNames.CONTENT_LENGTH, contentLength);
+
     return response;
 
   }
 
-  private void writeError(JsonGenerator gen, ZuluWarning warn) {
+  private void writeError(final JsonGenerator gen, final ZuluWarning warn) {
     try {
 
       gen.writeStartObject();
@@ -301,7 +327,7 @@ public class ZuluHttpResponder implements HttpResponder {
         gen.writeEndArray();
       }
 
-      ExecutableType context = warn.context();
+      final ExecutableType context = warn.context();
 
       if (context != null) {
         gen.writeObjectFieldStart("context");
@@ -312,9 +338,9 @@ public class ZuluHttpResponder implements HttpResponder {
           gen.writeStringField("fieldName", ((ZuluWarning.OutputFieldWarning) warn).element().fieldName());
         }
         if (warn instanceof ZuluWarning.ExecutionError) {
-          ExecutionError exec = ((ZuluWarning.ExecutionError) warn);
+          final ExecutionError exec = (ZuluWarning.ExecutionError) warn;
 
-          AnnotatedElement origin = exec.selection().origin().orElse(null);
+          final AnnotatedElement origin = exec.selection().origin().orElse(null);
 
           if (origin != null) {
             gen.writeStringField("origin", origin.toString());
@@ -325,7 +351,7 @@ public class ZuluHttpResponder implements HttpResponder {
         gen.writeEndObject();
       }
 
-      Throwable cause = warn.cause();
+      final Throwable cause = warn.cause();
 
       if (cause != null) {
 
@@ -341,9 +367,9 @@ public class ZuluHttpResponder implements HttpResponder {
 
           gen.writeArrayFieldStart("stack");
 
-          for (StackTraceElement stack : cause.getStackTrace()) {
+          for (final StackTraceElement stack : cause.getStackTrace()) {
 
-            if (StringUtils.equals(stack.getClassName(), getClass().getName())
+            if (StringUtils.equals(stack.getClassName(), this.getClass().getName())
                 && StringUtils.equals(stack.getMethodName(), "process")) {
               break;
             }
@@ -361,9 +387,9 @@ public class ZuluHttpResponder implements HttpResponder {
               gen.writeStringField("file", stack.getFileName());
             }
 
-//            if (stack.getModuleName() != null) {
-//              gen.writeStringField("module", stack.getModuleName());
-//            }
+            // if (stack.getModuleName() != null) {
+            // gen.writeStringField("module", stack.getModuleName());
+            // }
 
             gen.writeEndObject();
 
@@ -377,7 +403,7 @@ public class ZuluHttpResponder implements HttpResponder {
 
       }
 
-      GQLPreparedSelection sel = warn.selection();
+      final GQLPreparedSelection sel = warn.selection();
 
       if (sel != null) {
         gen.writeStringField("path", sel.path());
@@ -385,9 +411,34 @@ public class ZuluHttpResponder implements HttpResponder {
 
       gen.writeEndObject();
     }
-    catch (Exception ex) {
+    catch (final Exception ex) {
       throw new RuntimeException(ex);
     }
+  }
+
+  public <T> void bind(final TypeToken<?> type, final T instance) {
+    this.instances.put(type, instance);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public <T> T newInstance(final TypeToken<T> javaType) {
+
+    if (this.instances.containsKey(javaType)) {
+      return (T) this.instances.get(javaType);
+    }
+
+    try {
+      return (T) javaType
+          .getRawType()
+          .getDeclaredConstructor()
+          .newInstance();
+    }
+    catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+        | SecurityException e) {
+      throw new RuntimeException(e);
+    }
+
   }
 
 }

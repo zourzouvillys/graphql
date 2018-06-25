@@ -2,6 +2,7 @@ package io.zrz.graphql.zulu.executable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -18,12 +19,12 @@ import io.zrz.graphql.zulu.executable.ExecutableSchemaBuilder.Symbol;
 class BuildContext implements OutputFieldFilter {
 
   Map<Symbol, ExecutableType> types = new HashMap<>();
-  private ExecutableSchemaBuilder b;
-  private Set<Symbol> target;
+  private final ExecutableSchemaBuilder b;
+  private final Set<Symbol> target;
   Map<TypeToken<?>, Symbol> suppliers;
-  private ExecutableSchema schema;
+  private final ExecutableSchema schema;
 
-  BuildContext(ExecutableSchemaBuilder b, ExecutableSchema schema) {
+  BuildContext(final ExecutableSchemaBuilder b, final ExecutableSchema schema) {
     this.schema = schema;
     this.b = b;
     this.suppliers = b.symbols().collect(Collectors.toMap(s -> s.typeToken, s -> s));
@@ -34,11 +35,11 @@ class BuildContext implements OutputFieldFilter {
     return this.b;
   }
 
-  ExecutableTypeUse use(ExecutableElement user, TypeToken<?> javaType) {
-    return use(user, javaType, 0);
+  ExecutableTypeUse use(final ExecutableElement user, final TypeToken<?> javaType) {
+    return this.use(user, javaType, 0);
   }
 
-  ExecutableTypeUse use(ExecutableElement user, TypeToken<?> javaType, int arity) {
+  ExecutableTypeUse use(final ExecutableElement user, final TypeToken<?> javaType, final int arity) {
 
     Symbol symbol = this.suppliers.get(javaType);
 
@@ -58,7 +59,7 @@ class BuildContext implements OutputFieldFilter {
         javaType,
         user);
 
-    ExecutableType found = types.get(symbol);
+    final ExecutableType found = this.types.get(symbol);
 
     if (found == null) {
 
@@ -66,8 +67,8 @@ class BuildContext implements OutputFieldFilter {
 
         switch (symbol.typeKind) {
           case OUTPUT: {
-            ExecutableOutputType decl = new ExecutableOutputType(schema, symbol, this);
-            types.put(symbol, decl);
+            final ExecutableOutputType decl = new ExecutableOutputType(this.schema, symbol, this);
+            this.types.put(symbol, decl);
             return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl);
           }
           case ENUM:
@@ -75,8 +76,8 @@ class BuildContext implements OutputFieldFilter {
           case INTERFACE:
           case SCALAR:
           case UNION: {
-            ExecutableType decl = this.compile(symbol);
-            types.put(symbol, decl);
+            final ExecutableType decl = this.compile(symbol);
+            this.types.put(symbol, decl);
             return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl);
           }
           default:
@@ -86,7 +87,7 @@ class BuildContext implements OutputFieldFilter {
         throw new IllegalArgumentException(symbol.typeKind.toString());
 
       }
-      catch (Exception ex) {
+      catch (final Exception ex) {
 
         throw new RuntimeException("error building '" + symbol.typeName + "' from " + symbol.typeToken, ex);
 
@@ -99,19 +100,19 @@ class BuildContext implements OutputFieldFilter {
   }
 
   Set<Symbol> pending() {
-    return target.stream()
+    return this.target.stream()
         .filter(s -> s.typeKind == LogicalTypeKind.OUTPUT)
-        .filter(s -> !types.containsKey(s))
+        .filter(s -> !this.types.containsKey(s))
         .collect(Collectors.toSet());
   }
 
-  void add(Symbol symbol, ExecutableType type) {
-    types.putIfAbsent(symbol, type);
+  void add(final Symbol symbol, final ExecutableType type) {
+    this.types.putIfAbsent(symbol, type);
   }
 
-  public ExecutableType compile(Symbol symbol) {
+  public ExecutableType compile(final Symbol symbol) {
 
-    ExecutableType found = types.get(symbol);
+    final ExecutableType found = this.types.get(symbol);
 
     if (found != null) {
       return found;
@@ -119,26 +120,30 @@ class BuildContext implements OutputFieldFilter {
 
     switch (symbol.typeKind) {
       case OUTPUT: {
-        ExecutableOutputType value = new ExecutableOutputType(schema, symbol, this);
-        types.put(symbol, value);
+        final ExecutableOutputType value = new ExecutableOutputType(this.schema, symbol, this);
+        this.types.put(symbol, value);
         return value;
       }
       case SCALAR: {
-        ExecutableScalarType value = new ExecutableScalarType(schema, symbol, this);
-        types.put(symbol, value);
+        final ExecutableScalarType value = new ExecutableScalarType(this.schema, symbol, this);
+        this.types.put(symbol, value);
         return value;
       }
       case INPUT: {
-        ExecutableInputType value = new ExecutableInputType(schema, symbol, this);
-        types.put(symbol, value);
+        final ExecutableInputType value = new ExecutableInputType(this.schema, symbol, this);
+        this.types.put(symbol, value);
         return value;
       }
       case ENUM: {
-        ExecutableEnumType value = new ExecutableEnumType(schema, symbol, this);
-        types.put(symbol, value);
+        final ExecutableEnumType value = new ExecutableEnumType(this.schema, symbol, this);
+        this.types.put(symbol, value);
         return value;
       }
-      case INTERFACE:
+      case INTERFACE: {
+        final ExecutableInterfaceType value = new ExecutableInterfaceType(this.schema, symbol, this);
+        this.types.put(symbol, value);
+        return value;
+      }
       case UNION:
       default:
     }
@@ -149,12 +154,16 @@ class BuildContext implements OutputFieldFilter {
 
   /**
    * returns the filter to use for scanning the executabletype.
-   * 
+   *
    * @param type
    * @return
    */
 
-  public OutputFieldFilter filterFor(ExecutableOutputType type) {
+  public OutputFieldFilter filterFor(final ExecutableOutputType type) {
+    return this;
+  }
+
+  public OutputFieldFilter filterFor(final ExecutableInterfaceType type) {
     return this;
   }
 
@@ -163,25 +172,60 @@ class BuildContext implements OutputFieldFilter {
    */
 
   @Override
-  public boolean shouldInclude(JavaBindingMethodAnalysis m) {
+  public boolean shouldInclude(final JavaBindingMethodAnalysis m) {
     return true;
   }
 
   /**
    * provides the fields which the given output type will have.
-   * 
+   *
    * @param symbol
    * @param type
    * @return
    */
 
-  public Stream<? extends JavaOutputField> outputFieldsFor(Symbol symbol, ExecutableOutputType type) {
+  public Stream<? extends JavaOutputField> outputFieldsFor(final Symbol symbol, final ExecutableOutputType type) {
+
+    if (symbol.handle == null || symbol.stub) {
+      return this.builder().outputFieldsFor(symbol, type);
+    }
+
+    return Stream.concat(
+        this.builder().outputFieldsFor(symbol, type),
+        symbol.handle.outputFields(this.filterFor(type)));
+
+  }
+
+  public Stream<? extends JavaOutputField> outputFieldsFor(final Symbol symbol, final ExecutableInterfaceType type) {
     if (symbol.handle == null) {
-      return builder().outputFieldsFor(symbol, type);
+      return this.builder().outputFieldsFor(symbol, type);
     }
     return Stream.concat(
-        builder().outputFieldsFor(symbol, type),
+        this.builder().outputFieldsFor(symbol, type),
         symbol.handle.outputFields(this.filterFor(type)));
+
+  }
+
+  /**
+   * assign the interfaces for the specified type.
+   *
+   * the search strategy uses the java type hierachy, and annotations.
+   *
+   * @param symbol
+   * @param objectType
+   *
+   * @return
+   */
+
+  public Set<ExecutableInterfaceType> interfacesFor(final Symbol symbol, final ExecutableReceiverType receiverType) {
+
+    Objects.requireNonNull(symbol.handle, symbol.typeName);
+
+    return this.b.interfacesFor(symbol)
+        .stream()
+        .map(ifacesym -> this.compile(ifacesym))
+        .map(type -> (ExecutableInterfaceType) type)
+        .collect(Collectors.toSet());
 
   }
 

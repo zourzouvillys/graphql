@@ -8,31 +8,35 @@ import io.zrz.graphql.zulu.annotations.GQLMixin;
 
 public class JavaBindingTypeUse {
 
-  private TypeToken<?> type;
-  private TypeToken<?> context;
-  private AnnotatedType annotatedType;
+  private final TypeToken<?> type;
+  private final TypeToken<?> context;
+  private final AnnotatedType annotatedType;
 
-  public JavaBindingTypeUse(TypeToken<?> context, AnnotatedType type) {
+  public JavaBindingTypeUse(final TypeToken<?> context, final AnnotatedType type) {
     this.context = context;
     this.annotatedType = type;
     this.type = context.resolveType(type.getType());
   }
 
   public boolean isMixin() {
-    return annotatedType.isAnnotationPresent(GQLMixin.class);
-  }
-
-  @Override
-  public String toString() {
-    return this.type.getType().toString() + (isMixin() ? " @Mixin" : "") + " on " + this.context;
+    return this.annotatedType.isAnnotationPresent(GQLMixin.class);
   }
 
   public Class<?> rawClass() {
     return this.type.getRawType();
   }
 
+  public TypeToken<?> context() {
+    return this.context;
+  }
+
   public TypeToken<?> typeToken() {
     return this.type;
+  }
+
+  @Override
+  public String toString() {
+    return this.type.getType().toString() + (this.isMixin() ? " @GQLMixin" : "") + " on " + this.context;
   }
 
 }

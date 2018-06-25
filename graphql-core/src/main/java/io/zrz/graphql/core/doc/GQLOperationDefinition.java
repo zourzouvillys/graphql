@@ -5,6 +5,8 @@ import java.util.List;
 import org.eclipse.jdt.annotation.Nullable;
 import org.immutables.value.Value;
 
+import io.zrz.graphql.core.parser.GQLSourceRange;
+
 @Value.Immutable(copy = true)
 public abstract class GQLOperationDefinition implements GQLDefinition {
 
@@ -37,8 +39,10 @@ public abstract class GQLOperationDefinition implements GQLDefinition {
 
   public abstract List<GQLSelection> selections();
 
+  public abstract GQLSourceRange range();
+
   /**
-   * 
+   *
    */
 
   @Override

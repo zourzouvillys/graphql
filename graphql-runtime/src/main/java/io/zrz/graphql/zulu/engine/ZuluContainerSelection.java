@@ -10,24 +10,26 @@ import com.google.common.collect.ImmutableList;
 
 import io.zrz.graphql.zulu.doc.GQLPreparedSelection;
 import io.zrz.graphql.zulu.executable.ExecutableOutputField;
-import io.zrz.graphql.zulu.executable.ExecutableOutputType;
+import io.zrz.graphql.zulu.executable.ExecutableReceiverType;
 
 public class ZuluContainerSelection extends AbstractZuluSelection implements ZuluSelection, ZuluSelectionContainer {
 
-  private ZuluSelectionContainer parent;
-  private ExecutableOutputField field;
-  private GQLPreparedSelection sel;
-  private ZuluExecutable executable;
-  private ImmutableList<ZuluSelection> selections;
-  private ExecutableOutputType returnType;
-  private TypeTokenMethodHandle handle;
+  private final ZuluSelectionContainer parent;
+  private final ExecutableOutputField field;
+  private final GQLPreparedSelection sel;
+  private final ZuluExecutable executable;
+  private final ImmutableList<ZuluSelection> selections;
+  private final ExecutableReceiverType returnType;
+  private final TypeTokenMethodHandle handle;
+  private final ExecutableReceiverType receiverType;
 
   public ZuluContainerSelection(
-      ZuluSelectionContainer parent,
-      ExecutableOutputField field,
-      GQLPreparedSelection sel,
-      TypeTokenMethodHandle handle,
-      ExecutableBuilder b) {
+      final ZuluSelectionContainer parent,
+      final ExecutableOutputField field,
+      final GQLPreparedSelection sel,
+      final TypeTokenMethodHandle handle,
+      final ExecutableReceiverType receiverType,
+      final ExecutableBuilder b) {
 
     super(field, sel, parent.outputType());
 
@@ -37,9 +39,10 @@ public class ZuluContainerSelection extends AbstractZuluSelection implements Zul
     this.field = field;
     this.sel = sel;
     this.executable = parent.executable();
-    this.returnType = (ExecutableOutputType) this.field.fieldType().type();
+    this.returnType = (ExecutableReceiverType) this.field.fieldType().type();
     this.handle = Objects.requireNonNull(handle);
     this.selections = b.build(this, sel.subselections());
+    this.receiverType = receiverType;
 
   }
 
@@ -53,12 +56,21 @@ public class ZuluContainerSelection extends AbstractZuluSelection implements Zul
   }
 
   /**
+   * the type which this selection will be made against. this is different from the context type when there is a spread
+   * on another type.
+   */
+
+  public ExecutableReceiverType receiverType() {
+    return this.receiverType;
+  }
+
+  /**
    * the output type for a container is the type of the container itself, e.g the result type from executing the field.
    */
 
   @Override
-  public ExecutableOutputType outputType() {
-    return returnType;
+  public ExecutableReceiverType outputType() {
+    return this.returnType;
   }
 
   /**
@@ -67,27 +79,27 @@ public class ZuluContainerSelection extends AbstractZuluSelection implements Zul
 
   @Override
   public MethodHandle invoker() {
-    return handle.handle();
+    return this.handle.handle();
   }
 
   @Override
-  public void apply(ZuluSelectionVisitor.VoidVisitor visitor) {
+  public void apply(final ZuluSelectionVisitor.VoidVisitor visitor) {
     visitor.accept(this);
   }
 
   @Override
-  public <T> void apply(ZuluSelectionVisitor.ConsumerVisitor<T> visitor, T value) {
+  public <T> void apply(final ZuluSelectionVisitor.ConsumerVisitor<T> visitor, final T value) {
     visitor.accept(this, value);
   }
 
   @Override
-  public <R> R apply(ZuluSelectionVisitor.SupplierVisitor<R> visitor) {
+  public <R> R apply(final ZuluSelectionVisitor.SupplierVisitor<R> visitor) {
     return visitor.accept(this);
 
   }
 
   @Override
-  public <T, R> R apply(ZuluSelectionVisitor.FunctionVisitor<T, R> visitor, T value) {
+  public <T, R> R apply(final ZuluSelectionVisitor.FunctionVisitor<T, R> visitor, final T value) {
     return visitor.accept(this, value);
   }
 

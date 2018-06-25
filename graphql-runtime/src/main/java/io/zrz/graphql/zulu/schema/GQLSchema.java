@@ -4,14 +4,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.eclipse.jdt.annotation.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.reflect.TypeToken;
 
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.zulu.annotations.GQLContext;
 import io.zrz.graphql.zulu.annotations.GQLDocumentation;
+import io.zrz.graphql.zulu.annotations.GQLExtension;
 import io.zrz.graphql.zulu.annotations.GQLField;
 import io.zrz.graphql.zulu.annotations.GQLObjectType;
-import io.zrz.graphql.zulu.annotations.GQLExtension;
 import io.zrz.graphql.zulu.executable.ExecutableSchema;
 import io.zrz.graphql.zulu.executable.ExecutableType;
 
@@ -19,28 +23,29 @@ import io.zrz.graphql.zulu.executable.ExecutableType;
 @GQLDocumentation("schema")
 public class GQLSchema {
 
-  private ExecutableSchema schema;
+  private static final Logger log = LoggerFactory.getLogger(GQLSchema.class);
+  private final ExecutableSchema schema;
 
   public GQLSchema(final ExecutableSchema schema) {
     this.schema = schema;
   }
 
   public GQLSchemaType queryType() {
-    return schema.rootType(GQLOpType.Query).map(type -> new GQLSchemaType(type)).orElse(null);
+    return this.schema.rootType(GQLOpType.Query).map(type -> new GQLSchemaType(type)).orElse(null);
   }
 
   public GQLSchemaType mutationType() {
-    return schema.rootType(GQLOpType.Mutation).map(type -> new GQLSchemaType(type)).orElse(null);
+    return this.schema.rootType(GQLOpType.Mutation).map(type -> new GQLSchemaType(type)).orElse(null);
   }
 
   public GQLSchemaType subscriptionType() {
-    return schema.rootType(GQLOpType.Subscription).map(type -> new GQLSchemaType(type)).orElse(null);
+    return this.schema.rootType(GQLOpType.Subscription).map(type -> new GQLSchemaType(type)).orElse(null);
   }
 
   public List<GQLSchemaType> types() {
-    return schema.types()
+    return this.schema.types()
         .filter(type -> !type.typeName().startsWith("__"))
-        .filter(type -> !isBuiltin(type))
+        .filter(type -> !this.isBuiltin(type))
         .map(type -> new GQLSchemaType(type))
         .collect(Collectors.toList());
   }
@@ -73,7 +78,12 @@ public class GQLSchema {
   }
 
   /**
-   * the magic extensions foe __typename
+   * the magic extensions for __typename
+   *
+   * this uses the schema to map the instance to a concrete type.
+   *
+   * it is possible that a type may not be registered, and all we have is an interface for it. although it's not defined
+   * in the graphql spec specifically, it's assumed this is broken so we print a warning.
    *
    * @param instance
    * @return
@@ -81,7 +91,24 @@ public class GQLSchema {
 
   @GQLExtension
   public static String __typename(final Object instance, @GQLContext final ExecutableSchema schema) {
-    return schema.type(TypeToken.of(instance.getClass())).typeName();
+
+    final TypeToken<? extends @NonNull Object> tok = TypeToken.of(instance.getClass());
+
+    final ExecutableType type = schema.type(tok);
+
+    if (type == null) {
+      log.warn("couldn't find registered type for {} - falling back to supertypes", tok);
+      // look in the supertypes.
+      return tok.getTypes()
+          .stream()
+          .map(a -> schema.type(a))
+          .filter(a -> a != null)
+          .findFirst()
+          .map(x -> x.typeName())
+          .orElse(null);
+    }
+
+    return type.typeName();
   }
 
   /**

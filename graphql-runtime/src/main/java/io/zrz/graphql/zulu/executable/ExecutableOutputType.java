@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.similarity.FuzzyScore;
@@ -20,18 +22,19 @@ import io.zrz.graphql.zulu.annotations.GQLDocumentation;
 import io.zrz.graphql.zulu.executable.ExecutableSchemaBuilder.Symbol;
 import io.zrz.zulu.types.ZTypeKind;
 
-public final class ExecutableOutputType implements ExecutableType, ZOutputType, ExecutableElement {
+public final class ExecutableOutputType implements ExecutableType, ZOutputType, ExecutableElement, ExecutableReceiverType, ExecutableStructType {
 
   private static Logger log = LoggerFactory.getLogger(ExecutableOutputType.class);
 
-  private ExecutableSchema schema;
-  private String typeName;
-  private ImmutableMap<String, ExecutableOutputField> fields;
-  private ExecutableTypeUse typeUse;
-  private TypeToken<?> javaType;
-  private String documentation;
+  private final ExecutableSchema schema;
+  private final String typeName;
+  private final ImmutableMap<String, ExecutableOutputField> fields;
+  private final ExecutableTypeUse typeUse;
+  private final TypeToken<?> javaType;
+  private final String documentation;
+  private final Set<ExecutableInterfaceType> interfaces;
 
-  ExecutableOutputType(ExecutableSchema schema, Symbol symbol, BuildContext buildctx) {
+  ExecutableOutputType(final ExecutableSchema schema, final Symbol symbol, final BuildContext buildctx) {
 
     buildctx.add(symbol, this);
 
@@ -50,36 +53,62 @@ public final class ExecutableOutputType implements ExecutableType, ZOutputType, 
           .collect(Collectors.joining("\n\n"));
 
     }
+    else {
+      this.documentation = null;
+    }
 
-    this.fields = buildctx.outputFieldsFor(symbol, this)
-        .map(field -> new ExecutableOutputField(this, symbol, field, buildctx))
+    // interfaces are calculated based on the type hierachy.
+    this.interfaces = buildctx.interfacesFor(symbol, this);
+
+    final Map<String, ExecutableOutputField> declaredFields = buildctx
+        .outputFieldsFor(symbol, this).map(field -> new ExecutableOutputField(this, symbol, field, buildctx))
         .collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k));
+
+    this.fields = Stream.concat(
+        declaredFields.values().stream(),
+        this.interfaces
+            .stream()
+            .flatMap(x -> x.fields().values().stream())
+            .filter(f -> !declaredFields.containsKey(f.fieldName())))
+        .collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k, (a, b) -> JavaExecutableUtils.merge(this, a, b)));
 
     this.typeUse = buildctx.use(this, symbol.typeToken, 0);
 
   }
+
+  /**
+   * schema this type is part of.
+   */
 
   public ExecutableSchema schema() {
     return this.schema;
   }
 
   /**
+   * the interfaces implemented by object type.
+   */
+
+  public Set<ExecutableInterfaceType> interfaces() {
+    return this.interfaces;
+  }
+
+  /**
    * each executable has an app specific context value which represents the specific instance of the type being operated
    * on.
-   * 
+   *
    * for the query root type, this is normally a "viewer" type, which represents the entry point into the model. for
    * type nodes it would normally be something representing that type, e.g an instance of a java type representing it or
    * a database identifier.
-   * 
+   *
    * this value is normally only relevant to the caller for the root types (and is normally the root type itself), as it
    * must pass it in to execute anything.
-   * 
+   *
    * this will always return a logical type of kind {@link io.zrz.graphql.zulu.LogicalTypeKind.LogicalTypeKind#OUTPUT}.
-   * 
+   *
    */
 
   public ExecutableTypeUse contextType() {
-    return typeUse;
+    return this.typeUse;
   }
 
   /**
@@ -100,7 +129,7 @@ public final class ExecutableOutputType implements ExecutableType, ZOutputType, 
   }
 
   @Override
-  public Optional<ExecutableOutputField> field(String name) {
+  public Optional<ExecutableOutputField> field(final String name) {
     return Optional.ofNullable(this.fields().get(name));
   }
 
@@ -126,31 +155,31 @@ public final class ExecutableOutputType implements ExecutableType, ZOutputType, 
 
   /**
    * given a field name, returns any fields that are similar to that name.
-   * 
+   *
    * @param fieldName
    */
 
   private static FuzzyScore SCORE = new FuzzyScore(Locale.ROOT);
 
-  public List<String> similarFields(String fieldName, int count) {
-    return fieldNames()
+  public List<String> similarFields(final String fieldName, final int count) {
+    return this.fieldNames()
         .filter(name -> SCORE.fuzzyScore(fieldName, name) > 0)
         .sorted((a, b) -> Integer.compare(SCORE.fuzzyScore(fieldName, b), SCORE.fuzzyScore(fieldName, b)))
         .limit(count)
         .collect(Collectors.toList());
   }
 
-  public IllegalArgumentException missingFieldException(String fieldName) {
+  public IllegalArgumentException missingFieldException(final String fieldName) {
 
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
     sb.append("field ");
-    sb.append(typeName());
+    sb.append(this.typeName());
     sb.append(".");
     sb.append(fieldName);
     sb.append(" does not exist.");
 
-    List<String> similar = similarFields(fieldName, 5);
+    final List<String> similar = this.similarFields(fieldName, 5);
 
     if (!similar.isEmpty()) {
 

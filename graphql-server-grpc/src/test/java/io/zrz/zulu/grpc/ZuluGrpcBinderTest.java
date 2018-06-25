@@ -4,9 +4,12 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
@@ -16,12 +19,16 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.util.TransmitStatusRuntimeExceptionInterceptor;
+import io.reactivex.Flowable;
 import io.zrz.graphql.zulu.annotations.GQLDocumentation;
 import io.zrz.graphql.zulu.annotations.GQLField;
 import io.zrz.graphql.zulu.annotations.GQLObjectType;
 import io.zrz.graphql.zulu.engine.ZuluEngine;
 import io.zrz.graphql.zulu.plugins.Jre8ZuluPlugin;
 import io.zrz.graphql.zulu.schema.GQLSchema;
+import io.zrz.zulu.graphql.GraphQLGrpc;
+import io.zrz.zulu.graphql.GraphQLProtos.PrepareReply.PreparedOperation;
+import io.zrz.zulu.graphql.RxGraphQLGrpc;
 
 public class ZuluGrpcBinderTest {
 
@@ -38,14 +45,51 @@ public class ZuluGrpcBinderTest {
 
     Server server = InProcessServerBuilder.forName("zulu")
         .intercept(TransmitStatusRuntimeExceptionInterceptor.instance())
-        .addService(new ZuluGrpcBinder(engine))
+        .addTransportFilter(new BindingServerTransportFilter(() -> new ZuluGrpcBinder(engine)))
+        .addService(new PerSessionService(GraphQLGrpc.getServiceDescriptor()))
         .build()
         .start();
 
     ZuluGrpcClient client = new ZuluGrpcClient(InProcessChannelBuilder.forName("zulu").build());
 
-    client.prepare("query myQuery ($a: String!, $b: Int!) { a: count, hello, count, maybecount, xxx, listing, structList { hello, listing } boo(test: $a, val: $b) }")
-        .blockingSubscribe(System.err::println, err -> System.err.println("ERROR: " + err.getMessage()));
+    Map<String, PreparedOperation> ops = client
+        .prepare(
+            "query myQuery ($a: String!, $b: Int!) { a: count, hello, count, maybecount, xxx, listing, structList { hello, listing } boo(test: $a, val: $b) }")
+        .flatMapIterable(reply -> reply.getOperationsList())
+        .toMap(x -> x.getOperationName())
+        .blockingGet();
+
+    Flowable.range(0, 100_000)
+        .flatMap(seq -> {
+
+          return client.execute(ops.get("myQuery").getOperationId(),
+              Struct.newBuilder()
+                  .putFields("a", Value.newBuilder().setStringValue("bob").build())
+                  .putFields("b", Value.newBuilder().setNumberValue(123).build())
+                  .build());
+
+        })
+        .blockingSubscribe(res -> {
+        }, err -> System.err.println("ERROR: " + err.getMessage()));
+
+    Stopwatch start = Stopwatch.createStarted();
+
+    Flowable.range(0, 100_000)
+        .flatMap(seq -> {
+
+          return client.execute(ops.get("myQuery").getOperationId(),
+              Struct.newBuilder()
+                  .putFields("a", Value.newBuilder().setStringValue("bob").build())
+                  .putFields("b", Value.newBuilder().setNumberValue(123).build())
+                  .build());
+
+        }, 128)
+        .blockingSubscribe(res -> {
+        }, err -> System.err.println("ERROR: " + err.getMessage()));
+
+    start.stop();
+
+    System.err.println(start.elapsed(TimeUnit.MICROSECONDS) / 100_000.0);
 
     // client.query("query ($a: String!, $b: Int!) { hello, count, maybecount, listing, structList { hello } boo(test:
     // $a, val: $b) }", Struct.newBuilder()

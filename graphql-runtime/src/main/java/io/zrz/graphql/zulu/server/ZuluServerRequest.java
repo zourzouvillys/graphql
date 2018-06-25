@@ -14,6 +14,8 @@ public interface ZuluServerRequest {
 
   List<ImmutableQuery> queries();
 
+  ZuluInjector injector();
+
   @Value.Immutable
   public interface Query {
 
@@ -26,6 +28,9 @@ public interface ZuluServerRequest {
     ZuluParameterReader variables();
 
     ZuluResultReceiver resultReceiver();
+
+    @Nullable
+    String persistedQuery();
 
   }
 

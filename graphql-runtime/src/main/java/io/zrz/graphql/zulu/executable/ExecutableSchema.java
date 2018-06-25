@@ -16,7 +16,7 @@ import io.zrz.zulu.types.ZType;
 
 /**
  * a resolved and ready-to-execute schema bound to the java and graphql domain.
- * 
+ *
  * @author theo
  *
  */
@@ -27,16 +27,22 @@ public class ExecutableSchema implements ExecutableElement {
   private final ImmutableMap<String, ExecutableType> types;
   private ImmutableMap<TypeToken<?>, ExecutableType> tokens;
 
-  ExecutableSchema(ExecutableSchemaBuilder b) {
+  ExecutableSchema(final ExecutableSchemaBuilder b) {
 
-    BuildContext ctx = new BuildContext(b, this);
+    final BuildContext ctx = new BuildContext(b, this);
 
-    Builder<GQLOperationType, ExecutableOutputType> roots = ImmutableMap.<GQLOperationType, ExecutableOutputType>builder();
+    final Builder<GQLOperationType, ExecutableOutputType> roots = ImmutableMap.<GQLOperationType, ExecutableOutputType>builder();
 
     b.operationRoots()
         .forEach((type, symbol) -> roots.put(type, (ExecutableOutputType) ctx.compile(symbol)));
 
     this.operationRoots = roots.build();
+
+    // we also need to force-add any types which are not exposed directly through params/return types but implement
+    // interfaces which are.
+
+    b.additionalTypes(ctx.types.keySet())
+        .forEach(sym -> ctx.use(this, sym.typeToken));
 
     this.types = ctx.types
         .entrySet()
@@ -56,12 +62,12 @@ public class ExecutableSchema implements ExecutableElement {
 
   /**
    * fetches the root type for a specific operation on this schema.
-   * 
+   *
    * this would normally be {@link GQLOpType#Query}, {@link GQLOpType#Mutation}, or {@link GQLOpType#Subscription}.
-   * 
+   *
    */
 
-  public Optional<ExecutableOutputType> rootType(GQLOperationType type) {
+  public Optional<ExecutableOutputType> rootType(final GQLOperationType type) {
     return Optional.ofNullable(this.operationRoots.get(type));
   }
 
@@ -70,14 +76,14 @@ public class ExecutableSchema implements ExecutableElement {
    */
 
   public Stream<String> typeNames() {
-    return types.keySet().stream();
+    return this.types.keySet().stream();
   }
 
   /**
    * returns the ZType that represents the given GraphQL type name.
    */
 
-  public ZType type(String typeName) {
+  public ZType type(final String typeName) {
     return null;
   }
 
@@ -90,19 +96,19 @@ public class ExecutableSchema implements ExecutableElement {
 
   }
 
-  public ExecutableOutputField resolve(String typeName, String fieldName) {
+  public ExecutableOutputField resolve(final String typeName, final String fieldName) {
 
-    ExecutableType type = this.types.get(typeName);
+    final ExecutableType type = this.types.get(typeName);
 
     if (type.logicalKind() != LogicalTypeKind.OUTPUT) {
       throw new IllegalArgumentException("type '" + typeName + "' is not an output type");
     }
 
-    return resolve((ExecutableOutputType) type, fieldName);
+    return this.resolve((ExecutableOutputType) type, fieldName);
 
   }
 
-  private ExecutableOutputField resolve(ExecutableOutputType type, String fieldName) {
+  private ExecutableOutputField resolve(final ExecutableOutputType type, final String fieldName) {
     return type.field(fieldName)
         .orElseThrow(() -> type.missingFieldException(fieldName));
   }
@@ -111,13 +117,13 @@ public class ExecutableSchema implements ExecutableElement {
     return new ExecutableSchemaBuilder();
   }
 
-  public static ExecutableSchema withRoot(Type queryRoot) {
+  public static ExecutableSchema withRoot(final Type queryRoot) {
     return builder()
         .setRootType(GQLOpType.Query, queryRoot)
         .build();
   }
 
-  public static ExecutableSchema withRoot(Type queryRoot, Type mutationRoot) {
+  public static ExecutableSchema withRoot(final Type queryRoot, final Type mutationRoot) {
     return builder()
         .setRootType(GQLOpType.Query, queryRoot)
         .setRootType(GQLOpType.Mutation, mutationRoot)
@@ -126,23 +132,23 @@ public class ExecutableSchema implements ExecutableElement {
 
   /**
    * finds the type with the specified name.
-   * 
+   *
    * @param typeName
    * @return
    */
 
-  public ExecutableType resolveType(String typeName) {
+  public ExecutableType resolveType(final String typeName) {
     return this.types.get(typeName);
   }
 
   /**
    * converts a registered java type to it's executable type.
-   * 
+   *
    * @param type
    * @return
    */
 
-  public ExecutableType type(TypeToken<? extends Object> type) {
+  public ExecutableType type(final TypeToken<? extends Object> type) {
     return this.tokens.get(type);
   }
 

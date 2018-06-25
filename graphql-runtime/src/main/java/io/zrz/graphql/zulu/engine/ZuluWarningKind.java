@@ -6,11 +6,20 @@ import static io.zrz.graphql.zulu.engine.ZuluWarningCategory.INTERNAL;
 import static io.zrz.graphql.zulu.engine.ZuluWarningCategory.OPERATION;
 import static io.zrz.graphql.zulu.engine.ZuluWarningCategory.SELECTION;
 import static io.zrz.graphql.zulu.engine.ZuluWarningCategory.SYNTAX;
+import static io.zrz.graphql.zulu.engine.ZuluWarningCategory.TRANSPORT;
 
 public enum ZuluWarningKind {
 
   /**
-   * 
+   *
+   */
+
+  PERSISTED_QUERY_NOT_FOUND(
+      TRANSPORT,
+      "PersistedQueryNotFound"),
+
+  /**
+   *
    */
 
   SYNTAX_ERROR(
@@ -18,7 +27,7 @@ public enum ZuluWarningKind {
       "query syntax error"),
 
   /**
-   * 
+   *
    */
 
   INVALID_OPERATION(
@@ -26,7 +35,7 @@ public enum ZuluWarningKind {
       "invalid operation name '${operation.name}'"),
 
   /**
-   * 
+   *
    */
 
   OPERATION_NAME_REQUIRED(
@@ -40,6 +49,14 @@ public enum ZuluWarningKind {
   UNKNOWN_FIELD(
       SELECTION,
       "field '${field.name}' does not exist on type '${type.name}'"),
+
+  /**
+   * An unknown type was requested (e.g, for a spread).
+   */
+
+  UNKNOWN_TYPE(
+      SELECTION,
+      "type '${symbol}' does not exist"),
 
   /**
    * a required parameter was missing in the query.
@@ -61,6 +78,14 @@ public enum ZuluWarningKind {
   NONLEAF_SELECTION(
       SELECTION,
       "field '${type.name}.${field.name}' is of non scalar type '${field.type.name}' so must have a selection of subfields. did you mean '${field.name} { ... }'?"),
+
+  /**
+   * invalid spreaad
+   */
+
+  INVALID_SPREAD(
+      SELECTION,
+      "invalid spread type"),
 
   /**
    * a sub-selection on a leaf
@@ -95,7 +120,7 @@ public enum ZuluWarningKind {
       "an internal error occured while processing"),
 
   /**
-   * 
+   *
    */
 
   INVALID_HANDLER(
@@ -107,11 +132,11 @@ public enum ZuluWarningKind {
   private ZuluWarningCategory category;
   private String template;
 
-  ZuluWarningKind(ZuluWarningCategory category) {
+  ZuluWarningKind(final ZuluWarningCategory category) {
     this.category = category;
   }
 
-  ZuluWarningKind(ZuluWarningCategory category, String template) {
+  ZuluWarningKind(final ZuluWarningCategory category, final String template) {
     this.category = category;
     this.template = template;
   }
@@ -127,20 +152,20 @@ public enum ZuluWarningKind {
   /**
    */
 
-  public String detail(ZuluWarning warning) {
+  public String detail(final ZuluWarning warning) {
     if (this.template != null) {
-      return ZuluWarnings.format(warning, template);
+      return ZuluWarnings.format(warning, this.template);
     }
-    return toString();
+    return this.toString();
   }
 
   /**
-   * 
+   *
    */
 
   @Override
   public String toString() {
-    return category + ":" + name();
+    return this.category + ":" + this.name();
   }
 
 }

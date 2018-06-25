@@ -9,17 +9,21 @@ import com.google.common.base.Preconditions;
 
 import io.zrz.graphql.zulu.doc.GQLPreparedSelection;
 import io.zrz.graphql.zulu.executable.ExecutableOutputField;
+import io.zrz.graphql.zulu.executable.ExecutableReceiverType;
 
 public class ZuluLeafSelection extends AbstractZuluSelection implements ZuluSelection {
 
-  private TypeTokenMethodHandle handle;
-  private Optional<? extends AnnotatedElement> origin;
+  private final TypeTokenMethodHandle handle;
+  private final Optional<? extends AnnotatedElement> origin;
+  private final ExecutableReceiverType receiverType;
 
-  public ZuluLeafSelection(ZuluSelectionContainer parent, ExecutableOutputField field, GQLPreparedSelection sel, TypeTokenMethodHandle handle) {
+  public ZuluLeafSelection(final ZuluSelectionContainer parent, final ExecutableOutputField field, final GQLPreparedSelection sel,
+      final TypeTokenMethodHandle handle, final ExecutableReceiverType receiverType) {
     super(field, sel, parent.outputType());
     this.handle = Objects.requireNonNull(handle);
     Preconditions.checkState(sel.isLeaf());
     this.origin = field.origin();
+    this.receiverType = receiverType;
   }
 
   @Override
@@ -28,29 +32,29 @@ public class ZuluLeafSelection extends AbstractZuluSelection implements ZuluSele
   }
 
   @Override
-  public void apply(ZuluSelectionVisitor.VoidVisitor visitor) {
+  public void apply(final ZuluSelectionVisitor.VoidVisitor visitor) {
     visitor.accept(this);
   }
 
   @Override
-  public <T> void apply(ZuluSelectionVisitor.ConsumerVisitor<T> visitor, T value) {
+  public <T> void apply(final ZuluSelectionVisitor.ConsumerVisitor<T> visitor, final T value) {
     visitor.accept(this, value);
   }
 
   @Override
-  public <R> R apply(ZuluSelectionVisitor.SupplierVisitor<R> visitor) {
+  public <R> R apply(final ZuluSelectionVisitor.SupplierVisitor<R> visitor) {
     return visitor.accept(this);
 
   }
 
   @Override
-  public <T, R> R apply(ZuluSelectionVisitor.FunctionVisitor<T, R> visitor, T value) {
+  public <T, R> R apply(final ZuluSelectionVisitor.FunctionVisitor<T, R> visitor, final T value) {
     return visitor.accept(this, value);
   }
 
   @Override
   public Optional<? extends AnnotatedElement> origin() {
-    return origin;
+    return this.origin;
   }
 
 }

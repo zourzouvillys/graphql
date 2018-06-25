@@ -18,6 +18,7 @@ import io.zrz.graphql.core.runtime.GQLOperationType;
 import io.zrz.graphql.zulu.doc.DefaultGQLPreparedOperation.OpInputType;
 import io.zrz.graphql.zulu.doc.GQLPreparedOperation;
 import io.zrz.graphql.zulu.doc.GQLPreparedSelection;
+import io.zrz.graphql.zulu.doc.GQLSelectionTypeCriteria;
 import io.zrz.graphql.zulu.doc.RuntimeParameterHolder;
 import io.zrz.graphql.zulu.executable.ExecutableInputContext;
 import io.zrz.graphql.zulu.executable.ExecutableInputField;
@@ -25,15 +26,16 @@ import io.zrz.graphql.zulu.executable.ExecutableInputType;
 import io.zrz.graphql.zulu.executable.ExecutableInvoker;
 import io.zrz.graphql.zulu.executable.ExecutableOutputField;
 import io.zrz.graphql.zulu.executable.ExecutableOutputType;
+import io.zrz.graphql.zulu.executable.ExecutableReceiverType;
 import io.zrz.graphql.zulu.executable.ExecutableSchema;
+import io.zrz.graphql.zulu.executable.ExecutableType;
 import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
 import io.zrz.zulu.types.ZField;
-import io.zrz.zulu.types.ZStructType;
 import io.zrz.zulu.types.ZTypeUse;
 
 /**
  * state specific to building.
- * 
+ *
  * @author theo
  *
  */
@@ -44,11 +46,11 @@ class ExecutableBuilder {
 
   private static Logger log = LoggerFactory.getLogger(ExecutableBuilder.class);
 
-  private ZuluEngine engine;
-  private GQLPreparedOperation op;
+  private final ZuluEngine engine;
+  private final GQLPreparedOperation op;
   private List<ZuluWarning> warnings = null;
 
-  ExecutableBuilder(ZuluEngine engine, GQLPreparedOperation op) {
+  ExecutableBuilder(final ZuluEngine engine, final GQLPreparedOperation op) {
     this.engine = engine;
     this.op = op;
   }
@@ -58,7 +60,7 @@ class ExecutableBuilder {
   }
 
   /**
-   * 
+   *
    */
 
   List<ZuluWarning> warnings() {
@@ -67,42 +69,42 @@ class ExecutableBuilder {
 
   /**
    * build an executable for this operation and return a MethodHandle for invoking it.
-   * 
+   *
    * the {@link MethodHandle} takes the root context instance, and parameter provider. it returns the result of the
    * query.
-   * 
+   *
    * the executable will use constant values where possible, and invocations will be folded where they can.
-   * 
+   *
    */
 
   ZuluExecutable build() {
-    ExecutableOutputType type = engine.schema().rootType(op.type()).get();
+    final ExecutableOutputType type = this.engine.schema().rootType(this.op.type()).get();
     return new ZuluExecutable(this, type);
   }
 
   /**
-   * 
+   *
    * @param exec
    * @return
    */
 
-  ImmutableList<ZuluSelection> build(ZuluExecutable exec) {
-    return build(exec, op.selection());
+  ImmutableList<ZuluSelection> build(final ZuluExecutable exec) {
+    return this.build(exec, this.op.selection());
   }
 
   /**
-   * 
+   *
    * @param exec
    * @param selections
    * @return
    */
 
-  ImmutableList<ZuluSelection> build(ZuluSelectionContainer parent, List<? extends GQLPreparedSelection> selections) {
+  ImmutableList<ZuluSelection> build(final ZuluSelectionContainer parent, final List<? extends GQLPreparedSelection> selections) {
 
     return selections
         .stream()
         .sequential()
-        .map(sel -> build(parent, sel))
+        .map(sel -> this.build(parent, sel))
         .filter(sel -> !Objects.isNull(sel))
         .collect(ImmutableList.toImmutableList());
 
@@ -110,26 +112,34 @@ class ExecutableBuilder {
 
   /**
    * build a single ZuluSelection from a selection on a parent.
-   * 
+   *
    * @param exec
    * @param type
    * @param sel
    * @return
    */
 
-  private ZuluSelection build(ZuluSelectionContainer parent, GQLPreparedSelection sel) {
+  private ZuluSelection build(final ZuluSelectionContainer parent, final GQLPreparedSelection sel) {
+
+    // get the receiver that the field will be selected from.
+    final ExecutableReceiverType receiverType = this.calculateReceiver(parent, sel);
+
+    if (receiverType == null) {
+      // calculareReceiver will have warned
+      return null;
+    }
 
     // find this field in the parent container.
-    ExecutableOutputField field = parent.outputType()
+    final ExecutableOutputField field = receiverType
         .field(sel.fieldName())
         .orElse(null);
 
     if (field == null) {
-      addWarning(new ZuluWarning.MissingField(parent.outputType(), sel));
+      this.addWarning(new ZuluWarning.MissingField(receiverType, sel));
       return null;
     }
 
-    TypeTokenMethodHandle handle = applyField(sel, field);
+    final TypeTokenMethodHandle handle = this.applyField(sel, parent.outputType(), receiverType, field);
 
     if (handle == null) {
       // field apply will have generated warning/error if invalid.
@@ -144,7 +154,7 @@ class ExecutableBuilder {
         case SCALAR:
           // these are the only types which can be for sure output as leafs.
           // we output this value directly to the caller.
-          return new ZuluLeafSelection(parent, field, sel, handle);
+          return new ZuluLeafSelection(parent, field, sel, handle, receiverType);
         case UNION:
         case INPUT:
         case INTERFACE:
@@ -153,7 +163,7 @@ class ExecutableBuilder {
           break;
       }
 
-      addWarning(new ZuluWarning.OutputFieldWarning(ZuluWarningKind.NONLEAF_SELECTION, field, sel));
+      this.addWarning(new ZuluWarning.OutputFieldWarning(ZuluWarningKind.NONLEAF_SELECTION, field, sel));
       return null;
 
     }
@@ -165,60 +175,109 @@ class ExecutableBuilder {
       case SCALAR:
         // these are the only types which can be for sure output as leafs.
         // we output this value directly to the caller.
-        addWarning(new ZuluWarning.OutputFieldWarning(ZuluWarningKind.LEAF_SELECTION, field, sel));
+        this.addWarning(new ZuluWarning.OutputFieldWarning(ZuluWarningKind.LEAF_SELECTION, field, sel));
         return null;
       case OUTPUT:
+      case INTERFACE:
         break;
       case UNION:
       case INPUT:
-      case INTERFACE:
       default:
-        addWarning(new ZuluWarning.OutputFieldWarning(ZuluWarningKind.NOT_SUPPORTED, field, sel));
+        this.addWarning(new ZuluWarning.OutputFieldWarning(ZuluWarningKind.NOT_SUPPORTED, field, sel));
         return null;
     }
 
-    return new ZuluContainerSelection(parent, field, sel, handle, this);
+    return new ZuluContainerSelection(parent, field, sel, handle, receiverType, this);
+
+  }
+
+  /**
+   * calculate the type we will get the field from.
+   *
+   * @param parent
+   * @param sel
+   * @return
+   */
+
+  private ExecutableReceiverType calculateReceiver(final ZuluSelectionContainer parent, final GQLPreparedSelection sel) {
+
+    if (sel.typeCritera().isPresent()) {
+
+      // it's a fragment spread
+      final GQLSelectionTypeCriteria typeCriteria = sel.typeCritera().get();
+      final String receiverTypeName = typeCriteria.refType().name();
+      final ExecutableType receiverType = this.engine.schema().resolveType(receiverTypeName);
+
+      if (receiverType == null) {
+        this.addWarning(new ZuluWarning.UnknownTypeSymbol(parent.outputType(), receiverTypeName, sel));
+        return null;
+      }
+
+      switch (receiverType.logicalKind()) {
+        case INTERFACE:
+        case OUTPUT:
+          break;
+        default:
+          this.addWarning(new ZuluWarning.OutputTypeWarning(ZuluWarningKind.INVALID_SPREAD, parent.outputType(), sel));
+          return null;
+      }
+
+      return (ExecutableReceiverType) receiverType;
+
+    }
+
+    return parent.outputType();
 
   }
 
   /**
    * returns a handle for invoking this field. the handle takes the receiver context & request. it returns the result.
-   * 
+   *
    * @param sel
-   *                The selection to execute.
-   * 
+   *                       The selection to execute.
+   * @param receiverType
+   *                       the receiver type of the selection - may be different than the field type (due to spread).
    * @param field
    * @return
    */
 
-  private TypeTokenMethodHandle applyField(GQLPreparedSelection sel, ExecutableOutputField field) {
+  private TypeTokenMethodHandle applyField(
+      final GQLPreparedSelection sel,
+      final ExecutableReceiverType contextType,
+      final ExecutableReceiverType receiverType,
+      final ExecutableOutputField field) {
 
     Objects.requireNonNull(field);
 
-    ExecutableInvoker invoker = field.invoker();
+    final ExecutableInvoker invoker = field.invoker();
 
     if (invoker == null) {
-      addWarning(new ZuluWarning.OutputFieldWarning(ZuluWarningKind.INVALID_HANDLER, field, sel));
+      this.addWarning(new ZuluWarning.OutputFieldWarning(ZuluWarningKind.INVALID_HANDLER, field, sel));
       return null;
     }
 
-    ExecutableInputType params = field
+    final ExecutableInputType params = field
         .invoker()
         .parameters()
         .orElse(null);
 
-    TypeTokenMethodHandle handle = invocationHandle(field, field.invoker().methodHandle());
+    TypeTokenMethodHandle handle = this.invocationHandle(field, field.invoker().methodHandle());
+
+    if (receiverType != contextType) {
+      // cast to the receiver type, else return null
+      handle = handle.guardReceiverType(contextType.javaType(), receiverType);
+    }
 
     if (params == null) {
       // no parameters, so just return the method handle directly.
-      return checkHandlerSignature(field, handle);
+      return this.checkHandlerSignature(field, handle);
     }
 
     int offset = field.contextParameters().size() - CONTEXT_ARGS;
 
-    for (ExecutableInputField param : params.fieldValues()) {
+    for (final ExecutableInputField param : params.fieldValues()) {
 
-      handle = map(param, sel, handle, offset);
+      handle = this.map(param, sel, handle, offset);
 
       offset++;
 
@@ -229,16 +288,16 @@ class ExecutableBuilder {
 
     }
 
-    return checkHandlerSignature(field, handle);
+    return this.checkHandlerSignature(field, handle);
 
   }
 
-  private TypeTokenMethodHandle checkHandlerSignature(ExecutableOutputField field, TypeTokenMethodHandle handle) {
+  private TypeTokenMethodHandle checkHandlerSignature(final ExecutableOutputField field, final TypeTokenMethodHandle handle) {
 
-    MethodType type = handle.type();
+    final MethodType type = handle.type();
 
-    Class<?> returnType = type.returnType();
-    List<Class<?>> params = type.parameterList();
+    final Class<?> returnType = type.returnType();
+    final List<Class<?>> params = type.parameterList();
 
     if (field.fieldType().arity() > 0) {
 
@@ -261,29 +320,29 @@ class ExecutableBuilder {
 
   /**
    * wraps an invocation handle before passing into the pipeline.
-   * 
+   *
    * @param field
-   * 
+   *
    * @param methodHandle
    * @return
    */
 
-  public TypeTokenMethodHandle invocationHandle(ExecutableOutputField field, MethodHandle mh) {
+  public TypeTokenMethodHandle invocationHandle(final ExecutableOutputField field, MethodHandle mh) {
 
     mh = MethodHandles.dropArguments(mh, 0, ZuluRequestContext.class);
 
-    for (ExecutableInputContext ctx : field.contextParameters()) {
+    for (final ExecutableInputContext ctx : field.contextParameters()) {
 
-      mh = insertContextParam(mh, ctx.index() + CONTEXT_ARGS, ctx);
+      mh = this.insertContextParam(mh, ctx.index() + CONTEXT_ARGS, ctx);
 
     }
 
     return new TypeTokenMethodHandle(mh);
   }
 
-  private MethodHandle insertContextParam(MethodHandle mh, int index, ExecutableInputContext ctx) {
+  private MethodHandle insertContextParam(final MethodHandle mh, final int index, final ExecutableInputContext ctx) {
 
-    TypeToken<?> targetType = ctx.javaType();
+    final TypeToken<?> targetType = ctx.javaType();
 
     if (targetType.getRawType().equals(ExecutableSchema.class)) {
 
@@ -297,47 +356,47 @@ class ExecutableBuilder {
 
   /**
    * inserts an argument that provides the required value.
-   * 
+   *
    * @param param
    *                the input parameter definition.
    * @param sel
    *                the selection on the field.
-   * 
+   *
    */
 
-  private TypeTokenMethodHandle map(ExecutableInputField param, GQLPreparedSelection sel, TypeTokenMethodHandle target, int offset) {
+  private TypeTokenMethodHandle map(final ExecutableInputField param, final GQLPreparedSelection sel, final TypeTokenMethodHandle target, final int offset) {
 
     if (target == null) {
       throw new IllegalArgumentException("target");
     }
 
-    ZField provided = sel.parameters()
+    final ZField provided = sel.parameters()
         .flatMap(selparams -> selparams.field(param.fieldName()))
         .orElse(null);
 
     if (provided == null) {
-      addWarning(new ZuluWarning.MissingRequiredParameter(param, sel));
+      this.addWarning(new ZuluWarning.MissingRequiredParameter(param, sel));
       return null;
     }
 
     //
-    if (!engine.compatible(provided.fieldType(), param.fieldType())) {
-      addWarning(new ZuluWarning.IncompatibleTypes(param, provided, sel));
+    if (!this.engine.compatible(provided.fieldType(), param.fieldType())) {
+      this.addWarning(new ZuluWarning.IncompatibleTypes(param, provided, sel));
       return null;
     }
 
     // if the value is constant, we can bind now and avoid doing anything at invocation time.
     if (provided.constantValue().isPresent()) {
-      return target.insertArguments(param.index() - offset, engine.get(param, provided.constantValue().get()));
+      return target.insertArguments(param.index() - offset, this.engine.get(param, provided.constantValue().get()));
     }
 
     // the value is a variable (or depends on the output of another field/operation), so we need to defer to runtime.
     // however we do know the type, so let's check to make sure it's valid.
 
-    ExecutableTypeUse targetType = param.fieldType();
-    ZTypeUse providedType = provided.fieldType();
+    final ExecutableTypeUse targetType = param.fieldType();
+    final ZTypeUse providedType = provided.fieldType();
 
-    RuntimeParameterHolder holder = (RuntimeParameterHolder) provided;
+    final RuntimeParameterHolder holder = (RuntimeParameterHolder) provided;
 
     // if (false) {
     // return target.insertArgument(param.index() - offset, holder.parameterName(), targetType);
@@ -366,7 +425,7 @@ class ExecutableBuilder {
 
     // map the arguments.
 
-    int mapping[] = new int[mapped.type().parameterCount()];
+    final int mapping[] = new int[mapped.type().parameterCount()];
     mapping[0] = 0;
     mapping[1] = 1;
     mapping[2] = 0;
@@ -384,18 +443,18 @@ class ExecutableBuilder {
 
   }
 
-  public static Object resolveParameter(ZuluRequestContext ctx, ExecutableTypeUse targetType, String name) {
+  public static Object resolveParameter(final ZuluRequestContext ctx, final ExecutableTypeUse targetType, final String name) {
     return ctx.parameter(name, targetType);
   }
 
   /**
    * adds a warning generated during compilation.
-   * 
+   *
    * @param warning
    *                  the warning to add.
    */
 
-  private void addWarning(ZuluWarning warning) {
+  private void addWarning(final ZuluWarning warning) {
     if (this.warnings == null) {
       this.warnings = new ArrayList<>();
     }
@@ -403,11 +462,11 @@ class ExecutableBuilder {
   }
 
   public GQLOperationType operationType() {
-    return op.type();
+    return this.op.type();
   }
 
   public OpInputType inputType() {
-    return op.inputType();
+    return this.op.inputType();
   }
 
 }

@@ -18,31 +18,31 @@ public class ExecutableInputType extends AbstractExecutableType implements ZStru
 
   /**
    * construct from a parameter list.
-   * 
+   *
    * @param method
    * @param fields
    */
 
-  public ExecutableInputType(ExecutableOutputField method, ImmutableList<ExecutableInputField> fields) {
+  public ExecutableInputType(final ExecutableOutputField method, final ImmutableList<ExecutableInputField> fields) {
     this.fields = fields.stream().collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k));
     this.list = fields;
   }
 
   /**
    * construct from a declared input type.
-   * 
+   *
    * @param schema
    * @param symbol
    * @param buildContext
    */
 
-  public ExecutableInputType(ExecutableSchema schema, Symbol symbol, BuildContext buildContext) {
+  public ExecutableInputType(final ExecutableSchema schema, final Symbol symbol, final BuildContext buildContext) {
     this.name = symbol.typeName;
     this.fields = ImmutableMap.of();
   }
 
   @Override
-  public Optional<? extends ExecutableInputField> field(String name) {
+  public Optional<? extends ExecutableInputField> field(final String name) {
     return Optional.ofNullable(this.fields().get(name));
   }
 
@@ -62,7 +62,7 @@ public class ExecutableInputType extends AbstractExecutableType implements ZStru
 
   @Override
   public String typeName() {
-    return name;
+    return this.name;
   }
 
   @Override

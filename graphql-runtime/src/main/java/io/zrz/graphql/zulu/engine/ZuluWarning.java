@@ -10,7 +10,7 @@ import io.zrz.graphql.zulu.doc.GQLPreparedSelection;
 import io.zrz.graphql.zulu.executable.ExecutableElement;
 import io.zrz.graphql.zulu.executable.ExecutableInputField;
 import io.zrz.graphql.zulu.executable.ExecutableOutputField;
-import io.zrz.graphql.zulu.executable.ExecutableOutputType;
+import io.zrz.graphql.zulu.executable.ExecutableReceiverType;
 import io.zrz.graphql.zulu.executable.ExecutableType;
 import io.zrz.zulu.types.ZField;
 
@@ -18,9 +18,9 @@ public interface ZuluWarning {
 
   public class IncompatibleTypes extends AbstractWarning<ExecutableInputField> {
 
-    private ZField provided;
+    private final ZField provided;
 
-    public IncompatibleTypes(ExecutableInputField param, ZField provided, GQLPreparedSelection sel) {
+    public IncompatibleTypes(final ExecutableInputField param, final ZField provided, final GQLPreparedSelection sel) {
       super(ZuluWarningKind.INCOMPATIBLE_TYPE, param, sel);
       this.provided = provided;
     }
@@ -42,19 +42,40 @@ public interface ZuluWarning {
 
   }
 
+  public class UnknownTypeSymbol extends AbstractWarning<ExecutableElement> {
+
+    private final String symbol;
+
+    public UnknownTypeSymbol(final ExecutableElement context, final String symbol, final GQLPreparedSelection sel) {
+      super(ZuluWarningKind.UNKNOWN_TYPE, context, sel);
+      this.symbol = symbol;
+    }
+
+    @Override
+    public String detail() {
+      return "type '" + symbol + "' is unknown";
+    }
+
+    @Override
+    public ExecutableType context() {
+      return null;
+    }
+
+  }
+
   public class DocumentWarning implements ZuluWarning {
 
-    private GQLPreparedDocument doc;
-    private ZuluWarningKind kind;
-    private String operationName;
+    private final GQLPreparedDocument doc;
+    private final ZuluWarningKind kind;
+    private final String operationName;
 
-    public DocumentWarning(ZuluWarningKind kind, GQLPreparedDocument doc, String operationName) {
+    public DocumentWarning(final ZuluWarningKind kind, final GQLPreparedDocument doc, final String operationName) {
       this.doc = doc;
       this.kind = kind;
       this.operationName = operationName;
     }
 
-    public DocumentWarning(ZuluWarningKind kind, GQLPreparedDocument doc) {
+    public DocumentWarning(final ZuluWarningKind kind, final GQLPreparedDocument doc) {
       this(kind, doc, null);
     }
 
@@ -96,11 +117,11 @@ public interface ZuluWarning {
 
   public class ParseWarning implements ZuluWarning {
 
-    private ZuluWarningKind kind;
-    private String input;
-    private GQLException error;
+    private final ZuluWarningKind kind;
+    private final String input;
+    private final GQLException error;
 
-    public ParseWarning(ZuluWarningKind kind, String input, GQLException error) {
+    public ParseWarning(final ZuluWarningKind kind, final String input, final GQLException error) {
       this.error = error;
       this.input = input;
       this.kind = kind;
@@ -130,9 +151,9 @@ public interface ZuluWarning {
 
       if (error instanceof SyntaxErrorException) {
 
-        SyntaxErrorException err = (SyntaxErrorException) error;
+        final SyntaxErrorException err = (SyntaxErrorException) error;
 
-        ImmutableLineInfo info = err.lineInfo();
+        final ImmutableLineInfo info = err.lineInfo();
 
         return ImmutableGQLSourceLocation.builder()
             .lineNumber(info.lineNumber())
@@ -176,18 +197,18 @@ public interface ZuluWarning {
     protected T type;
     protected Throwable cause;
 
-    public AbstractWarning(ZuluWarningKind kind, T type) {
+    public AbstractWarning(final ZuluWarningKind kind, final T type) {
       this.kind = kind;
       this.type = type;
     }
 
-    public AbstractWarning(ZuluWarningKind kind, T type, GQLPreparedSelection sel) {
+    public AbstractWarning(final ZuluWarningKind kind, final T type, final GQLPreparedSelection sel) {
       this.kind = kind;
       this.sel = sel;
       this.type = type;
     }
 
-    public AbstractWarning(ZuluWarningKind kind, ZuluSelection sel, T type) {
+    public AbstractWarning(final ZuluWarningKind kind, final ZuluSelection sel, final T type) {
       this.kind = kind;
       this.sel = sel;
       this.type = type;
@@ -225,7 +246,7 @@ public interface ZuluWarning {
     @Override
     public String toString() {
 
-      StringBuilder sb = new StringBuilder();
+      final StringBuilder sb = new StringBuilder();
 
       if (sourceLocation() != null) {
         sb.append("(line ");
@@ -244,11 +265,11 @@ public interface ZuluWarning {
 
   }
 
-  public class OutputTypeWarning extends AbstractWarning<ExecutableOutputType> {
+  public class OutputTypeWarning extends AbstractWarning<ExecutableReceiverType> {
 
-    private ExecutableOutputType type;
+    private final ExecutableReceiverType type;
 
-    public OutputTypeWarning(ZuluWarningKind kind, ExecutableOutputType type, GQLPreparedSelection sel) {
+    public OutputTypeWarning(final ZuluWarningKind kind, final ExecutableReceiverType type, final GQLPreparedSelection sel) {
       super(kind, type, sel);
       this.type = type;
     }
@@ -269,18 +290,18 @@ public interface ZuluWarning {
 
     private String message;
 
-    public OutputFieldWarning(ZuluWarningKind kind, ExecutableOutputField field, GQLPreparedSelection sel) {
+    public OutputFieldWarning(final ZuluWarningKind kind, final ExecutableOutputField field, final GQLPreparedSelection sel) {
       super(kind, field, sel);
 
     }
 
-    public OutputFieldWarning(ZuluWarningKind kind, ExecutableOutputField field, GQLPreparedSelection sel, String message) {
+    public OutputFieldWarning(final ZuluWarningKind kind, final ExecutableOutputField field, final GQLPreparedSelection sel, final String message) {
       super(kind, field, sel);
       this.message = message;
     }
 
     @Override
-    public ExecutableOutputType context() {
+    public ExecutableType context() {
       return this.type.receiverType();
     }
 
@@ -294,9 +315,9 @@ public interface ZuluWarning {
 
   }
 
-  public class MissingField extends AbstractWarning<ExecutableOutputType> {
+  public class MissingField extends AbstractWarning<ExecutableReceiverType> {
 
-    public MissingField(ExecutableOutputType type, GQLPreparedSelection sel) {
+    public MissingField(final ExecutableReceiverType type, final GQLPreparedSelection sel) {
       super(ZuluWarningKind.UNKNOWN_FIELD, type, sel);
     }
 
@@ -319,9 +340,9 @@ public interface ZuluWarning {
 
   public class MissingRequiredParameter extends AbstractWarning<ExecutableInputField> {
 
-    private ExecutableInputField param;
+    private final ExecutableInputField param;
 
-    public MissingRequiredParameter(ExecutableInputField param, GQLPreparedSelection sel) {
+    public MissingRequiredParameter(final ExecutableInputField param, final GQLPreparedSelection sel) {
       super(ZuluWarningKind.MISSING_PARAMETER, param, sel);
       this.param = param;
     }
@@ -343,12 +364,12 @@ public interface ZuluWarning {
 
   public class ExecutionError extends AbstractWarning<ExecutableElement> {
 
-    private Throwable error;
-    private Object context;
-    private ExecutableOutputType type;
-    private ZuluSelection selection;
+    private final Throwable error;
+    private final Object context;
+    private final ExecutableReceiverType type;
+    private final ZuluSelection selection;
 
-    public ExecutionError(ZuluLeafSelection leaf, Throwable ex, Object context) {
+    public ExecutionError(final ZuluLeafSelection leaf, final Throwable ex, final Object context) {
       super(ZuluWarningKind.INVOCATION_EXCEPTION, leaf, leaf.element());
       this.error = ex;
       this.context = context;
@@ -356,7 +377,7 @@ public interface ZuluWarning {
       this.selection = leaf;
     }
 
-    public ExecutionError(ZuluContainerSelection container, Throwable ex, Object context) {
+    public ExecutionError(final ZuluContainerSelection container, final Throwable ex, final Object context) {
       super(ZuluWarningKind.INVOCATION_EXCEPTION, container, container.element());
       this.error = ex;
       this.context = context;

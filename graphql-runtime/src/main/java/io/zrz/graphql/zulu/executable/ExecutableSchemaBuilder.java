@@ -4,10 +4,12 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -26,6 +28,7 @@ import io.zrz.graphql.zulu.JavaInputField;
 import io.zrz.graphql.zulu.JavaOutputField;
 import io.zrz.graphql.zulu.LogicalTypeKind;
 import io.zrz.graphql.zulu.annotations.GQLObjectType;
+import io.zrz.graphql.zulu.annotations.GQLType.Kind;
 import io.zrz.graphql.zulu.binding.JavaBindingProvider;
 import io.zrz.graphql.zulu.binding.JavaBindingType;
 import io.zrz.graphql.zulu.binding.JavaBindingUtils;
@@ -35,9 +38,9 @@ import io.zrz.graphql.zulu.spi.ExtensionGenerator;
 /**
  * builds a schema that is bound to the defined handlers, and exposes a GraphQL compatible model that can be
  * introspected.
- * 
+ *
  * the resulting model has all fields and types resolved, and provides a mechanism for binding.
- * 
+ *
  * @author theo
  *
  */
@@ -47,13 +50,13 @@ public final class ExecutableSchemaBuilder {
   private static Logger log = LoggerFactory.getLogger(ExecutableSchemaBuilder.class);
 
   // the binder component is stateful, as it knows types previously registered.
-  private JavaBindingProvider binder = new JavaBindingProvider();
+  private final JavaBindingProvider binder = new JavaBindingProvider();
 
   /**
    * the registered operation roots.
    */
 
-  private Map<GQLOperationType, Symbol> operationRoots = new HashMap<>();
+  private final Map<GQLOperationType, Symbol> operationRoots = new HashMap<>();
 
   /**
    * the predicate which tests if a token is allowed to be loaded.
@@ -62,39 +65,39 @@ public final class ExecutableSchemaBuilder {
   private Predicate<TypeToken<?>> allowedAutoload = tok -> false;
 
   /**
-   * 
+   *
    */
 
-  private Map<String, Symbol> names = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-  private Map<TypeToken<?>, Symbol> types = new HashMap<>();
-  private Multimap<LogicalTypeKind, Symbol> kinds = HashMultimap.create();
+  private final Map<String, Symbol> names = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+  private final Map<TypeToken<?>, Symbol> types = new HashMap<>();
+  private final Multimap<LogicalTypeKind, Symbol> kinds = HashMultimap.create();
 
   public ExecutableSchemaBuilder() {
 
-    this.addScalar(String.class, "String");
+    this.addBuiltin(String.class, "String", LogicalTypeKind.SCALAR);
 
-    this.addScalar(Boolean.class, "Boolean");
-    this.addScalar(Integer.class, "Int");
-    this.addScalar(Long.class, "Int");
-    this.addScalar(Double.class, "Double");
+    this.addBuiltin(Boolean.class, "Boolean", LogicalTypeKind.SCALAR);
+    this.addBuiltin(Integer.class, "Int", LogicalTypeKind.SCALAR);
+    this.addBuiltin(Long.class, "Int", LogicalTypeKind.SCALAR);
+    this.addBuiltin(Double.class, "Double", LogicalTypeKind.SCALAR);
 
-    this.addScalar(Boolean.TYPE, "Boolean");
-    this.addScalar(Integer.TYPE, "Int");
-    this.addScalar(Long.TYPE, "Int");
-    this.addScalar(Double.TYPE, "Double");
+    this.addBuiltin(Boolean.TYPE, "Boolean", LogicalTypeKind.SCALAR);
+    this.addBuiltin(Integer.TYPE, "Int", LogicalTypeKind.SCALAR);
+    this.addBuiltin(Long.TYPE, "Int", LogicalTypeKind.SCALAR);
+    this.addBuiltin(Double.TYPE, "Double", LogicalTypeKind.SCALAR);
 
-    this.addEnum(GQLTypeKind.class, "__TypeKind");
-    this.addEnum(GQLDirectiveLocation.class, "__DirectiveLocation");
+    this.addBuiltin(GQLTypeKind.class, "__TypeKind", LogicalTypeKind.ENUM);
+    this.addBuiltin(GQLDirectiveLocation.class, "__DirectiveLocation", LogicalTypeKind.ENUM);
 
   }
 
-  public ExecutableSchemaBuilder allowedAutoloader(Predicate<TypeToken<?>> allowed) {
+  public ExecutableSchemaBuilder allowedAutoloader(final Predicate<TypeToken<?>> allowed) {
     this.allowedAutoload = allowed;
     return this;
   }
 
   /**
-   * 
+   *
    */
 
   static class Symbol {
@@ -105,39 +108,41 @@ public final class ExecutableSchemaBuilder {
     // if we received explicit indication of this symbol being exported, e.g it was specified manually or through a
     // scanner.
     boolean exported;
+    boolean builtin;
+    boolean stub;
   }
 
   /**
    * exposes the query root.
-   * 
+   *
    * @return
    */
 
-  public ExecutableSchemaBuilder setRootType(GQLOperationType operation, Type klass) {
+  public ExecutableSchemaBuilder setRootType(final GQLOperationType operation, final Type klass) {
     return this.setRootType(operation, klass, JavaBindingUtils.autoTypeName(TypeToken.of(klass)));
   }
 
   /**
    * set the root for an operation.
-   * 
+   *
    * @param operationType
    * @param klass
    * @param typeName
    * @return
    */
 
-  public ExecutableSchemaBuilder setRootType(GQLOperationType operationType, Type klass, String typeName) {
-    TypeToken<?> typeToken = TypeToken.of(klass);
+  public ExecutableSchemaBuilder setRootType(final GQLOperationType operationType, final Type klass, final String typeName) {
+    final TypeToken<?> typeToken = TypeToken.of(klass);
     Preconditions.checkState(!this.operationRoots.containsKey(operationType));
-    Symbol symbol = this.registerType(typeToken, typeName, LogicalTypeKind.OUTPUT);
+    final Symbol symbol = this.registerType(typeToken, typeName, LogicalTypeKind.OUTPUT);
     symbol.exported = true;
     this.operationRoots.put(operationType, symbol);
     return this;
   }
 
-  private void checkSymbol(TypeToken<?> typeToken, String typeName, LogicalTypeKind typeKind) {
+  private void checkSymbol(final TypeToken<?> typeToken, final String typeName, final LogicalTypeKind typeKind) {
 
-    Symbol symbol = this.names.get(typeName);
+    final Symbol symbol = this.names.get(typeName);
 
     if (symbol != null) {
 
@@ -153,7 +158,7 @@ public final class ExecutableSchemaBuilder {
 
     }
 
-    Symbol typeSymbol = this.types.get(typeToken);
+    final Symbol typeSymbol = this.types.get(typeToken);
 
     if (typeSymbol != null) {
 
@@ -171,25 +176,20 @@ public final class ExecutableSchemaBuilder {
 
   }
 
-  private Symbol addSymbol(TypeToken<?> typeToken, String typeName, LogicalTypeKind typeKind, JavaBindingType handle) {
+  private Symbol addSymbol(final TypeToken<?> typeToken, final String typeName, final LogicalTypeKind typeKind, final JavaBindingType handle) {
 
-    if (handle == null && typeKind == LogicalTypeKind.SCALAR) {
-
-      Symbol symbol = this.types.get(typeToken);
-
-      if (symbol != null) {
-        // it's an additional name.
-      }
-
-    }
-
-    Symbol symbol = new Symbol();
+    final Symbol symbol = new Symbol();
 
     symbol.typeName = typeName;
     symbol.typeKind = typeKind;
     symbol.typeToken = typeToken;
     symbol.handle = handle;
     symbol.exported = true;
+
+    if (handle == null) {
+      System.err.println(typeToken);
+      symbol.handle = this.binder.include(typeToken);
+    }
 
     this.names.put(symbol.typeName, symbol);
     this.types.put(symbol.typeToken, symbol);
@@ -199,11 +199,11 @@ public final class ExecutableSchemaBuilder {
 
   }
 
-  private Symbol registerType(TypeToken<?> typeToken, String typeName, LogicalTypeKind typeKind) {
+  private Symbol registerType(final TypeToken<?> typeToken, String typeName, final LogicalTypeKind typeKind) {
 
-    if (typeKind.equals(LogicalTypeKind.OUTPUT)) {
+    if (typeKind.equals(LogicalTypeKind.OUTPUT) || typeKind.equals(LogicalTypeKind.INTERFACE)) {
 
-      JavaBindingType handle = binder.registerType(typeToken);
+      final JavaBindingType handle = this.binder.registerType(typeToken);
 
       if (typeName == null) {
         typeName = this.generateName(typeToken, handle);
@@ -213,11 +213,15 @@ public final class ExecutableSchemaBuilder {
 
     }
     else {
+
       if (typeName == null) {
         typeName = this.generateName(typeToken, null);
       }
+
       this.checkSymbol(typeToken, typeName, typeKind);
+
       return this.addSymbol(typeToken, typeName, typeKind, null);
+
     }
 
   }
@@ -226,20 +230,49 @@ public final class ExecutableSchemaBuilder {
    * exposes a java class as a GraphQL output type.
    */
 
-  public ExecutableSchemaBuilder addType(Type klass) {
-    registerType(TypeToken.of(klass), null, LogicalTypeKind.OUTPUT);
+  public ExecutableSchemaBuilder addType(final Type klass) {
+    return this.addType(TypeToken.of(klass));
+  }
+
+  public ExecutableSchemaBuilder addType(final TypeToken<?> typeToken) {
+
+    final Optional<Kind> kind = JavaExecutableUtils.getType(typeToken);
+
+    if (!kind.isPresent()) {
+      throw new IllegalArgumentException("couldn't calculate type kind for " + typeToken.toString() + " - specify a @GQL*Type annotation on the type");
+    }
+
+    final LogicalTypeKind typeKind = LogicalTypeKind.from(kind.get());
+
+    final Symbol sym = this.registerType(typeToken, null, typeKind);
+
+    this.autoscan(typeToken);
+
     return this;
   }
 
-  public ExecutableSchemaBuilder addStubType(Type klass, String typeName, JavaBindingType handle) {
+  /**
+   * register a stub type - a java type which isn't itself a GQL java type but extensions will provide the functionality
+   * for it.
+   *
+   * @param klass
+   * @param typeName
+   * @param handle
+   * @return
+   */
 
-    TypeToken<?> typeToken = TypeToken.of(klass);
+  public ExecutableSchemaBuilder addStubType(final Type klass, String typeName, final JavaBindingType handle) {
+
+    final TypeToken<?> typeToken = TypeToken.of(klass);
 
     if (typeName == null) {
       typeName = this.generateName(typeToken, handle);
     }
 
-    this.addSymbol(typeToken, typeName, LogicalTypeKind.OUTPUT, null);
+    final Symbol sym = this.addSymbol(typeToken, typeName, LogicalTypeKind.OUTPUT, null);
+
+    sym.stub = true;
+
     return this;
 
   }
@@ -248,8 +281,8 @@ public final class ExecutableSchemaBuilder {
    * exposes a java class as a GraphQL type.
    */
 
-  public ExecutableSchemaBuilder addType(Type klass, String typeName) {
-    registerType(TypeToken.of(klass), typeName, LogicalTypeKind.OUTPUT);
+  public ExecutableSchemaBuilder addType(final Type klass, final String typeName) {
+    this.registerType(TypeToken.of(klass), typeName, LogicalTypeKind.OUTPUT);
     return this;
   }
 
@@ -257,8 +290,8 @@ public final class ExecutableSchemaBuilder {
    * exports the given java type as a GraphQL interface.
    */
 
-  public ExecutableSchemaBuilder addInterface(Type klass) {
-    registerType(TypeToken.of(klass), null, LogicalTypeKind.INTERFACE);
+  public ExecutableSchemaBuilder addInterface(final Type klass) {
+    this.registerType(TypeToken.of(klass), null, LogicalTypeKind.INTERFACE);
     return this;
   }
 
@@ -266,8 +299,8 @@ public final class ExecutableSchemaBuilder {
    * exports the given java type as a GraphQL union.
    */
 
-  public ExecutableSchemaBuilder addUnion(Type klass) {
-    registerType(TypeToken.of(klass), null, LogicalTypeKind.UNION);
+  public ExecutableSchemaBuilder addUnion(final Type klass) {
+    this.registerType(TypeToken.of(klass), null, LogicalTypeKind.UNION);
     return this;
   }
 
@@ -275,8 +308,8 @@ public final class ExecutableSchemaBuilder {
    * exports the given java enum as a GraphQL enum
    */
 
-  public ExecutableSchemaBuilder addEnum(Type klass) {
-    registerType(TypeToken.of(klass), null, LogicalTypeKind.ENUM);
+  public ExecutableSchemaBuilder addEnum(final Type klass) {
+    this.registerType(TypeToken.of(klass), null, LogicalTypeKind.ENUM);
     return this;
   }
 
@@ -284,8 +317,8 @@ public final class ExecutableSchemaBuilder {
    * exports the given java enum as a GraphQL enum
    */
 
-  public ExecutableSchemaBuilder addEnum(Type klass, String typeName) {
-    registerType(TypeToken.of(klass), typeName, LogicalTypeKind.ENUM);
+  public ExecutableSchemaBuilder addEnum(final Type klass, final String typeName) {
+    this.registerType(TypeToken.of(klass), typeName, LogicalTypeKind.ENUM);
     return this;
   }
 
@@ -293,22 +326,13 @@ public final class ExecutableSchemaBuilder {
    * exports the given java type as a GraphQL scalar.
    */
 
-  public ExecutableSchemaBuilder addScalar(Type klass) {
-    registerType(TypeToken.of(klass), null, LogicalTypeKind.SCALAR);
+  public ExecutableSchemaBuilder addScalar(final Type klass) {
+    this.registerType(TypeToken.of(klass), null, LogicalTypeKind.SCALAR);
     return this;
   }
 
-  public ExecutableSchemaBuilder addScalar(TypeToken<?> typeToken, String typeName) {
-    registerType(typeToken, typeName, LogicalTypeKind.SCALAR);
-    return this;
-  }
-
-  /**
-   * exports the given java type as a GraphQL scalar.
-   */
-
-  public ExecutableSchemaBuilder addScalar(Type klass, String typeName) {
-    registerType(TypeToken.of(klass), typeName, LogicalTypeKind.SCALAR);
+  public ExecutableSchemaBuilder addScalar(final TypeToken<?> typeToken, final String typeName) {
+    this.registerType(typeToken, typeName, LogicalTypeKind.SCALAR);
     return this;
   }
 
@@ -316,14 +340,27 @@ public final class ExecutableSchemaBuilder {
    * exports the given java type as a GraphQL scalar.
    */
 
-  public ExecutableSchemaBuilder addInput(Type klass, String typeName) {
-    registerType(TypeToken.of(klass), typeName, LogicalTypeKind.INPUT);
+  public ExecutableSchemaBuilder addScalar(final Type klass, final String typeName) {
+    this.registerType(TypeToken.of(klass), typeName, LogicalTypeKind.SCALAR);
+    return this;
+  }
+
+  private void addBuiltin(final Type klass, final String typeName, final LogicalTypeKind kind) {
+    this.registerType(TypeToken.of(klass), typeName, kind).builtin = true;
+  }
+
+  /**
+   * exports the given java type as a GraphQL scalar.
+   */
+
+  public ExecutableSchemaBuilder addInput(final Type klass, final String typeName) {
+    this.registerType(TypeToken.of(klass), typeName, LogicalTypeKind.INPUT);
     return this;
   }
 
   /**
    * validates the schema.
-   * 
+   *
    * @return
    */
 
@@ -331,7 +368,7 @@ public final class ExecutableSchemaBuilder {
 
     // build complete types.
 
-    ValidationResult val = new ValidationResult();
+    final ValidationResult val = new ValidationResult();
 
     val.validate();
 
@@ -350,40 +387,40 @@ public final class ExecutableSchemaBuilder {
 
   public static class ReturnTypeUse implements MissingTypeValidationError {
 
-    private Symbol symbol;
-    private JavaOutputField field;
-    private TypeToken<?> returnType;
+    private final Symbol symbol;
+    private final JavaOutputField field;
+    private final TypeToken<?> returnType;
 
-    public ReturnTypeUse(Symbol symbol, JavaOutputField field, TypeToken<?> returnType) {
+    public ReturnTypeUse(final Symbol symbol, final JavaOutputField field, final TypeToken<?> returnType) {
       this.symbol = symbol;
       this.field = field;
       this.returnType = returnType;
     }
 
     public String usage() {
-      return field.origin().map(JavaBindingUtils::toString).orElse(field.toString());
+      return this.field.origin().map(JavaBindingUtils::toString).orElse(this.field.toString());
     }
 
     @Override
     public String toString() {
-      return "return type '" + returnType + "' can not be mapped to GraphQL\n  -> " + usage();
+      return "return type '" + this.returnType + "' can not be mapped to GraphQL\n  -> " + this.usage();
     }
 
     @Override
     public TypeToken<?> unmappedType() {
-      return returnType;
+      return this.returnType;
     }
 
   }
 
   public static class ParameterTypeUse implements MissingTypeValidationError {
 
-    private Symbol symbol;
-    private JavaOutputField field;
-    private JavaInputField param;
-    private TypeToken<?> parameterType;
+    private final Symbol symbol;
+    private final JavaOutputField field;
+    private final JavaInputField param;
+    private final TypeToken<?> parameterType;
 
-    public ParameterTypeUse(Symbol symbol, JavaOutputField field, JavaInputField param, TypeToken<?> type) {
+    public ParameterTypeUse(final Symbol symbol, final JavaOutputField field, final JavaInputField param, final TypeToken<?> type) {
       this.symbol = symbol;
       this.field = field;
       this.param = param;
@@ -391,56 +428,56 @@ public final class ExecutableSchemaBuilder {
     }
 
     public String usage() {
-      return field.origin().map(JavaBindingUtils::toString).orElse(field.toString());
+      return this.field.origin().map(JavaBindingUtils::toString).orElse(this.field.toString());
     }
 
     @Override
     public String toString() {
-      return "parameter type '" + parameterType + "' can not be mapped to GraphQL\n  -> " + usage();
+      return "parameter type '" + this.parameterType + "' can not be mapped to GraphQL\n  -> " + this.usage();
     }
 
     @Override
     public TypeToken<?> unmappedType() {
-      return parameterType;
+      return this.parameterType;
     }
 
   }
 
   public class ValidationResult {
 
-    private Multimap<TypeToken<?>, ValidationTypeUse> requires = HashMultimap.create();
+    private final Multimap<TypeToken<?>, ValidationTypeUse> requires = HashMultimap.create();
 
     void validate() {
 
-      names.values()
+      ExecutableSchemaBuilder.this.names.values()
           .stream()
           .filter(s -> s.handle != null)
           .forEach(this::validate);
 
     }
 
-    private void validate(Symbol symbol) {
+    private void validate(final Symbol symbol) {
       symbol.handle
           .outputFields(new OutputFieldFilter() {})
-          .forEach(field -> validate(symbol, field));
+          .forEach(field -> this.validate(symbol, field));
     }
 
     /**
      * validate an output field be checking it's return type and parameters.
      */
 
-    private void validate(Symbol symbol, JavaOutputField field) {
-      validateReturnType(symbol, field, field.returnType());
-      field.inputFields().forEach(param -> validate(symbol, field, param));
+    private void validate(final Symbol symbol, final JavaOutputField field) {
+      this.validateReturnType(symbol, field, field.returnType());
+      field.inputFields().forEach(param -> this.validate(symbol, field, param));
     }
 
-    private void validateReturnType(Symbol symbol, JavaOutputField field, TypeToken<?> returnType) {
+    private void validateReturnType(final Symbol symbol, final JavaOutputField field, final TypeToken<?> returnType) {
 
       if (returnType.getType().equals(Object.class)) {
         return;
       }
 
-      if (types.containsKey(returnType)) {
+      if (ExecutableSchemaBuilder.this.types.containsKey(returnType)) {
         return;
       }
 
@@ -454,15 +491,15 @@ public final class ExecutableSchemaBuilder {
      * validate an input field.
      */
 
-    private void validate(Symbol symbol, JavaOutputField field, JavaInputField param) {
+    private void validate(final Symbol symbol, final JavaOutputField field, final JavaInputField param) {
 
-      TypeToken<?> type = param.inputType();
+      final TypeToken<?> type = param.inputType();
 
       if (type.getType().equals(Object.class)) {
         return;
       }
 
-      if (types.containsKey(type)) {
+      if (ExecutableSchemaBuilder.this.types.containsKey(type)) {
         return;
       }
 
@@ -474,25 +511,25 @@ public final class ExecutableSchemaBuilder {
 
   /**
    * validates the schema and returns and immutable instance of it.
-   * 
+   *
    * throws an exception if the schema has any errors and strict is set.
-   * 
+   *
    * @return
    */
 
   public ExecutableSchema build() {
-    return build(true);
+    return this.build(true);
   }
 
-  public ExecutableSchema build(boolean strict) {
+  public ExecutableSchema build(final boolean strict) {
 
-    AtomicBoolean changed = new AtomicBoolean(false);
+    final AtomicBoolean changed = new AtomicBoolean(false);
 
     do {
 
       changed.set(false);
 
-      ValidationResult val = validate();
+      final ValidationResult val = this.validate();
 
       if (!val.requires.isEmpty()) {
 
@@ -501,7 +538,7 @@ public final class ExecutableSchemaBuilder {
           throw new IllegalArgumentException("validation failed");
         }
 
-        Set<TypeToken<?>> tried = new HashSet<>();
+        final Set<TypeToken<?>> tried = new HashSet<>();
 
         val.requires.values().forEach(err -> {
 
@@ -509,16 +546,16 @@ public final class ExecutableSchemaBuilder {
 
           if (err instanceof MissingTypeValidationError) {
 
-            MissingTypeValidationError m = (MissingTypeValidationError) err;
+            final MissingTypeValidationError m = (MissingTypeValidationError) err;
 
-            TypeToken<?> type = m.unmappedType();
+            final TypeToken<?> type = m.unmappedType();
 
             if (tried.add(type)) {
 
-              if (shouldAutoMap(type)) {
+              if (this.shouldAutoMap(type)) {
                 changed.set(true);
-                JavaBindingType handle = this.binder.registerType(type);
-                Symbol symbol = addSymbol(type, generateName(type, handle), LogicalTypeKind.OUTPUT, handle);
+                final JavaBindingType handle = this.binder.registerType(type);
+                final Symbol symbol = this.addSymbol(type, this.generateName(type, handle), LogicalTypeKind.OUTPUT, handle);
                 symbol.exported = false;
               }
 
@@ -539,14 +576,14 @@ public final class ExecutableSchemaBuilder {
 
   /**
    * true if we should take a crack at auto-registering this type.
-   * 
+   *
    * auto registering only happens if the type was directly exported.
-   * 
+   *
    * @param type
    * @return
    */
 
-  private boolean shouldAutoMap(TypeToken<?> type) {
+  private boolean shouldAutoMap(final TypeToken<?> type) {
 
     if (type.isArray()) {
       return false;
@@ -555,27 +592,27 @@ public final class ExecutableSchemaBuilder {
       return false;
     }
 
-    if (type.getRawType().isAnnotationPresent(GQLObjectType.class)) {
+    if (JavaExecutableUtils.getType(type).isPresent()) {
       log.debug("auto registering {}", type);
       return true;
     }
 
-    return allowedAutoload.test(type);
+    return this.allowedAutoload.test(type);
 
   }
 
   /**
-   * 
+   *
    * @param req
    * @param handle
    * @return
    */
 
-  private String generateName(TypeToken<?> req, JavaBindingType handle) {
+  private String generateName(final TypeToken<?> req, final JavaBindingType handle) {
 
     if (handle != null) {
       // TODO: also for enum, scalar, etc ...
-      for (GQLObjectType a : handle.analysis().annotations(GQLObjectType.class)) {
+      for (final GQLObjectType a : handle.analysis().annotations(GQLObjectType.class)) {
         if (!StringUtils.isEmpty(a.name())) {
           return a.name();
         }
@@ -594,68 +631,120 @@ public final class ExecutableSchemaBuilder {
     return this.types.values().stream();
   }
 
-  public void registerExtension(Class<?> klass) {
+  public void registerExtension(final Class<?> klass) {
     this.binder.registerExtension(klass);
   }
 
-  public ExecutableSchemaBuilder extensionGenerator(ExtensionGenerator gen) {
+  public ExecutableSchemaBuilder extensionGenerator(final ExtensionGenerator gen) {
     this.binder.extensionGenerator(gen);
     return this;
   }
 
   /**
    * maps the return type to the target GraphQL type that the field maps to.
-   * 
+   *
    * @param field
    * @param returnType
    * @return
    */
 
-  JavaOutputMapper mapReturnType(ExecutableOutputField field, TypeToken<?> returnType) {
+  JavaOutputMapper mapReturnType(final ExecutableOutputField field, final TypeToken<?> returnType) {
     return new JavaOutputMapper(field, returnType).unwrap();
   }
 
-  JavaInputMapper mapInputType(ExecutableInputField field) {
+  JavaInputMapper mapInputType(final ExecutableInputField field) {
     return new JavaInputMapper(field).unwrap();
   }
 
   /**
    * a chance to autoload the javatype which isn't currently registered as a symbol before failing the method.
-   * 
+   *
    * @param javaType
    * @param user
    * @return
    */
 
-  Symbol autoload(TypeToken<?> javaType, ExecutableElement user) {
-    if (!javaType.getRawType().isAnnotationPresent(GQLObjectType.class)) {
+  Symbol autoload(final TypeToken<?> javaType, final ExecutableElement user) {
+
+    // see if any annotations with @GQLType are present
+
+    final Optional<Kind> kind = JavaExecutableUtils.getType(javaType);
+
+    if (!kind.isPresent()) {
       return null;
     }
-    JavaBindingType handle = this.binder.registerType(javaType);
-    String typeName = this.generateName(javaType, handle);
-    log.info("autoloading OUTPUT type {} = {} (used by {})", typeName, javaType, user);
+
+    final JavaBindingType handle = this.binder.registerType(javaType);
+    final String typeName = this.generateName(javaType, handle);
+    log.info("autoloading " + kind.get() + " type {} = {} (used by {})", typeName, javaType, user);
     return this.addSymbol(
         javaType,
         typeName,
-        LogicalTypeKind.OUTPUT,
+        LogicalTypeKind.from(kind.get()),
         handle);
+
   }
 
-  public Stream<? extends JavaOutputField> outputFieldsFor(Symbol symbol, ExecutableOutputType type) {
-
+  public Stream<? extends JavaOutputField> outputFieldsFor(final Symbol symbol, final ExecutableOutputType type) {
     return this.binder.extensionsFor(symbol.typeToken);
+  }
 
-    // this.analysis.methods()
-    // .filter(m -> !Modifier.isStatic(m.method.getModifiers()))
-    // .filter(m -> filter.shouldInclude(m)),
-    // Stream.concat(
-    // this.analysis
-    // .superTypes()
-    // .filter(a -> a.isMixin())
-    // .map(a -> generator.include(a.typeToken()))
-    // .flatMap(t -> t.outputFields(filter.forSupertype(t))),
-    // this.generator.extensionsFor(this.type)));
+  public Stream<? extends JavaOutputField> outputFieldsFor(final Symbol symbol, final ExecutableInterfaceType type) {
+    return this.binder.extensionsFor(symbol.typeToken);
+  }
+
+  /**
+   * provides a stream of symbols which are declared but not in the provided set.
+   *
+   * used to calculate types which need to be registered even though they're not referenced directly.
+   *
+   * @param set
+   * @return
+   */
+
+  Stream<Symbol> additionalTypes(final Set<Symbol> set) {
+
+    return this.symbols()
+        .filter(a -> !set.contains(a))
+        .filter(a -> !a.builtin)
+        .filter(a -> a.typeKind == LogicalTypeKind.OUTPUT || a.typeKind == LogicalTypeKind.INTERFACE);
 
   }
 
+  public Set<Symbol> interfacesFor(final Symbol symbol) {
+    return this.supertypes(symbol.handle);
+  }
+
+  private Set<Symbol> supertypes(final JavaBindingType handle) {
+
+    final Symbol symbol = this.types.get(handle.analysis().javaType());
+    final TypeToken<?>.TypeSet stypes = symbol.typeToken.getTypes();
+
+    return stypes.stream()
+        .filter(t -> !t.equals(symbol.typeToken))
+        .map(x -> this.types.get(x))
+        .filter(x -> x != null)
+        .filter(sym -> sym.typeKind == LogicalTypeKind.INTERFACE)
+        .collect(Collectors.toSet());
+
+  }
+
+  /**
+   * hint to autoregister other types associasted with this.
+   *
+   * @param typeToken
+   * @return
+   */
+
+  private void autoscan(final TypeToken<?> typeToken) {
+
+    final TypeToken<?>.TypeSet stypes = typeToken.getTypes();
+
+    stypes.stream()
+        .filter(t -> !t.equals(typeToken))
+        .filter(x -> !this.types.containsKey(x))
+        .filter(e -> this.shouldAutoMap(e))
+        .forEach(type -> this.addType(type));
+
+  }
 }

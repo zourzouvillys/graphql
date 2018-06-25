@@ -11,7 +11,7 @@ import io.zrz.zulu.types.ZField;
 
 /**
  * a single input field in the parameters.
- * 
+ *
  * @author theo
  *
  */
@@ -25,7 +25,7 @@ public final class ExecutableInputField implements ZField, ExecutableElement {
   private final int index;
   private final JavaInputField param;
 
-  public ExecutableInputField(ExecutableOutputField field, JavaInputField spec, BuildContext types) {
+  public ExecutableInputField(final ExecutableOutputField field, final JavaInputField spec, final BuildContext types) {
     this.field = field;
     this.name = spec.fieldName();
     this.javaType = Objects.requireNonNull(spec.inputType());
@@ -34,12 +34,12 @@ public final class ExecutableInputField implements ZField, ExecutableElement {
     this.fieldTypeUse = new InputTypeUse(this, spec, types);
   }
 
-  public ExecutableType enclosingType() {
-    return field.receiverType();
+  public ExecutableReceiverType enclosingType() {
+    return this.field.receiverType();
   }
 
   public ExecutableOutputField enclosingField() {
-    return field;
+    return this.field;
   }
 
   public TypeToken<?> javaType() {
@@ -67,20 +67,20 @@ public final class ExecutableInputField implements ZField, ExecutableElement {
   }
 
   /**
-   * 
+   *
    */
 
   @Override
   public String toString() {
     return "parameter " + this.name + " of " + this.field.receiverType().typeName() + "." + this.field.fieldName()
-        + ": " + ((this.fieldTypeUse == null) ? "<recursive>" : fieldType()) + " (native " + this.javaType + ")";
+        + ": " + (this.fieldTypeUse == null ? "<recursive>" : this.fieldType()) + " (native " + this.javaType + ")";
   }
 
   public int index() {
     return this.index;
   }
 
-  public <T extends Annotation> Optional<T> annotation(Class<T> klass) {
+  public <T extends Annotation> Optional<T> annotation(final Class<T> klass) {
     return this.param.annotation(klass);
   }
 

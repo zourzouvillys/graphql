@@ -1,5 +1,7 @@
 package io.zrz.zulu.grpc;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,7 +16,9 @@ import io.zrz.graphql.zulu.doc.DefaultGQLPreparedOperation.OpInputType;
 import io.zrz.graphql.zulu.engine.ZuluCompileResult;
 import io.zrz.graphql.zulu.engine.ZuluContainerSelection;
 import io.zrz.graphql.zulu.engine.ZuluEngine;
+import io.zrz.graphql.zulu.engine.ZuluExecutable;
 import io.zrz.graphql.zulu.engine.ZuluExecutionResult;
+import io.zrz.graphql.zulu.engine.ZuluRequest;
 import io.zrz.graphql.zulu.engine.ZuluSelection;
 import io.zrz.graphql.zulu.engine.ZuluWarning;
 import io.zrz.graphql.zulu.executable.ExecutableScalarType;
@@ -24,7 +28,6 @@ import io.zrz.graphql.zulu.server.ImmutableQuery;
 import io.zrz.graphql.zulu.server.ImmutableZuluServerRequest;
 import io.zrz.zulu.graphql.GraphQLProtos;
 import io.zrz.zulu.graphql.GraphQLProtos.ExecuteRequest;
-import io.zrz.zulu.graphql.GraphQLProtos.Field;
 import io.zrz.zulu.graphql.GraphQLProtos.FieldValueType;
 import io.zrz.zulu.graphql.GraphQLProtos.InputParameter;
 import io.zrz.zulu.graphql.GraphQLProtos.InputType;
@@ -44,6 +47,10 @@ import io.zrz.zulu.graphql.RxGraphQLGrpc;
 public class ZuluGrpcBinder extends RxGraphQLGrpc.GraphQLImplBase {
 
   private ZuluEngine zulu;
+  private Map<Integer, ZuluExecutable> prepared = new HashMap<>();
+  private AtomicInteger alloc = new AtomicInteger();
+
+  // private static Attributes.Key<Map<String, String>> PREPARED_DOCS = Attributes.Key.of("prepared_docs");
 
   public ZuluGrpcBinder(ZuluEngine zulu) {
     this.zulu = zulu;
@@ -62,8 +69,12 @@ public class ZuluGrpcBinder extends RxGraphQLGrpc.GraphQLImplBase {
       zulu.compileDocument(request.getDocument())
           .forEach(op -> {
 
+            // note: only valid within the same trsansport session. means that
+            // connections must be direct. use with care!
+            int id = alloc.incrementAndGet();
+
             PreparedOperation.Builder pop = PreparedOperation.newBuilder()
-                .setOperationId(Integer.toHexString(op.hashCode()))
+                .setOperationId(Integer.toHexString(id))
                 .setOperationType(toOpType(op.executable().operationType()))
                 .setOutputType(makeTypeSchema(op))
                 .setInputType(makeInputType(op));
@@ -73,6 +84,8 @@ public class ZuluGrpcBinder extends RxGraphQLGrpc.GraphQLImplBase {
             op.executable().operationName().ifPresent(name -> pop.setOperationName(name));
 
             reply.addOperations(pop.build());
+
+            prepared.put(id, op.executable());
 
           });
 
@@ -222,12 +235,47 @@ public class ZuluGrpcBinder extends RxGraphQLGrpc.GraphQLImplBase {
     return ScalarTypeKind.TYPE_ANY;
   }
 
+  public Flowable<QueryReply> execute(Single<ExecuteRequest> request) {
+    return request.flatMapPublisher(req -> execute(req));
+  }
+
+  /**
+   * executed a previously prepared operation.
+   * 
+   * @param req
+   * @return
+   */
+
+  private Flowable<QueryReply> execute(ExecuteRequest req) {
+
+    try {
+
+      ZuluExecutable exec = this.prepared.get(Integer.parseInt(req.getOperationId(), 16));
+
+      QueryReply.Builder qbr = QueryReply.newBuilder();
+
+      GrpcResultReceiver results = new GrpcResultReceiver(qbr);
+
+      exec.execute(new ZuluRequest(new GrpcParameterProvider(req.getVariables())), results);
+
+      return Flowable.just(qbr.build());
+
+    }
+    catch (Exception ex) {
+      ex.printStackTrace();
+      return Flowable.error(ex);
+    }
+
+  }
+
   public Flowable<QueryReply> query(Single<QueryRequest> request) {
     return request.flatMapPublisher(req -> query(req));
   }
 
   public Flowable<QueryReply> query(QueryRequest param) {
+
     try {
+
       ImmutableZuluServerRequest.Builder b = ImmutableZuluServerRequest.builder();
 
       ImmutableQuery.Builder q = ImmutableQuery.builder();
@@ -270,11 +318,6 @@ public class ZuluGrpcBinder extends RxGraphQLGrpc.GraphQLImplBase {
     }
 
     // throw new io.grpc.StatusRuntimeException(io.grpc.Status.UNIMPLEMENTED);
-  }
-
-  public Flowable<QueryReply> execute(Single<ExecuteRequest> request) {
-
-    throw new io.grpc.StatusRuntimeException(io.grpc.Status.UNIMPLEMENTED);
   }
 
 }

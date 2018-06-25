@@ -3,6 +3,12 @@ package io.zrz.graphql.zulu.engine;
 public enum ZuluWarningCategory {
 
   /**
+   * a transport related error - e.g, cache key missing.
+   */
+
+  TRANSPORT,
+
+  /**
    * application related category.
    */
 

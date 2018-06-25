@@ -408,6 +408,7 @@ public class ParseContext {
 
   /**
    *
+   * @param start
    * @return
    */
 
@@ -415,9 +416,12 @@ public class ParseContext {
 
     final ImmutableGQLDocument.Builder b = GQLDocument.builder();
 
+    GQLSourceLocation start = this.lexer.position();
+
     while (this.lexer.isReadable()) {
-      final GQLDefinition def = this.parseDefinition();
+      final GQLDefinition def = this.parseDefinition(start);
       b.addDefinitions(def);
+      start = this.lexer.position();
     }
 
     return b.build();
@@ -428,13 +432,13 @@ public class ParseContext {
    * returns an operation or a fragment.
    */
 
-  public GQLDefinition parseDefinition() {
+  public GQLDefinition parseDefinition(final GQLSourceLocation start) {
 
     if (this.skip("fragment")) {
       return this.parseFragment();
     }
 
-    return this.parseOperation();
+    return this.parseOperation(start);
 
   }
 
@@ -444,11 +448,12 @@ public class ParseContext {
    * @return
    */
 
-  GQLOperationDefinition parseOperation() {
+  GQLOperationDefinition parseOperation(final GQLSourceLocation start) {
 
     if (this.is("{")) {
       return GQLOperationDefinition.builder()
           .selections(this.parseSelectionSet())
+          .range(this.lexer.range(start, this.lexer.position()))
           .build();
     }
 
@@ -480,6 +485,8 @@ public class ParseContext {
     }
 
     b.selections(this.parseSelectionSet());
+
+    b.range(this.lexer.range(start, this.lexer.position()));
 
     return b.build();
 

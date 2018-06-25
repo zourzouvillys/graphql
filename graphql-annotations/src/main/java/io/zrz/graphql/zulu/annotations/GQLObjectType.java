@@ -6,6 +6,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import io.zrz.graphql.zulu.annotations.GQLType.Kind;
+
 /**
  * indicates that the specified type is a GQL object type
  *
@@ -15,6 +17,7 @@ import java.lang.annotation.Target;
 
 @Retention(RUNTIME)
 @Target(TYPE)
+@GQLType(kind = Kind.OBJECT)
 public @interface GQLObjectType {
 
   String name() default "";

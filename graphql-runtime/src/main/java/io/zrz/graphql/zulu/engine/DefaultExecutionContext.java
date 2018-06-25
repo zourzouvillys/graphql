@@ -11,47 +11,47 @@ import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
 
 class DefaultExecutionContext<RootT> implements ZuluContext {
 
-  private ZuluExecutable exec;
-  private RootT root;
-  private ZuluParameterReader defaultValues;
+  private final ZuluExecutable exec;
+  private final RootT root;
+  private final ZuluParameterReader defaultValues;
 
-  DefaultExecutionContext(ZuluExecutable exec, RootT root, ZuluParameterReader defaultValues) {
+  DefaultExecutionContext(final ZuluExecutable exec, final RootT root, final ZuluParameterReader defaultValues) {
     this.exec = exec;
     this.root = Objects.requireNonNull(root, "missing root instance");
     this.defaultValues = defaultValues;
   }
 
   @Override
-  public ZuluExecutionResult execute(ZuluRequest req, ZuluResultReceiver receiver, String fieldName) {
-    ZuluSelection sel = exec.selectionOrDefault(fieldName, null);
+  public ZuluExecutionResult execute(final ZuluRequest req, final ZuluResultReceiver receiver, final String fieldName) {
+    final ZuluSelection sel = this.exec.selectionOrDefault(fieldName, null);
     Preconditions.checkArgument(sel != null, "operation does not define output field '%s'", fieldName);
-    return execute(receiver, sel);
+    return this.execute(receiver, sel);
   }
 
   @Override
-  public ZuluExecutionResult execute(ZuluRequest req, ZuluResultReceiver receiver) {
+  public ZuluExecutionResult execute(final ZuluRequest req, final ZuluResultReceiver receiver) {
 
-    DefaultExecutionContext<RootT>.ExecutionState state = new ExecutionState(req, receiver);
+    final DefaultExecutionContext<RootT>.ExecutionState state = new ExecutionState(req, receiver);
 
-    receiver.push(this.exec, root);
+    receiver.push(this.exec, this.root);
 
-    receiver.startStruct(this.exec, root);
+    receiver.startStruct(this.exec, this.root);
 
-    for (ZuluSelection sel : exec.selections()) {
-      sel.apply(state, root);
+    for (final ZuluSelection sel : this.exec.selections()) {
+      sel.apply(state, this.root);
     }
 
-    receiver.endStruct(this.exec, root);
+    receiver.endStruct(this.exec, this.root);
 
-    receiver.pop(this.exec, root);
+    receiver.pop(this.exec, this.root);
 
     return state;
 
   }
 
-  private ZuluExecutionResult execute(ZuluResultReceiver receiver, ZuluSelection selection) {
-    DefaultExecutionContext<RootT>.ExecutionState state = new ExecutionState(null, receiver);
-    selection.apply(state, root);
+  private ZuluExecutionResult execute(final ZuluResultReceiver receiver, final ZuluSelection selection) {
+    final DefaultExecutionContext<RootT>.ExecutionState state = new ExecutionState(null, receiver);
+    selection.apply(state, this.root);
     return state;
   }
 
@@ -61,16 +61,16 @@ class DefaultExecutionContext<RootT> implements ZuluContext {
 
   private class ExecutionState implements ZuluSelectionVisitor.ConsumerVisitor<Object>, ZuluExecutionResult, ZuluRequestContext {
 
-    private ZuluResultReceiver receiver;
+    private final ZuluResultReceiver receiver;
     private ArrayList<ZuluWarning> notes = null;
-    private ZuluRequest req;
+    private final ZuluRequest req;
 
-    public ExecutionState(ZuluRequest req, ZuluResultReceiver receiver) {
+    public ExecutionState(final ZuluRequest req, final ZuluResultReceiver receiver) {
       this.receiver = receiver;
       this.req = req;
     }
 
-    private void note(ZuluWarning note, ZuluSelection selection) {
+    private void note(final ZuluWarning note, final ZuluSelection selection) {
       if (this.notes == null) {
         this.notes = new ArrayList<>();
       }
@@ -78,88 +78,100 @@ class DefaultExecutionContext<RootT> implements ZuluContext {
     }
 
     @Override
-    public void accept(ZuluLeafSelection leaf, Object value) {
+    public void accept(final ZuluLeafSelection leaf, final Object value) {
+
       Object result;
+
       try {
+
         result = leaf.invoke(this, value);
 
         if (leaf.isList()) {
-          receiver.startList(leaf, receiver);
-          if (result == null) {
-          }
-          else {
-            for (Object element : (Object[]) result) {
-              receiver.write(leaf, element);
+
+          this.receiver.startList(leaf, this.receiver);
+
+          try {
+            if (result != null) {
+              for (final Object element : (Object[]) result) {
+                this.receiver.write(leaf, element);
+              }
             }
           }
-          receiver.endList(leaf, receiver);
+          finally {
+            this.receiver.endList(leaf, this.receiver);
+          }
+
         }
         else {
 
           if (result == null) {
             // TODO: if the value is non-null, then propagate exception up.
-            receiver.write(leaf);
+            this.receiver.write(leaf);
           }
           else {
-            receiver.write(leaf, result);
+            this.receiver.write(leaf, result);
           }
 
         }
 
       }
-      catch (Exception ex) {
-        note(new ZuluWarning.ExecutionError(leaf, ex, value), leaf);
+      catch (final Exception ex) {
+        this.note(new ZuluWarning.ExecutionError(leaf, ex, value), leaf);
         return;
       }
     }
 
     @Override
-    public void accept(ZuluContainerSelection container, Object value) {
+    public void accept(final ZuluContainerSelection container, final Object value) {
       try {
 
-        Objects.requireNonNull(receiver);
-        Object context = container.invoke(this, value);
+        Objects.requireNonNull(this.receiver);
+        final Object context = container.invoke(this, value);
 
         if (context != null) {
 
-          receiver.push(container, context);
+          this.receiver.push(container, context);
           try {
 
             if (container.isList()) {
 
-              receiver.startList(container, context);
+              this.receiver.startList(container, context);
 
-              for (Object element : (Object[]) context) {
-                receiver.next(element);
+              for (final Object element : (Object[]) context) {
+                this.receiver.next(element);
                 container.selections().forEach(sub -> {
 
-                  receiver.startStruct(container, null);
+                  this.receiver.startStruct(container, null);
                   sub.apply(this, element);
-                  receiver.endStruct(container, null);
+                  this.receiver.endStruct(container, null);
 
                 });
               }
 
-              receiver.endList(container, context);
+              this.receiver.endList(container, context);
 
             }
             else {
-              receiver.startStruct(container, null);
+              this.receiver.startStruct(container, null);
               container.selections().forEach(sub -> sub.apply(this, context));
-              receiver.endStruct(container, null);
+              this.receiver.endStruct(container, null);
             }
 
           }
           finally {
-            receiver.pop(container, context);
+            this.receiver.pop(container, context);
           }
+
         }
         else {
+
           // TODO: if it's a non-null return in the model, propogate up to parent.
+          this.receiver.write(container);
+
         }
       }
-      catch (Exception ex) {
-        note(new ZuluWarning.ExecutionError(container, ex, value), container);
+      catch (final Exception ex) {
+        this.note(new ZuluWarning.ExecutionError(container, ex, value), container);
         return;
       }
     }
@@ -173,8 +185,8 @@ class DefaultExecutionContext<RootT> implements ZuluContext {
     }
 
     @Override
-    public Object parameter(String parameterName, ExecutableTypeUse targetType) {
-      return req.parameter(parameterName, targetType);
+    public Object parameter(final String parameterName, final ExecutableTypeUse targetType) {
+      return this.req.parameter(parameterName, targetType);
     }
 
   }

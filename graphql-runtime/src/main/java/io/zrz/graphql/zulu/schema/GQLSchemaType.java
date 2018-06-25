@@ -10,6 +10,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import io.zrz.graphql.core.types.GQLTypeKind;
 import io.zrz.graphql.zulu.LogicalTypeKind;
 import io.zrz.graphql.zulu.annotations.GQLObjectType;
+import io.zrz.graphql.zulu.executable.ExecutableInterfaceType;
 import io.zrz.graphql.zulu.executable.ExecutableOutputType;
 import io.zrz.graphql.zulu.executable.ExecutableType;
 
@@ -17,13 +18,13 @@ import io.zrz.graphql.zulu.executable.ExecutableType;
 public class GQLSchemaType {
 
   private final ExecutableType type;
-  private int arity;
+  private final int arity;
 
-  public GQLSchemaType(ExecutableType type) {
+  public GQLSchemaType(final ExecutableType type) {
     this(type, 0);
   }
 
-  public GQLSchemaType(ExecutableType type, int arity) {
+  public GQLSchemaType(final ExecutableType type, final int arity) {
     this.type = Objects.requireNonNull(type);
     this.arity = arity;
   }
@@ -35,7 +36,7 @@ public class GQLSchemaType {
       return GQLTypeKind.LIST;
     }
 
-    switch (type.logicalKind()) {
+    switch (this.type.logicalKind()) {
       case ENUM:
         return GQLTypeKind.ENUM;
       case INPUT:
@@ -49,7 +50,7 @@ public class GQLSchemaType {
       case UNION:
         return GQLTypeKind.UNION;
       default:
-        throw new IllegalArgumentException(type.logicalKind().name());
+        throw new IllegalArgumentException(this.type.logicalKind().name());
     }
 
   }
@@ -58,43 +59,69 @@ public class GQLSchemaType {
   public String name() {
     if (this.arity > 0)
       return null;
-    return type.typeName();
+    return this.type.typeName();
   }
 
   // description: String
   public String description() {
-    return type.documentation();
+    return this.type.documentation();
   }
 
   // # OBJECT and INTERFACE only
   // fields(includeDeprecated: Boolean = false): [__Field!]
-  public List<@NonNull GQLSchemaField> fields(boolean includeDeprecated) {
-    if (type.logicalKind() != LogicalTypeKind.OUTPUT) {
-      return null;
+  public List<@NonNull GQLSchemaField> fields(final boolean includeDeprecated) {
+
+    switch (this.type.logicalKind()) {
+
+      case OUTPUT:
+
+        return ((ExecutableOutputType) this.type)
+            .fields()
+            .values()
+            .stream()
+            .filter(field -> !field.fieldName().startsWith("__"))
+            .map(x -> new GQLSchemaField(x))
+            .collect(Collectors.toList());
+
+      case INTERFACE:
+        return ((ExecutableInterfaceType) this.type)
+            .fields()
+            .values()
+            .stream()
+            .filter(field -> !field.fieldName().startsWith("__"))
+            .map(x -> new GQLSchemaField(x))
+            .collect(Collectors.toList());
+
+      default:
+        return null;
+
     }
-    return ((ExecutableOutputType) type)
-        .fields()
-        .values()
-        .stream()
-        .filter(field -> !field.fieldName().startsWith("__"))
-        .map(x -> new GQLSchemaField(x))
-        .collect(Collectors.toList());
+
   }
 
   //
   // # OBJECT only
   // interfaces: [__Type!]
   public List<io.zrz.graphql.zulu.schema.GQLSchemaType> interfaces() {
-    if (this.type.logicalKind() != LogicalTypeKind.OUTPUT)
-      return null;
-    return Collections.emptyList();
+
+    switch (this.type.logicalKind()) {
+      case OUTPUT:
+        return ((ExecutableOutputType) this.type)
+            .interfaces()
+            .stream()
+            .map(x -> new GQLSchemaType(x))
+            .collect(Collectors.toList());
+      default:
+        return null;
+    }
+
   }
 
   //
   // # INTERFACE and UNION only
   // possibleTypes: [__Type!]
   public List<io.zrz.graphql.zulu.schema.GQLSchemaType> possibleTypes() {
-    if (this.type.logicalKind() != LogicalTypeKind.INTERFACE && type.logicalKind() != LogicalTypeKind.UNION)
+    if (this.type.logicalKind() != LogicalTypeKind.INTERFACE && this.type.logicalKind() != LogicalTypeKind.UNION)
       return null;
     return Collections.emptyList();
   }
@@ -102,7 +129,7 @@ public class GQLSchemaType {
   //
   // # ENUM only
   // enumValues(includeDeprecated: Boolean = false): [__EnumValue!]
-  public List<io.zrz.graphql.zulu.schema.GQLSchemaEnumValue> enumValues(boolean includeDeprecated) {
+  public List<io.zrz.graphql.zulu.schema.GQLSchemaEnumValue> enumValues(final boolean includeDeprecated) {
     if (this.type.logicalKind() != LogicalTypeKind.ENUM)
       return null;
     return Collections.emptyList();

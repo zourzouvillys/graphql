@@ -1,11 +1,17 @@
 package io.zrz.graphql.zulu.engine;
 
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Stopwatch;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.hash.Hashing;
 
 import io.zrz.graphql.core.doc.GQLDocument;
 import io.zrz.graphql.core.doc.GQLOpType;
@@ -31,18 +37,23 @@ public class ZuluEngine {
 
   private static Logger log = LoggerFactory.getLogger(ZuluEngine.class);
 
+  private final Cache<String, ZuluCompileResult> cache = CacheBuilder.newBuilder()
+      .maximumSize(10000)
+      .build();
+
+  // private final Map<String, ZuluCompileResult> cache = new HashMap<>();
   private final ExecutableSchema schema;
   private final GQLDocumentManager docs;
 
-  public ZuluEngine(Type queryRoot) {
+  public ZuluEngine(final Type queryRoot) {
     this(ExecutableSchema.builder().setRootType(GQLOpType.Query, queryRoot).build(false));
   }
 
-  public ZuluEngine(ExecutableSchema schema) {
+  public ZuluEngine(final ExecutableSchema schema) {
     this(schema, null);
   }
 
-  public ZuluEngine(ExecutableSchema schema, GQLDocumentManager docmgr) {
+  public ZuluEngine(final ExecutableSchema schema, final GQLDocumentManager docmgr) {
     this.schema = Objects.requireNonNull(schema);
 
     if (docmgr == null)
@@ -54,60 +65,79 @@ public class ZuluEngine {
 
   /**
    * execute a prepared operation.
-   * 
+   *
    * @return
    */
 
-  public ZuluCompileResult compile(GQLPreparedOperation op) {
-    ExecutableBuilder builder = new ExecutableBuilder(this, op);
+  public ZuluCompileResult compile(final GQLPreparedOperation op) {
+    final ExecutableBuilder builder = new ExecutableBuilder(this, op);
     return new ZuluCompileResult(op, builder, builder.build());
   }
 
   /**
    * execute a simple unnamed query.
-   * 
+   *
    * @return
    */
 
-  public ZuluCompileResult compile(String queryString) {
-    return compile(docs.prepareDocument(docs.parse(queryString)).defaultOperation().get());
+  public ZuluCompileResult compile(final String queryString) {
+    return this.compile(this.docs.prepareDocument(this.docs.parse(queryString)).defaultOperation().get());
   }
 
   /**
-   * 
+   *
    * @param documentString
    * @return
    */
 
-  public Stream<ZuluCompileResult> compileDocument(String documentString) {
-    GQLPreparedDocument doc = docs.prepareDocument(docs.parse(documentString));
+  public Stream<ZuluCompileResult> compileDocument(final String documentString) {
+    final GQLPreparedDocument doc = this.docs.prepareDocument(this.docs.parse(documentString));
     return doc
         .operations()
-        .map(op -> compile(op));
+        .map(op -> this.compile(op));
   }
 
   /**
-   * 
+   *
    * @param queryString
    * @param operationName
    * @return
    */
 
-  public ZuluCompileResult compile(String queryString, String operationName) {
+  public ZuluCompileResult compile(final String queryString, final String operationName, final String persistedQuery) {
+
+    if (persistedQuery != null) {
+
+      final ZuluCompileResult cached = this.cache.getIfPresent(persistedQuery);
+
+      if (cached != null) {
+        // woo - cache hit.
+        return cached;
+      }
+
+      if (queryString == null) {
+        System.err.println("Missing persisted query " + persistedQuery);
+        return ZuluCompileResult.withErrors(
+            new ZuluWarning.ParseWarning(ZuluWarningKind.PERSISTED_QUERY_NOT_FOUND, queryString, null));
+      }
+
+    }
+
+    final String hashCode = Hashing.sha256().hashString(queryString, StandardCharsets.UTF_8).toString();
 
     final GQLDocument parsed;
 
     try {
-      parsed = docs.parse(queryString);
+      parsed = this.docs.parse(queryString);
     }
-    catch (GQLException ex) {
+    catch (final GQLException ex) {
       return ZuluCompileResult.withErrors(
           new ZuluWarning.ParseWarning(ZuluWarningKind.SYNTAX_ERROR, queryString, ex));
     }
 
-    GQLPreparedDocument doc = docs.prepareDocument(parsed);
+    final GQLPreparedDocument doc = this.docs.prepareDocument(parsed);
 
-    GQLPreparedOperation op = doc.operation(operationName).orElse(null);
+    final GQLPreparedOperation op = doc.operation(operationName).orElse(null);
 
     if (op == null) {
 
@@ -125,7 +155,11 @@ public class ZuluEngine {
 
     }
 
-    return compile(op);
+    final ZuluCompileResult compileResult = this.compile(op);
+
+    this.cache.put(hashCode, compileResult);
+
+    return compileResult;
 
   }
 
@@ -135,17 +169,17 @@ public class ZuluEngine {
 
   /**
    * returns a ZValue in a form it can be bound to.
-   * 
+   *
    * @param param
-   * 
+   *
    * @param value
    * @return
    */
 
-  public Object get(ExecutableInputField param, ZValue value) {
+  public Object get(final ExecutableInputField param, final ZValue value) {
     switch (value.valueType().typeKind()) {
       case SCALAR: {
-        ZScalarValue scalar = (ZScalarValue) value;
+        final ZScalarValue scalar = (ZScalarValue) value;
         switch (scalar.valueType().baseType()) {
           case BOOLEAN:
             return ((ZBoolValue) scalar).boolValue();
@@ -173,13 +207,13 @@ public class ZuluEngine {
 
   /**
    * true if a value of 'from' can be converted to 'to'
-   * 
+   *
    * @param from
    * @param to
    * @return
    */
 
-  public boolean compatible(ZTypeUse from, ExecutableTypeUse to) {
+  public boolean compatible(final ZTypeUse from, final ExecutableTypeUse to) {
     // TODO Auto-generated method stub
     return true;
   }
@@ -188,33 +222,35 @@ public class ZuluEngine {
    * process this request.
    */
 
-  public ZuluExecutionResult[] processRequestBatch(ImmutableZuluServerRequest req) {
+  public ZuluExecutionResult[] processRequestBatch(final ImmutableZuluServerRequest req) {
 
-    ZuluExecutionResult[] res = new ZuluExecutionResult[req.queries().size()];
+    final ZuluExecutionResult[] res = new ZuluExecutionResult[req.queries().size()];
 
     for (int i = 0; i < req.queries().size(); ++i) {
-      ImmutableQuery q = req.queries().get(i);
-      res[i] = processRequest(req, q);
+      final ImmutableQuery q = req.queries().get(i);
+      res[i] = this.processRequest(req, q);
     }
 
     return res;
 
   }
 
-  private ZuluExecutionResult processRequest(ImmutableZuluServerRequest req, ImmutableQuery q) {
+  private ZuluExecutionResult processRequest(final ImmutableZuluServerRequest req, final ImmutableQuery q) {
 
-    ExecutionResult.Builder res = ExecutionResult.builder();
+    final Stopwatch timer = Stopwatch.createStarted();
 
-    ZuluResultReceiver receiver = q.resultReceiver();
+    final ExecutionResult.Builder res = ExecutionResult.builder();
+
+    final ZuluResultReceiver receiver = q.resultReceiver();
 
     // compile the query. may use cache if it already exists.
-    ZuluCompileResult compileResult = compile(q.query(), q.operationName());
+    final ZuluCompileResult compileResult = this.compile(q.query(), q.operationName(), q.persistedQuery());
 
     if (!compileResult.warnings().isEmpty()) {
       res.addAllNotes(compileResult.warnings());
     }
 
-    ZuluExecutable doc = compileResult.executable();
+    final ZuluExecutable doc = compileResult.executable();
 
     if (doc == null) {
 
@@ -222,29 +258,37 @@ public class ZuluEngine {
       return res.build();
     }
 
+    System.err.println("compiled in " + timer);
+    timer.reset().start();
+
     Object instance;
     try {
-      instance = compileResult.executable().javaType()
-          .getRawType()
-          .getDeclaredConstructor()
-          .newInstance();
+
+      instance = req.injector().newInstance(compileResult.executable().javaType());
+
     }
-    catch (RuntimeException e) {
+    catch (final RuntimeException e) {
       throw e;
     }
-    catch (Throwable e) {
+    catch (final Throwable e) {
       throw new RuntimeException(e);
     }
 
     // bind to the context for this caller.
-    ZuluContext ctx = doc.executable().bind(instance);
+    final ZuluContext ctx = doc.executable().bind(instance);
 
-    ZuluExecutionResult execres = ctx.execute(new ZuluRequest(q.variables()), receiver);
+    final ZuluExecutionResult execres = ctx.execute(new ZuluRequest(q.variables()), receiver);
 
     res.addAllNotes(execres.notes());
 
     // and execute it.
-    return res.build();
+    try {
+      return res.build();
+    }
+    finally {
+      timer.stop();
+      System.err.println("executed in " + timer);
+    }
 
   }
 

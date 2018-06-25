@@ -47,7 +47,7 @@ public final class Lexer {
   private final String input;
   private final GQLSourceInput source;
 
-  public Lexer(final String doc, GQLSourceInput source) {
+  public Lexer(final String doc, final GQLSourceInput source) {
     this.input = doc;
     this.source = source;
   }
@@ -274,11 +274,11 @@ public final class Lexer {
    * @return
    */
 
-  public static final List<Token> tokenize(final String input) {
+  public static List<Token> tokenize(final String input) {
     return tokenize(input, GQLSourceInput.emptySource());
   }
 
-  public static final List<Token> tokenize(final String input, GQLSourceInput source) {
+  public static List<Token> tokenize(final String input, final GQLSourceInput source) {
     final List<Token> tokens = new ArrayList<>();
     final Lexer lex = new Lexer(input, source);
     while (lex.hasToken()) {
@@ -307,7 +307,7 @@ public final class Lexer {
 
   }
 
-  public ImmutableLineInfo lineNumberAtOffset(int start) {
+  public ImmutableLineInfo lineNumberAtOffset(final int start) {
     int lines = 0;
     int lineStartAt = 0;
     for (int i = 0; i < start; ++i) {
@@ -327,13 +327,22 @@ public final class Lexer {
     final ImmutableLineInfo current = this.lineNumberAtOffset(this.pos);
     return ImmutableGQLSourceLocation
         .builder()
-        .input(source)
+        .input(this.source)
         .sourceOffset(this.pos)
         .lineOffset(this.pos)
         .lineNumber(current.lineNumber())
         .lineOffset(current.lineOffset())
         .build();
 
+  }
+
+  public GQLSourceRange range(final GQLSourceLocation start, final GQLSourceLocation end) {
+    return ImmutableGQLSourceRange.builder()
+        .input(this.source)
+        .start(start)
+        .end(end)
+        .content(this.input.substring(start.sourceOffset(), end.sourceOffset()))
+        .build();
   }
 
 }

@@ -7,7 +7,7 @@ import io.zrz.graphql.zulu.engine.ZuluEngineBuilder;
 
 /**
  * provides out of the box support for JRE 8 types.
- * 
+ *
  * @author theo
  *
  */
@@ -17,18 +17,18 @@ public class Jre8ZuluPlugin implements ZuluPlugin {
   public static class ZuluInstant {
 
     @GQLExtension
-    public static String isoValue(Instant instant) {
+    public static String isoValue(final Instant instant) {
       return instant.toString();
     }
 
   }
 
   @Override
-  public void onPluginRegistered(ZuluEngineBuilder builder) {
+  public void onPluginRegistered(final ZuluEngineBuilder builder) {
 
     builder.stubType(Instant.class);
 
-    builder.type(ZuluInstant.class);
+    builder.extension(ZuluInstant.class);
 
   }
 

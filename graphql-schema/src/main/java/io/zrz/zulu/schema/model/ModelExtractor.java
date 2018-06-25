@@ -13,7 +13,7 @@ import io.zrz.zulu.schema.binding.BoundSelection;
 
 /**
  * calculates the model return type based on the structure of the query.
- * 
+ *
  * @author theo
  *
  */
@@ -21,7 +21,7 @@ import io.zrz.zulu.schema.binding.BoundSelection;
 public class ModelExtractor implements BoundElementVisitor.SupplierVisitor<ModelElement> {
 
   @Override
-  public ModelElement visitOperation(BoundOperation op) {
+  public ModelElement visitOperation(final BoundOperation op) {
     // if (op.selections().size() == 1) {
     // return op.selections().get(0).accept(this);
     // }
@@ -32,11 +32,11 @@ public class ModelExtractor implements BoundElementVisitor.SupplierVisitor<Model
   }
 
   @Override
-  public ModelElement visitObject(BoundObjectSelection obj) {
+  public ModelElement visitObject(final BoundObjectSelection obj) {
 
-    ModelConnectionMeta connectionMeta = ModelTraits.isConnectionLike(obj.selectionType());
+    final ModelConnectionMeta connectionMeta = ModelTraits.isConnectionLike(obj.selectionType());
 
-    if (connectionMeta != null) {
+    if (connectionMeta != null && false) {
 
       // it's a connection so assign the selections from all three into the right place.
 
@@ -62,14 +62,14 @@ public class ModelExtractor implements BoundElementVisitor.SupplierVisitor<Model
     // return obj.selections().get(0).accept(this);
     // }
 
-    ImmutableMap.Builder<String, ModelElement> fields = ImmutableMap.builder();
+    final ImmutableMap.Builder<String, ModelElement> fields = ImmutableMap.builder();
 
-    for (BoundSelection sel : obj.selections()) {
+    for (final BoundSelection sel : obj.selections()) {
 
       if (sel instanceof BoundFieldSelection) {
 
-        String fieldName = ((BoundFieldSelection) sel).outputName();
-        ModelElement element = sel.accept(this);
+        final String fieldName = ((BoundFieldSelection) sel).outputName();
+        final ModelElement element = sel.accept(this);
 
         fields.put(fieldName, element);
 
@@ -81,12 +81,12 @@ public class ModelExtractor implements BoundElementVisitor.SupplierVisitor<Model
   }
 
   @Override
-  public ModelElement visitLeaf(BoundLeafSelection leaf) {
+  public ModelElement visitLeaf(final BoundLeafSelection leaf) {
     return new ModelScalarField(leaf);
   }
 
   @Override
-  public ModelElement visitFragment(BoundFragment frag) {
+  public ModelElement visitFragment(final BoundFragment frag) {
     frag.selections().forEach(s -> s.accept(this));
     throw new IllegalArgumentException();
     // return null;

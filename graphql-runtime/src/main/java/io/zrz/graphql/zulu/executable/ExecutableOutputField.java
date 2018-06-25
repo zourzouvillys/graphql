@@ -13,18 +13,18 @@ import io.zrz.graphql.zulu.executable.ExecutableSchemaBuilder.Symbol;
 
 public final class ExecutableOutputField implements ZOutputField, ExecutableElement {
 
-  private final ExecutableOutputType receiverType;
+  private final ExecutableReceiverType receiverType;
   private final JavaOutputField field;
   private final ExecutableInputType params;
-  private ReturnTypeUse returnType;
+  private final ReturnTypeUse returnType;
 
   /**
    * context parameters needed for this field.
    */
 
-  private ImmutableList<ExecutableInputContext> context;
+  private final ImmutableList<ExecutableInputContext> context;
 
-  ExecutableOutputField(ExecutableOutputType receiverType, Symbol symbol, JavaOutputField field, BuildContext types) {
+  ExecutableOutputField(final ExecutableReceiverType receiverType, final Symbol symbol, final JavaOutputField field, final BuildContext types) {
 
     this.receiverType = receiverType;
     this.field = field;
@@ -66,7 +66,7 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
    * the type that this field is part of.
    */
 
-  public ExecutableOutputType receiverType() {
+  public ExecutableReceiverType receiverType() {
     return this.receiverType;
   }
 
@@ -75,7 +75,7 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
    */
 
   public String fieldName() {
-    return field.fieldName();
+    return this.field.fieldName();
   }
 
   /**
@@ -84,9 +84,9 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
 
   @Override
   public Optional<ExecutableInputType> parameters() {
-    if (params.fields().isEmpty())
+    if (this.params.fields().isEmpty())
       return Optional.empty();
-    return Optional.of(params);
+    return Optional.of(this.params);
   }
 
   /**
@@ -94,27 +94,27 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
    */
 
   @Override
-  public ExecutableInputField parameter(String pname) {
-    if (params.fields().isEmpty())
+  public ExecutableInputField parameter(final String pname) {
+    if (this.params.fields().isEmpty())
       return null;
-    return params.field(pname).get();
+    return this.params.field(pname).get();
   }
 
   /**
    * a slow-path invocation using the reflection API. prefer the invoker.
-   * 
+   *
    * @param viewer
-   *          The viewer request.
+   *                  The viewer request.
    * @param context
-   *          The context this field is being executed in (e.g, an instance of the receiver)
+   *                  The context this field is being executed in (e.g, an instance of the receiver)
    * @param args
-   *          The (java) parameters for executing this field. must match the type and order of the
-   *          {@link #inputFields()}.
-   * 
+   *                  The (java) parameters for executing this field. must match the type and order of the
+   *                  {@link #inputFields()}.
+   *
    * @return The return value, or an exception if there was an error.
    */
 
-  public <T, V, C> T invoke(V request, C context, Object... args) {
+  public <T, V, C> T invoke(final V request, final C context, final Object... args) {
     return this.field.invoke(request, context, args);
   }
 
@@ -124,7 +124,7 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
 
   @Override
   public String documentation() {
-    return field.documentation();
+    return this.field.documentation();
   }
 
   @Override
@@ -134,7 +134,7 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
   }
 
   public Optional<? extends AnnotatedElement> origin() {
-    return field.origin();
+    return this.field.origin();
   }
 
 }

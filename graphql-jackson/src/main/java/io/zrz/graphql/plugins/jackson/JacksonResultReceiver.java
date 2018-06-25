@@ -12,135 +12,136 @@ import io.zrz.graphql.zulu.engine.ZuluSelectionContainer;
 
 /**
  * Zulu engine which outputs results using a jackson serializer.
- * 
+ *
  * JSON is the primary format, but ObjectMapper is used so YAML, XML, etc if you really wanted.
- * 
+ *
  * @author theo
  *
  */
 
 public class JacksonResultReceiver extends DefaultZuluResultReceiver implements ZuluResultReceiver {
 
-  private JsonGenerator jg;
+  private final JsonGenerator jg;
 
-  public JacksonResultReceiver(JsonGenerator jg) {
+  public JacksonResultReceiver(final JsonGenerator jg) {
     this.jg = jg;
   }
 
   @Override
-  public void push(ZuluSelectionContainer container, Object instance) {
+  public void push(final ZuluSelectionContainer container, final Object instance) {
     try {
       if (container instanceof ZuluExecutable) {
-        jg.writeStartObject();
+        this.jg.writeStartObject();
       }
       else if (container.isList()) {
-        jg.writeArrayFieldStart(container.outputName());
+        this.jg.writeArrayFieldStart(container.outputName());
       }
       else {
-        jg.writeObjectFieldStart(container.outputName());
+        this.jg.writeObjectFieldStart(container.outputName());
       }
     }
-    catch (IOException e) {
+    catch (final IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   @Override
-  public void pop(ZuluSelectionContainer container, Object instance) {
+  public void pop(final ZuluSelectionContainer container, final Object instance) {
     try {
-      if (jg.getOutputContext().inObject()) {
-        jg.writeEndObject();
+      if (this.jg.getOutputContext().inObject()) {
+        this.jg.writeEndObject();
       }
-      if (jg.getOutputContext().inArray()) {
-        jg.writeEndArray();
+      if (this.jg.getOutputContext().inArray()) {
+        this.jg.writeEndArray();
       }
     }
-    catch (IOException e) {
+    catch (final IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   @Override
-  public void next(Object instance) {
+  public void next(final Object instance) {
     try {
-      if (jg.getOutputContext().inObject()) {
-        jg.writeEndObject();
+      if (this.jg.getOutputContext().inObject()) {
+        this.jg.writeEndObject();
       }
-      jg.writeStartObject();
+      this.jg.writeStartObject();
     }
-    catch (IOException e) {
+    catch (final IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   @Override
-  public void write(ZuluSelection field) {
+  public void write(final ZuluSelection field) {
     try {
-      jg.writeNullField(field.outputName());
+      System.err.println(field);
+      this.jg.writeNullField(field.outputName());
     }
-    catch (IOException e) {
+    catch (final IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   @Override
-  public void write(ZuluSelection field, int value) {
+  public void write(final ZuluSelection field, final int value) {
     try {
-      jg.writeNumberField(field.outputName(), value);
+      this.jg.writeNumberField(field.outputName(), value);
     }
-    catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-
-  }
-
-  @Override
-  public void write(ZuluSelection field, long value) {
-    try {
-      jg.writeNumberField(field.outputName(), value);
-    }
-    catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @Override
-  public void write(ZuluSelection field, boolean value) {
-    try {
-      jg.writeBooleanField(field.outputName(), value);
-    }
-    catch (IOException e) {
+    catch (final IOException e) {
       throw new RuntimeException(e);
     }
 
   }
 
   @Override
-  public void write(ZuluSelection field, double value) {
+  public void write(final ZuluSelection field, final long value) {
     try {
-      jg.writeNumberField(field.outputName(), value);
+      this.jg.writeNumberField(field.outputName(), value);
     }
-    catch (IOException e) {
+    catch (final IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   @Override
-  public void write(ZuluSelection field, String value) {
+  public void write(final ZuluSelection field, final boolean value) {
     try {
-      jg.writeStringField(field.outputName(), value);
+      this.jg.writeBooleanField(field.outputName(), value);
     }
-    catch (IOException e) {
+    catch (final IOException e) {
+      throw new RuntimeException(e);
+    }
+
+  }
+
+  @Override
+  public void write(final ZuluSelection field, final double value) {
+    try {
+      this.jg.writeNumberField(field.outputName(), value);
+    }
+    catch (final IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   @Override
-  public void write(ZuluSelection field, Object value) {
+  public void write(final ZuluSelection field, final String value) {
     try {
-      jg.writeObjectField(field.outputName(), value);
+      this.jg.writeStringField(field.outputName(), value);
     }
-    catch (IOException e) {
+    catch (final IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public void write(final ZuluSelection field, final Object value) {
+    try {
+      this.jg.writeObjectField(field.outputName(), value);
+    }
+    catch (final IOException e) {
       throw new RuntimeException(e);
     }
   }

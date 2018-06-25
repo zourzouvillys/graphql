@@ -15,13 +15,13 @@ import io.zrz.graphql.zulu.JavaOutputField;
 
 public class JavaBindingType {
 
-  private TypeToken<?> type;
-  private JavaBindingClassAnalysis analysis;
-  private Set<JavaBindingType> supertypes = new HashSet<>();
-  private JavaBindingProvider generator;
+  private final TypeToken<?> type;
+  private final JavaBindingClassAnalysis analysis;
+  private final Set<JavaBindingType> supertypes = new HashSet<>();
+  private final JavaBindingProvider generator;
   private boolean exported;
 
-  public JavaBindingType(JavaBindingProvider generator, TypeToken<?> type) {
+  public JavaBindingType(final JavaBindingProvider generator, final TypeToken<?> type) {
     this.generator = generator;
     this.type = type;
     this.analysis = JavaBindingClassAnalysis.lookup(type.getRawType());
@@ -39,7 +39,7 @@ public class JavaBindingType {
    * adds an interface.
    */
 
-  public void processInterface(JavaBindingType type) {
+  public void processInterface(final JavaBindingType type) {
 
     if (type.type.isSubtypeOf(type.type)) {
       this.supertypes.add(type);
@@ -51,8 +51,8 @@ public class JavaBindingType {
    * all of the supertypes of this java type.
    */
 
-  public Stream<JavaBindingType> supertypes() {
-    return this.supertypes.stream();
+  public Stream<JavaBindingTypeUse> supertypes() {
+    return this.analysis.superTypes();
   }
 
   /**
@@ -60,7 +60,7 @@ public class JavaBindingType {
    * hidden by methods declared in this class as well as any generated extensions for this type.
    */
 
-  public Stream<? extends JavaOutputField> outputFields(OutputFieldFilter filter) {
+  public Stream<? extends JavaOutputField> outputFields(final OutputFieldFilter filter) {
     return Stream.concat(
         this.analysis.methods()
             .filter(m -> !Modifier.isStatic(m.method.getModifiers()))
@@ -68,12 +68,12 @@ public class JavaBindingType {
         this.analysis
             .superTypes()
             .filter(a -> a.isMixin())
-            .map(a -> generator.include(a.typeToken()))
+            .map(a -> this.generator.include(a.typeToken()))
             .flatMap(t -> t.outputFields(filter.forSupertype(t))));
   }
 
   /**
-   * 
+   *
    */
 
   @Override

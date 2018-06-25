@@ -8,6 +8,7 @@ import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.zrz.graphql.zulu.engine.ZuluEngine;
 import io.zrz.graphql.zulu.engine.ZuluEngineBuilder;
+import io.zrz.zulu.graphql.GraphQLGrpc;
 
 public class ZuluGrpcServer {
 
@@ -22,7 +23,9 @@ public class ZuluGrpcServer {
 
   public ZuluGrpcServer startAsync() {
     this.server = NettyServerBuilder.forPort(this.port)
-        .addService(new ZuluGrpcBinder(zulu))
+        // .addService(new ZuluGrpcBinder(zulu))
+        .addTransportFilter(new BindingServerTransportFilter(() -> new ZuluGrpcBinder(zulu)))
+        .addService(new PerSessionService(GraphQLGrpc.getServiceDescriptor()))
         .build();
     return this;
   }

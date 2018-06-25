@@ -1,0 +1,90 @@
+buildscript {
+  repositories {
+    maven {
+      url 'https://plugins.gradle.org/m2/'
+    }
+  }
+  dependencies {
+	classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
+    classpath 'net.ltgt.gradle:gradle-apt-plugin:0.15'
+    classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+  }
+}
+
+
+
+plugins { 
+  id "com.google.protobuf" version '0.8.5'
+}
+
+eclipse.project.name = 'graphql:client-grpc'
+
+def grpcVersion = '1.13.1'
+def reactiveGrpcVersion = '0.8.2'
+
+
+dependencies {
+  
+  // runtime shared dependencies.
+  api                 'org.slf4j:slf4j-api:1.7.25'
+
+  // grpc
+  api "io.grpc:grpc-protobuf:${grpcVersion}"
+  api 'io.reactivex.rxjava2:rxjava:2.1.15'
+ 
+  implementation "com.salesforce.servicelibs:rxgrpc-stub:${reactiveGrpcVersion}"
+
+  // compile time only dependencies
+  compileOnly         'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.150'
+  compileOnly         'org.glassfish:javax.annotation:10.0-b28'
+
+  testImplementation  'junit:junit:4.12'
+  testImplementation  'org.assertj:assertj-core:3.6.1'
+  testImplementation  'ch.qos.logback:logback-classic:1.2.3'
+
+}
+
+///
+
+
+
+
+
+
+      protobuf {
+  
+        protoc {
+          artifact = 'com.google.protobuf:protoc:3.5.1-1'
+        }
+    
+        plugins {
+          grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+          }
+          rxgrpc {
+            artifact = "com.salesforce.servicelibs:rxgrpc:${reactiveGrpcVersion}:jdk8@jar"
+          }    
+        }
+    
+        generateProtoTasks {
+          all()*.plugins {
+            grpc {}
+            rxgrpc {}
+          }
+        }
+   
+        sourceSets {
+          main {
+            proto {
+              srcDir '../graphql-server-grpc/src/main/proto'
+            }
+            java {
+              srcDirs 'src/main/proto'
+              srcDirs 'build/generated/source/proto/main/grpc'
+              srcDirs 'build/generated/source/proto/main/java'
+              srcDirs 'build/generated/source/proto/main/rxgrpc'
+            }
+          }
+        }    
+    
+    }

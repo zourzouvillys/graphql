@@ -24,10 +24,10 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
   private static Logger log = LoggerFactory.getLogger(DefaultGQLPreparedSelection.class);
 
-  private GQLSelectionTypeCriteria condition;
-  private GQLFieldSelection selection;
-  private DefaultGQLPreparedOperation req;
-  private DefaultGQLPreparedSelection parent;
+  private final GQLSelectionTypeCriteria condition;
+  private final GQLFieldSelection selection;
+  private final DefaultGQLPreparedOperation req;
+  private final DefaultGQLPreparedSelection parent;
 
   public DefaultGQLPreparedSelection(final DefaultGQLPreparedOperation req, final DefaultGQLPreparedSelection parent, final GQLSelectionTypeCriteria condition,
       final GQLFieldSelection selection) {
@@ -39,12 +39,12 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
   @Override
   public GQLSourceLocation sourceLocation() {
-    return selection.location();
+    return this.selection.location();
   }
 
   @Override
   public List<ZAnnotation> annotations() {
-    return selection.directives().stream().map(x -> new ZAnnotation() {
+    return this.selection.directives().stream().map(x -> new ZAnnotation() {
 
       @Override
       public Optional<ZStructValue> value() {
@@ -62,17 +62,17 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
   @Override
   public Optional<GQLSelectionTypeCriteria> typeCritera() {
-    return Optional.empty();
+    return Optional.ofNullable(this.condition);
   }
 
   @Override
   public String fieldName() {
-    return selection.name();
+    return this.selection.name();
   }
 
   @Override
   public String outputName() {
-    return selection.outputName();
+    return this.selection.outputName();
   }
 
   @Override
@@ -81,16 +81,16 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
         .selections()
         .stream()
         .sequential()
-        .flatMap(x -> x.apply(new SelectionGenerator(req, this)))
+        .flatMap(x -> x.apply(new SelectionGenerator(this.req, this)))
         .collect(Collectors.toList());
   }
 
   @Override
   public String toString() {
-    String id = path();
+    String id = this.path();
 
     if (this.parameters().isPresent()) {
-      id += parameters()
+      id += this.parameters()
           .get()
           .fields()
           .entrySet()
@@ -119,8 +119,8 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
   private final static class ParamField implements ZField, RuntimeParameterHolder {
 
-    private DefaultGQLPreparedOperation req;
-    private GQLArgument arg;
+    private final DefaultGQLPreparedOperation req;
+    private final GQLArgument arg;
 
     public ParamField(final DefaultGQLPreparedOperation req, final GQLArgument arg) {
       this.req = req;
@@ -129,31 +129,31 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
     @Override
     public ZTypeUse fieldType() {
-      return ValueResolvingVisitor.create(req, arg.value()).type();
+      return ValueResolvingVisitor.create(this.req, this.arg.value()).type();
     }
 
     @Override
     public Optional<ZValue> defaultValue() {
-      return arg.value().apply(new DefaultZValueValueExtractor(req, arg));
+      return this.arg.value().apply(new DefaultZValueValueExtractor(this.req, this.arg));
     }
 
     @Override
     public Optional<ZValue> constantValue() {
-      return arg.value().apply(new ConstantZValueValueExtractor(req, arg, null));
+      return this.arg.value().apply(new ConstantZValueValueExtractor(this.req, this.arg, null));
     }
 
     @Override
     public String toString() {
-      return fieldType() + (Optional.ofNullable(constantValue().orElse(defaultValue().orElse(null))).map(val -> " = " + val).orElse(""));
+      return this.fieldType() + Optional.ofNullable(this.constantValue().orElse(this.defaultValue().orElse(null))).map(val -> " = " + val).orElse("");
     }
 
     public Optional<ZValue> resolve(final GQLVariableProvider provider) {
-      return arg.value().apply(new ConstantZValueValueExtractor(req, arg, provider));
+      return this.arg.value().apply(new ConstantZValueValueExtractor(this.req, this.arg, provider));
     }
 
     @Override
     public String parameterName() {
-      return arg.value().apply(new VariableNameExtractor(req, arg));
+      return this.arg.value().apply(new VariableNameExtractor(this.req, this.arg));
     }
 
   }
@@ -167,7 +167,7 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
   @Override
   public Optional<ZStructType> parameters() {
 
-    if (selection.args().isEmpty()) {
+    if (this.selection.args().isEmpty()) {
       return Optional.empty();
     }
 
@@ -175,14 +175,14 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
       @Override
       public Map<String, ZField> fields() {
-        return selection.args()
+        return DefaultGQLPreparedSelection.this.selection.args()
             .stream()
-            .collect(Collectors.toMap(x -> x.name(), x -> new ParamField(req, x)));
+            .collect(Collectors.toMap(x -> x.name(), x -> new ParamField(DefaultGQLPreparedSelection.this.req, x)));
       }
 
       @Override
       public String toString() {
-        return fields()
+        return this.fields()
             .entrySet()
             .stream()
             .map(x -> x.getKey() + ": " + x.getValue())
@@ -199,7 +199,7 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
   @Override
   public Optional<ZStructValue> arguments(final GQLVariableProvider provider) {
-    return this.parameters().map(struct -> resolve(struct, provider));
+    return this.parameters().map(struct -> this.resolve(struct, provider));
   }
 
   /**

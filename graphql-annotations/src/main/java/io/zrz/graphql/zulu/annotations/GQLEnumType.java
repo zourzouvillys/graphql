@@ -6,15 +6,20 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import io.zrz.graphql.zulu.annotations.GQLType.Kind;
+
 /**
- * indicates that the specified type is a ZuluType
- * 
+ * indicates that the specified type is a GQL object type
+ *
  * @author theo
  *
  */
 
 @Retention(RUNTIME)
 @Target(TYPE)
-public @interface GQLInterface {
+@GQLType(kind = Kind.ENUM)
+public @interface GQLEnumType {
+
   String name() default "";
+
 }

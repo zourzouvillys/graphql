@@ -32,12 +32,12 @@ public class DefaultGQLParser implements GQLParser {
 
   private static final DefaultGQLParser INSTANCE = new DefaultGQLParser();
 
-  public GQLValue parseValue(String value, GQLSourceInput source) {
+  public GQLValue parseValue(final String value, final GQLSourceInput source) {
     final ParseContext ctx = new ParseContext(value, source);
     return ctx.parseValue();
   }
 
-  public static GQLTypeReference parseTypeRef(String value, GQLSourceInput source) {
+  public static GQLTypeReference parseTypeRef(final String value, final GQLSourceInput source) {
     final ParseContext ctx = new ParseContext(value, source);
     return ctx.parseTypeRef();
   }
@@ -52,7 +52,7 @@ public class DefaultGQLParser implements GQLParser {
    */
 
   @Override
-  public GQLDocument parse(final String doc, GQLSourceInput source) {
+  public GQLDocument parse(final String doc, final GQLSourceInput source) {
     if (doc == null || doc.trim().length() == 0) {
       throw ParserExceptions.endOfStream();
     }
@@ -68,7 +68,7 @@ public class DefaultGQLParser implements GQLParser {
    * @return
    */
 
-  private GQLDocument validate(GQLDocument doc) {
+  private GQLDocument validate(final GQLDocument doc) {
     final ValidatingVisitor visitor = new ValidatingVisitor(doc);
     return ImmutableGQLDocument.copyOf(doc)
         .withDefinitions(doc.definitions().stream().map(def -> def.apply(visitor)).collect(Collectors.toList()));
@@ -88,9 +88,10 @@ public class DefaultGQLParser implements GQLParser {
 
   }
 
-  public GQLOperationDefinition parseQuery(final String doc, GQLSourceInput source) {
+  public GQLOperationDefinition parseQuery(final String doc, final GQLSourceInput source) {
     final ParseContext ctx = new ParseContext(doc, source);
-    return ctx.parseOperation();
+    final GQLSourceLocation start = ctx.lexer().position();
+    return ctx.parseOperation(start);
   }
 
   /**
@@ -98,16 +99,16 @@ public class DefaultGQLParser implements GQLParser {
    * it.
    *
    * @param schema
-   *          The input string to process
+   *                 The input string to process
    *
    * @return A list of schema declarations encountered.
    */
 
-  public List<GQLDeclaration> readSchema(String schema, GQLSourceInput source) {
+  public List<GQLDeclaration> readSchema(final String schema, final GQLSourceInput source) {
     return new ParseContext(schema, source).parseSchema();
   }
 
-  public List<GQLDeclaration> readSchema(InputStream schema, GQLSourceInput source) {
+  public List<GQLDeclaration> readSchema(final InputStream schema, final GQLSourceInput source) {
     return this.readSchema(streamToString(schema), source);
   }
 
@@ -118,12 +119,12 @@ public class DefaultGQLParser implements GQLParser {
    * @return
    */
 
-  public GQLTypeRegistry parseSchema(String schema) {
+  public GQLTypeRegistry parseSchema(final String schema) {
     return this.parseSchema(schema, GQLSourceInput.emptySource());
   }
 
   @Override
-  public GQLTypeRegistry parseSchema(String schema, GQLSourceInput source) {
+  public GQLTypeRegistry parseSchema(final String schema, final GQLSourceInput source) {
     return new GQLSchemaBuilder()
         .add(GQLTypes.builtins())
         .add(new ParseContext(schema, source).parseSchema())
@@ -137,12 +138,12 @@ public class DefaultGQLParser implements GQLParser {
    * @return
    */
 
-  public GQLTypeRegistry parseSchema(InputStream schema) {
+  public GQLTypeRegistry parseSchema(final InputStream schema) {
     return this.parseSchema(schema, GQLSourceInput.emptySource());
   }
 
   @Override
-  public GQLTypeRegistry parseSchema(InputStream schema, GQLSourceInput source) {
+  public GQLTypeRegistry parseSchema(final InputStream schema, final GQLSourceInput source) {
     return new GQLSchemaBuilder().add(GQLTypes.builtins())
         .add(new ParseContext(streamToString(schema), source).parseSchema()).build();
   }
@@ -156,35 +157,35 @@ public class DefaultGQLParser implements GQLParser {
     }
   }
 
-  public static List<GQLSelection> parseSelection(String input) {
+  public static List<GQLSelection> parseSelection(final String input) {
     final ParseContext ctx = new ParseContext(input, GQLSourceInput.emptySource());
     return ctx.parseSelectionSet();
   }
 
-  public static GQLDocument parseDocument(String input) {
+  public static GQLDocument parseDocument(final String input) {
     return INSTANCE.parse(input, GQLSourceInput.emptySource());
   }
 
-  public static GQLDocument parseDocument(String input, GQLSourceInput source) {
+  public static GQLDocument parseDocument(final String input, final GQLSourceInput source) {
     return INSTANCE.parse(input, source);
   }
 
-  public static GQLDocument parseDocument(InputStream input) {
+  public static GQLDocument parseDocument(final InputStream input) {
     return parseDocument(input, GQLSourceInput.emptySource());
   }
 
-  public static GQLDocument parseDocument(InputStream input, GQLSourceInput source) {
+  public static GQLDocument parseDocument(final InputStream input, final GQLSourceInput source) {
     if (input == null) {
       throw new IllegalArgumentException("input");
     }
     return parseDocument(streamToString(input), source);
   }
 
-  public static GQLDocument parseDocument(Path path) {
+  public static GQLDocument parseDocument(final Path path) {
     try (InputStream in = new FileInputStream(path.toString())) {
       return parseDocument(in, GQLSourceInput.of(path.toString()));
     }
-    catch (Exception ex) {
+    catch (final Exception ex) {
       throw new RuntimeException(ex);
     }
   }

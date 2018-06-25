@@ -1,6 +1,8 @@
 package io.zrz.zulu.schema;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -13,6 +15,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.CharSource;
+import com.google.common.io.MoreFiles;
 
 import io.zrz.graphql.core.decl.GQLEnumDeclaration;
 import io.zrz.graphql.core.decl.GQLInputTypeDeclaration;
@@ -78,23 +81,28 @@ public class SchemaCompiler implements DiagnosticListener<ResolutionDiagnostic> 
   }
 
   public ResolvedSchema compile(final String queryRoot) {
-    final Map<GQLOperationType, String> roots = ImmutableMap.of(GQLOpType.Query, queryRoot);
-    return this.compile(roots);
+    return this.compile(queryRoot, null, null);
   }
 
   public ResolvedSchema compile(final String queryRoot, final String mutationRoot) {
-    final Map<GQLOperationType, String> roots = ImmutableMap.of(
-        GQLOpType.Query, queryRoot,
-        GQLOpType.Mutation, mutationRoot);
-    return this.compile(roots);
+
+    return this.compile(queryRoot, mutationRoot, null);
   }
 
   public ResolvedSchema compile(final String queryRoot, final String mutationRoot, final String subscriptionRoot) {
-    final Map<GQLOperationType, String> roots = ImmutableMap.of(
-        GQLOpType.Query, queryRoot,
-        GQLOpType.Mutation, mutationRoot,
-        GQLOpType.Subscription, subscriptionRoot);
-    return this.compile(roots);
+
+    final ImmutableMap.Builder<GQLOperationType, String> b = ImmutableMap.builder();
+
+    if (queryRoot != null)
+      b.put(GQLOpType.Query, queryRoot);
+
+    if (mutationRoot != null)
+      b.put(GQLOpType.Mutation, mutationRoot);
+
+    if (subscriptionRoot != null)
+      b.put(GQLOpType.Subscription, subscriptionRoot);
+
+    return this.compile(b.build());
   }
 
   public TypeUse use(final SchemaElement element, final GQLTypeReference type) {
@@ -178,6 +186,15 @@ public class SchemaCompiler implements DiagnosticListener<ResolutionDiagnostic> 
   @Override
   public void report(final Diagnostic<ResolutionDiagnostic> diag) {
     System.err.println(diag);
+  }
+
+  public void addUnit(final Path path) {
+    try {
+      this.addUnit(MoreFiles.asCharSource(path, StandardCharsets.UTF_8));
+    }
+    catch (final IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
 }
