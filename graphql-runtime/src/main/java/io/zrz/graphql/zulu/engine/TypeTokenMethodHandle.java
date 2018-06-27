@@ -71,7 +71,11 @@ public class TypeTokenMethodHandle {
   /**
    * guards invocation of this handle so it will return null if the receiver is not of the specified type.
    *
+   * @param currentType
+   *                       The type of the node
    * @param receiverType
+   *                       The type the node should be cast to, or null if not that value.
+   *
    * @return
    */
 
@@ -81,12 +85,18 @@ public class TypeTokenMethodHandle {
         .type()
         .changeParameterType(1, currentType.getRawType());
 
+    MethodHandle assignableTest = this.isAssignableFrom(receiverType.javaType().getRawType(), currentType.getRawType());
+
+    //
+
+    // drop the first parameter (context)
+    assignableTest = dropArguments(assignableTest, 0, this.handle.type().parameterType(0));
+
     final MethodHandle test = dropArguments(
-        this.isAssignableFrom(receiverType.javaType().getRawType()),
-        0,
-        sig
-            .dropParameterTypes(0, 1)
-            .dropParameterTypes(1, sig.parameterCount() - 1)
+        assignableTest,
+        2,
+        assignableTest.type()
+            .dropParameterTypes(0, 2)
             .parameterArray());
 
     final MethodHandle guarded = guardWithTest(
@@ -99,15 +109,17 @@ public class TypeTokenMethodHandle {
   }
 
   /**
+   * @param class1
    *
    */
 
-  private final MethodHandle isAssignableFrom(final Class<?> klass) {
+  private final MethodHandle isAssignableFrom(final Class<?> klass, final Class<?> upperBound) {
 
     try {
       return publicLookup()
           .findVirtual(Class.class, "isInstance", methodType(Boolean.TYPE, Object.class))
-          .bindTo(klass);
+          .bindTo(klass)
+          .asType(methodType(Boolean.TYPE, upperBound));
     }
     catch (NoSuchMethodException | IllegalAccessException e) {
       throw new RuntimeException(e);

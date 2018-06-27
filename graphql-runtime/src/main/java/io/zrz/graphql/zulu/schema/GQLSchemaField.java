@@ -2,8 +2,6 @@ package io.zrz.graphql.zulu.schema;
 
 import java.util.List;
 
-import org.eclipse.jdt.annotation.NonNull;
-
 import com.google.common.collect.ImmutableList;
 
 import io.zrz.graphql.zulu.annotations.GQLObjectType;
@@ -31,7 +29,7 @@ public class GQLSchemaField {
 
   // args: [__InputValue!]!
 
-  public @NonNull List<io.zrz.graphql.zulu.schema.GQLSchemaInputValue> args() {
+  public List<io.zrz.graphql.zulu.schema.GQLSchemaInputValue> args() {
     return this.field
         .parameters()
         .map(p -> p.fieldValues())

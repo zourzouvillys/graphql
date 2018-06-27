@@ -265,8 +265,10 @@ class ExecutableBuilder {
     TypeTokenMethodHandle handle = this.invocationHandle(field, field.invoker().methodHandle());
 
     if (receiverType != contextType) {
-      // cast to the receiver type, else return null
+
+      // cast to the receiver type, else return null.
       handle = handle.guardReceiverType(contextType.javaType(), receiverType);
+
     }
 
     if (params == null) {
@@ -277,21 +279,27 @@ class ExecutableBuilder {
 
         // providing parameters when we don't need any?
 
-        final List<String> extras = sel.parameters().get()
+        final List<String> extras = sel
+            .parameters()
+            .get()
             .fieldNames()
             .collect(Collectors.toList());
 
         if (!extras.isEmpty()) {
 
-          this.addWarning(new ZuluWarning.OutputFieldWarning(ZuluWarningKind.UNKNOWN_PARAMETER, field, sel,
-              "unknown parameter"
-                  + (extras.size() == 1 ? "" : "s")
-                  + " "
-                  + (extras.size() == 1 ? "'" + extras.get(0) + "'" : extras.toString())
-                  + " for selection on field '"
-                  + sel.fieldName() + "' in type '"
-                  + receiverType.typeName()
-                  + "'"));
+          this.addWarning(
+              new ZuluWarning.OutputFieldWarning(
+                  ZuluWarningKind.UNKNOWN_PARAMETER,
+                  field,
+                  sel,
+                  "unknown parameter"
+                      + (extras.size() == 1 ? "" : "s")
+                      + " "
+                      + (extras.size() == 1 ? "'" + extras.get(0) + "'" : extras.toString())
+                      + " for selection on field '"
+                      + sel.fieldName() + "' in type '"
+                      + receiverType.typeName()
+                      + "'"));
 
           return null;
 
@@ -300,6 +308,7 @@ class ExecutableBuilder {
       }
 
       return this.checkHandlerSignature(field, handle);
+
     }
 
     //
@@ -328,6 +337,7 @@ class ExecutableBuilder {
       }
 
     }
+
     //
 
     int offset = field.contextParameters().size() - CONTEXT_ARGS;
