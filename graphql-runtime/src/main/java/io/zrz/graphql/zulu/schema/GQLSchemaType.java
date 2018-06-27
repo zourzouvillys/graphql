@@ -13,6 +13,7 @@ import io.zrz.graphql.zulu.annotations.GQLObjectType;
 import io.zrz.graphql.zulu.executable.ExecutableInterfaceType;
 import io.zrz.graphql.zulu.executable.ExecutableOutputType;
 import io.zrz.graphql.zulu.executable.ExecutableType;
+import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
 
 @GQLObjectType(name = "__Type")
 public class GQLSchemaType {
@@ -29,6 +30,12 @@ public class GQLSchemaType {
     this.type = Objects.requireNonNull(type);
     this.arity = arity;
     this.nullable = nullable;
+  }
+
+  public GQLSchemaType(final ExecutableTypeUse fieldType) {
+    this.type = fieldType.type();
+    this.arity = fieldType.arity();
+    this.nullable = fieldType.isNullable();
   }
 
   // kind: __TypeKind!

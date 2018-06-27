@@ -9,20 +9,20 @@ import java.util.Optional;
 import io.zrz.graphql.zulu.ZOutputField;
 import io.zrz.graphql.zulu.doc.GQLPreparedSelection;
 import io.zrz.graphql.zulu.executable.ExecutableElement;
-import io.zrz.graphql.zulu.executable.ExecutableType;
 import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
 import io.zrz.zulu.types.ZAnnotation;
 
 /**
  * a selection in an operation from a prepared document that is bound to the executable model.
- * 
+ *
  * @author theo
  *
  */
 
-public interface ZuluSelection extends GQLPreparedSelection, ExecutableType, ZOutputField {
+public interface ZuluSelection extends GQLPreparedSelection, ZOutputField {
 
-  public ExecutableTypeUse fieldType();
+  @Override
+  ExecutableTypeUse fieldType();
 
   @Override
   default List<ZAnnotation> annotations() {
@@ -47,21 +47,21 @@ public interface ZuluSelection extends GQLPreparedSelection, ExecutableType, ZOu
 
   /**
    * calls the invoker directly.
-   * 
+   *
    * @param receiver
    * @param parentContext
-   * 
+   *
    * @return
    */
 
-  default Object invoke(ZuluRequestContext receiver, Object parentContext) {
+  default Object invoke(final ZuluRequestContext receiver, final Object parentContext) {
     try {
       return this.invoker().invoke(Objects.requireNonNull(receiver), Objects.requireNonNull(parentContext));
     }
-    catch (RuntimeException ex) {
+    catch (final RuntimeException ex) {
       throw ex;
     }
-    catch (Throwable ex) {
+    catch (final Throwable ex) {
       throw new RuntimeException(ex);
     }
   }

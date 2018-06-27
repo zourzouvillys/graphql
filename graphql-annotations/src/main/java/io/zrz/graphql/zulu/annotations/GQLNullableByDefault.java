@@ -7,11 +7,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * indicates a type usage is nullable.
+ * indicates that by default all type uses are nullable unless otherwise specified. this is the default.
  */
 
 @Retention(RUNTIME)
-@Target({ ElementType.PARAMETER, ElementType.TYPE_USE })
+@Target({ ElementType.PACKAGE, ElementType.TYPE })
 @GQLTypeUse(nullable = true)
-public @interface GQLNullable {
+public @interface GQLNullableByDefault {
+
 }

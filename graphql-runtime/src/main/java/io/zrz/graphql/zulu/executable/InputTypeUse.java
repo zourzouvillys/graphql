@@ -14,10 +14,15 @@ public class InputTypeUse {
 
     this.inputType = types.builder().mapInputType(field);
 
-    this.typeuse = Objects.requireNonNull(types.use(field, this.inputType.modelType(), this.inputType.arity()));
-
     // if @Nullable, Optional, or has a default value then
     this.nullable = JavaExecutableUtils.isNullableInput(spec);
+
+    this.typeuse = Objects.requireNonNull(
+        types.use(
+            field,
+            this.inputType.modelType(),
+            this.inputType.arity(),
+            this.nullable));
 
   }
 

@@ -87,22 +87,22 @@ public class JavaExecutableUtils {
   }
 
   /**
-   * merges two fields declared for a type to find the winning one.
+   * when there are two fields with the same name, we need to chose one which will be the one we export.
+   *
+   * this happens with inheritance.
    *
    * @param receiver
    * @param a
    * @param b
+   *
    * @return
    */
 
   public static ExecutableOutputField merge(final ExecutableReceiverType receiver, final ExecutableOutputField a, final ExecutableOutputField b) {
-
     if (a.fieldType().javaType().isSubtypeOf(b.fieldType().javaType())) {
       return a;
     }
-
     return b;
-
   }
 
   public static JavaOutputField merge(final ExecutableReceiverType receiver, final JavaOutputField a, final JavaOutputField b) {

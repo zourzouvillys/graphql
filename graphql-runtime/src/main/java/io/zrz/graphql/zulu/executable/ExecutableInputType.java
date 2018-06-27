@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
 
 import io.zrz.graphql.zulu.LogicalTypeKind;
 import io.zrz.graphql.zulu.executable.ExecutableSchemaBuilder.Symbol;
@@ -68,6 +69,11 @@ public class ExecutableInputType extends AbstractExecutableType implements ZStru
   @Override
   public String documentation() {
     return null;
+  }
+
+  @Override
+  public TypeToken<?> javaType() {
+    throw new IllegalStateException("no java type for input type");
   }
 
 }

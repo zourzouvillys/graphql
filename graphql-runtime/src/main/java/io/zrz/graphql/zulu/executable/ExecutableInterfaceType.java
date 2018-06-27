@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
@@ -33,13 +32,7 @@ public class ExecutableInterfaceType implements ExecutableType, ExecutableElemen
 
     this.interfaces = buildctx.interfacesFor(symbol, this);
 
-    this.fields = Stream.concat(
-        declaredFields.values().stream(),
-        this.interfaces
-            .stream()
-            .flatMap(x -> x.fields().values().stream())
-            .filter(f -> !declaredFields.containsKey(f.fieldName())))
-        .collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k, (a, b) -> JavaExecutableUtils.merge(this, a, b)));
+    this.fields = ImmutableMap.copyOf(declaredFields);
 
   }
 

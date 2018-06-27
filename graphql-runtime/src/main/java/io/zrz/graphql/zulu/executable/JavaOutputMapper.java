@@ -361,4 +361,12 @@ class JavaOutputMapper {
     return this.javaType.toString();
   }
 
+  /**
+   * if the return value can be null.
+   */
+
+  public boolean isNullable() {
+    return true;
+  }
+
 }

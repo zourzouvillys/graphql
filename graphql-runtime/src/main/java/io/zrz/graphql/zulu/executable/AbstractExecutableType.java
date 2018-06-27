@@ -1,5 +1,9 @@
 package io.zrz.graphql.zulu.executable;
 
-public abstract class AbstractExecutableType implements ExecutableElement {
+abstract class AbstractExecutableType implements ExecutableElement {
+
+  AbstractExecutableType() {
+
+  }
 
 }

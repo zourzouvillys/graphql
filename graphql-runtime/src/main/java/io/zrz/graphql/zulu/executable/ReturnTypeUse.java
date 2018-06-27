@@ -12,10 +12,16 @@ public class ReturnTypeUse {
   public ReturnTypeUse(final ExecutableOutputField field, final BuildContext types, final TypeToken<?> returnType) {
 
     // mapper for the return type.
-    this.returnType = types.builder().mapReturnType(field, returnType);
+    this.returnType = types.builder().mapReturnType(
+        field,
+        returnType);
 
     // make sure we register usage of this type, and store it.
-    this.typeuse = types.use(field, this.returnType.modelType(), this.returnType.returnTypeArity());
+    this.typeuse = types.use(
+        field,
+        this.returnType.modelType(),
+        this.returnType.returnTypeArity(),
+        this.returnType.isNullable());
 
   }
 

@@ -101,17 +101,14 @@ public abstract class AbstractZuluSelection implements ZuluSelection {
     return this.psel.path();
   }
 
-  @Override
   public ZTypeKind typeKind() {
     return this.type.typeKind();
   }
 
-  @Override
   public LogicalTypeKind logicalKind() {
     return this.type.logicalKind();
   }
 
-  @Override
   public String typeName() {
     return this.type.typeName();
   }

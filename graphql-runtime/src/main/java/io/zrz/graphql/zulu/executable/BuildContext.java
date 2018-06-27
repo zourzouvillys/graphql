@@ -36,11 +36,11 @@ class BuildContext implements OutputFieldFilter {
     return this.b;
   }
 
-  ExecutableTypeUse use(final ExecutableElement user, final TypeToken<?> javaType) {
-    return this.use(user, javaType, 0);
+  ExecutableTypeUse use(final ExecutableElement user, final TypeToken<?> javaType, final boolean nullable) {
+    return this.use(user, javaType, 0, nullable);
   }
 
-  ExecutableTypeUse use(final ExecutableElement user, final TypeToken<?> javaType, final int arity) {
+  ExecutableTypeUse use(final ExecutableElement user, final TypeToken<?> javaType, final int arity, final boolean nullable) {
 
     Symbol symbol = this.suppliers.get(javaType);
 
@@ -72,12 +72,6 @@ class BuildContext implements OutputFieldFilter {
 
         switch (symbol.typeKind) {
           case OUTPUT:
-            // {
-            // final ExecutableOutputType decl = new ExecutableOutputType(this.schema, symbol, this);
-            // Preconditions.checkArgument(this.types.containsKey(symbol));
-            // Preconditions.checkArgument(this.types.get(symbol) == decl);
-            // return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl);
-            // }
           case ENUM:
           case INPUT:
           case INTERFACE:
@@ -90,14 +84,14 @@ class BuildContext implements OutputFieldFilter {
             Preconditions.checkArgument(this.types.containsKey(symbol));
             Preconditions.checkArgument(this.types.get(symbol) == decl);
 
-            return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl);
+            return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl, nullable);
 
           }
           default:
-            break;
-        }
 
-        throw new IllegalArgumentException(symbol.typeKind.toString());
+            throw new IllegalArgumentException(symbol.typeKind.toString());
+
+        }
 
       }
       catch (final Exception ex) {
@@ -108,7 +102,7 @@ class BuildContext implements OutputFieldFilter {
 
     }
 
-    return new ExecutableTypeUse(javaType, found, arity, symbol);
+    return new ExecutableTypeUse(javaType, found, arity, symbol, nullable);
 
   }
 

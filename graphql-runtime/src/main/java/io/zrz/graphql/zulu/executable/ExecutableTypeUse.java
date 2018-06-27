@@ -10,37 +10,46 @@ import io.zrz.zulu.types.ZTypeUse;
 
 /**
  * both input and output types have a java type as well as a GraphQL type that represents them.
- * 
+ *
  * this includes both.
- * 
+ *
  * @author theo
  *
  */
 
 public class ExecutableTypeUse extends ZTypeUse {
 
-  private String typeName;
-  private TypeToken<?> javaType;
+  private final String typeName;
+  private final TypeToken<?> javaType;
   private final int arity;
-  private Symbol symbol;
+  private final Symbol symbol;
   private final ExecutableType type;
+  private final boolean nullable;
 
-  public ExecutableTypeUse(TypeToken<?> javaType, ExecutableType type, int arity, Symbol symbol) {
+  public ExecutableTypeUse(final TypeToken<?> javaType, final ExecutableType type, final int arity, final Symbol symbol, final boolean nullable) {
     super(type);
     this.javaType = javaType;
     this.typeName = type.typeName();
     this.type = Objects.requireNonNull(type);
     this.arity = arity;
     this.symbol = symbol;
+    this.nullable = nullable;
   }
 
-  public ExecutableTypeUse(TypeToken<?> javaType, String typeName, int arity, Symbol symbol, ExecutableType decl) {
+  public ExecutableTypeUse(
+      final TypeToken<?> javaType,
+      final String typeName,
+      final int arity,
+      final Symbol symbol,
+      final ExecutableType decl,
+      final boolean nullable) {
     super(decl);
     this.javaType = javaType;
     this.typeName = typeName;
     this.arity = arity;
     this.symbol = symbol;
     this.type = Objects.requireNonNull(decl, javaType.toString());
+    this.nullable = nullable;
   }
 
   @Override
@@ -57,7 +66,7 @@ public class ExecutableTypeUse extends ZTypeUse {
    */
 
   public LogicalTypeKind logicalTypeKind() {
-    return symbol.typeKind;
+    return this.symbol.typeKind;
   }
 
   /**
@@ -65,7 +74,7 @@ public class ExecutableTypeUse extends ZTypeUse {
    */
 
   public TypeToken<?> javaType() {
-    return javaType;
+    return this.javaType;
   }
 
   /**
@@ -73,12 +82,16 @@ public class ExecutableTypeUse extends ZTypeUse {
    */
 
   public String logicalType() {
-    return typeName;
+    return this.typeName;
   }
 
   @Override
   public String toString() {
-    return this.javaType + " -> " + this.typeName;
+    return this.javaType + " -> " + this.typeName + (this.nullable ? "" : "!");
+  }
+
+  public boolean isNullable() {
+    return this.nullable;
   }
 
 }

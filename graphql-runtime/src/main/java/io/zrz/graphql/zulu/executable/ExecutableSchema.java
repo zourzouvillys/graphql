@@ -28,13 +28,13 @@ public class ExecutableSchema implements ExecutableElement {
 
   private final ImmutableMap<GQLOperationType, ExecutableOutputType> operationRoots;
   private final ImmutableMap<String, ExecutableType> types;
-  private ImmutableMap<TypeToken<?>, ExecutableType> tokens;
+  private final ImmutableMap<TypeToken<?>, ExecutableType> tokens;
 
   ExecutableSchema(final ExecutableSchemaBuilder b) {
 
     final BuildContext ctx = new BuildContext(b, this);
 
-    final Builder<GQLOperationType, ExecutableOutputType> roots = ImmutableMap.<GQLOperationType, ExecutableOutputType>builder();
+    final Builder<GQLOperationType, ExecutableOutputType> roots = ImmutableMap.builder();
 
     b.operationRoots()
         .entrySet()
@@ -50,17 +50,13 @@ public class ExecutableSchema implements ExecutableElement {
 
     b.additionalTypes(ctx.types.keySet())
         .sorted(Comparator.comparing(Symbol::typeName))
-        .forEach(sym -> ctx.use(this, sym.typeToken));
+        .forEach(ctx::compile);
 
     this.types = ctx.types
         .entrySet()
         .stream()
         .sorted(Comparator.comparing(Entry::getKey, Comparator.comparing(Symbol::typeName)))
-        .collect(ImmutableMap.toImmutableMap(k -> k.getKey().typeName, k -> k.getValue(), (t1, t2) -> {
-
-          return t1;
-
-        }));
+        .collect(ImmutableMap.toImmutableMap(k -> k.getKey().typeName, Entry::getValue, this::mergeTypes));
 
     this.tokens = ctx.types
         .entrySet()
@@ -69,9 +65,46 @@ public class ExecutableSchema implements ExecutableElement {
         .collect(ImmutableMap.toImmutableMap(k -> k.getKey().typeToken, k -> k.getValue(), (t1, t2) -> {
 
           throw new IllegalArgumentException(
-              "type registered multiple times:\n - " + t1 + " (" + t1.typeName() + ")" + "\n - " + t2 + " (" + t2.typeName() + ")");
+              "type registered multiple times:\n - "
+                  + t1 + " (" + t1.typeName() + ")" + "\n - "
+                  + t2 + " (" + t2.typeName() + ")");
 
         }));
+
+  }
+
+  /**
+   * merges the types.
+   *
+   * we can have multiple symbols for the same name because of aliasing internally. e.g, multiple scalar types which use
+   * {@link String} as their representation.
+   *
+   * annotations on the type usage would define the name that they use in the schema, and we just need to track them
+   * together.
+   *
+   * this is only supported for scalar types.
+   *
+   * @param a
+   * @param b
+   * @return
+   */
+
+  private ExecutableType mergeTypes(final ExecutableType a, final ExecutableType b) {
+
+    // , (t1, t2) -> { return t1; }));
+
+    switch (a.typeName()) {
+      case "Int":
+      case "Boolean":
+      case "Double":
+      case "String":
+        return a;
+    }
+
+    System.err.println(a.logicalKind() + " " + a.typeName());
+    System.err.println(b.logicalKind() + " " + b.typeName());
+
+    return a;
 
   }
 
@@ -106,10 +139,24 @@ public class ExecutableSchema implements ExecutableElement {
     return this.types.values().stream();
   }
 
+  /**
+   *
+   * @return
+   */
+
   public Map<GQLOperationType, ExecutableOutputType> operationTypes() {
     return this.operationRoots;
 
   }
+
+  /**
+   *
+   *
+   * @param typeName
+   * @param fieldName
+   *
+   * @return
+   */
 
   public ExecutableOutputField resolve(final String typeName, final String fieldName) {
 
@@ -123,10 +170,25 @@ public class ExecutableSchema implements ExecutableElement {
 
   }
 
+  /**
+   *
+   *
+   * @param type
+   * @param fieldName
+   *
+   * @return
+   */
+
   private ExecutableOutputField resolve(final ExecutableOutputType type, final String fieldName) {
     return type.field(fieldName)
         .orElseThrow(() -> type.missingFieldException(fieldName));
   }
+
+  /**
+   *
+   *
+   * @return
+   */
 
   public static ExecutableSchemaBuilder builder() {
     return new ExecutableSchemaBuilder();

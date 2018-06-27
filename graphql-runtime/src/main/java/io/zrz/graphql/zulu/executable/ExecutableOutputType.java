@@ -8,7 +8,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.similarity.FuzzyScore;
@@ -76,27 +75,9 @@ public final class ExecutableOutputType implements ExecutableType, ZOutputType, 
         .map(field -> this.buildField(field, symbol, buildctx))
         .collect(ImmutableMap.toImmutableMap(ExecutableOutputField::fieldName, Function.identity(), this::mergeFields));
 
-    this.fields = Stream.concat(
+    this.fields = ImmutableMap.copyOf(declaredFields);
 
-        declaredFields
-            .values()
-            .stream()
-            .sorted(Comparator.comparing(ExecutableOutputField::fieldName)),
-
-        this.interfaces
-            .stream()
-            .flatMap(x -> x.fields().values().stream())
-            .filter(f -> !declaredFields.containsKey(f.fieldName()))
-            .sorted(Comparator.comparing(ExecutableOutputField::fieldName))
-
-    )
-        .collect(
-            ImmutableMap.toImmutableMap(
-                k -> k.fieldName(),
-                k -> k,
-                (a, b) -> JavaExecutableUtils.merge(this, a, b)));
-
-    this.typeUse = buildctx.use(this, symbol.typeToken, 0);
+    this.typeUse = buildctx.use(this, symbol.typeToken, 0, false);
 
   }
 
@@ -126,7 +107,7 @@ public final class ExecutableOutputType implements ExecutableType, ZOutputType, 
   }
 
   /**
-   * the interfaces implemented by object type.
+   * the GraphQL interfaces that this object type implements.
    */
 
   public Set<ExecutableInterfaceType> interfaces() {
