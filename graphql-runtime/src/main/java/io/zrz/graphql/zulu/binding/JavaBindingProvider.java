@@ -137,7 +137,7 @@ public class JavaBindingProvider {
   public Stream<JavaOutputField> extensionsFor(final TypeToken<?> type) {
     log.trace("looking up in {} extensions for {}: {}", this.extensions.size(), type, type.getTypes());
     return Stream.concat(
-        type.getTypes().stream().flatMap(e -> this.extensions.get(e).stream()).distinct(),
+        Stream.concat(Stream.of(TypeToken.of(Object.class)), type.getTypes().stream()).distinct().flatMap(e -> this.extensions.get(e).stream()).distinct(),
         this.extensionGenerators.stream().flatMap(gen -> gen.generateExtensions(type)))
     // .peek(f -> log.trace("extending {} with {}", type, f))
     ;

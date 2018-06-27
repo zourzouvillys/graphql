@@ -30,12 +30,19 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
   private final GQLTypeResolver resolver;
   private final DefaultGQLPreparedDocument doc;
   private final OpInputType inputType;
+  private final List<DefaultGQLPreparedSelection> selection;
 
   public DefaultGQLPreparedOperation(final DefaultGQLPreparedDocument doc, final GQLTypeResolver resolver, final GQLSelectedOperation op) {
     this.doc = doc;
     this.resolver = resolver;
     this.op = op;
     this.inputType = new OpInputType();
+    this.selection = this.op
+        .operation()
+        .selections()
+        .stream()
+        .flatMap(x -> x.apply(new SelectionGenerator(this)))
+        .collect(Collectors.toList());
   }
 
   /**
@@ -134,6 +141,10 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
       return this.fields;
     }
 
+    public void validate(final GQLPreparedValidationListener listener) {
+      // TODO Auto-generated method stub
+    }
+
   }
 
   /**
@@ -151,12 +162,7 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
 
   @Override
   public List<DefaultGQLPreparedSelection> selection() {
-    return this.op
-        .operation()
-        .selections()
-        .stream()
-        .flatMap(x -> x.apply(new SelectionGenerator(this)))
-        .collect(Collectors.toList());
+    return this.selection;
   }
 
   GQLFragmentDefinition fragment(final String name) {
@@ -175,6 +181,14 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
   @Override
   public GQLPreparedDocument document() {
     return this.doc;
+  }
+
+  @Override
+  public void validate(final GQLPreparedValidationListener listener) {
+    if (this.inputType != null) {
+      this.inputType.validate(listener);
+    }
+    this.selection.forEach(sel -> sel.validate(listener));
   }
 
 }

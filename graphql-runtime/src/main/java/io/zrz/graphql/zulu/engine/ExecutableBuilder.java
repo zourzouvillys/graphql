@@ -448,8 +448,10 @@ class ExecutableBuilder {
       return null;
     }
 
+    final ExecutableTypeUse fieldType = param.fieldType();
+
     //
-    if (!this.engine.compatible(provided.fieldType(), param.fieldType())) {
+    if (!this.engine.compatible(provided.fieldType(), fieldType)) {
       this.addWarning(new ZuluWarning.IncompatibleTypes(param, provided, sel));
       return null;
     }

@@ -67,7 +67,7 @@ public abstract class AbstractZuluSelection implements ZuluSelection {
   }
 
   @Override
-  public Optional<ZStructType> parameters() {
+  public Optional<? extends ZStructType> parameters() {
     return this.psel.parameters();
   }
 

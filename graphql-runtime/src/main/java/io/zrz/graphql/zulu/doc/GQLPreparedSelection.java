@@ -31,7 +31,7 @@ public interface GQLPreparedSelection {
    * the parameters provided to this field.
    */
 
-  Optional<ZStructType> parameters();
+  Optional<? extends ZStructType> parameters();
 
   /**
    * annotations on the field selection.
@@ -51,12 +51,11 @@ public interface GQLPreparedSelection {
 
   List<? extends GQLPreparedSelection> subselections();
 
-  
   /**
    * resolves the provided arguments for this prepared selection, returning the {@link ZStructValue} representing it.
-   * 
+   *
    * the type of the instance will be the same as the {@link #parameters()} return value.
-   * 
+   *
    */
 
   Optional<ZStructValue> arguments(GQLVariableProvider provider);

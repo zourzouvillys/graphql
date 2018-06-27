@@ -2,7 +2,9 @@ package io.zrz.graphql.zulu.engine;
 
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -16,15 +18,21 @@ import com.google.common.hash.Hashing;
 import io.zrz.graphql.core.doc.GQLDocument;
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.parser.GQLException;
+import io.zrz.graphql.core.parser.GQLSourceLocation;
+import io.zrz.graphql.core.parser.GQLSourceRange;
 import io.zrz.graphql.zulu.doc.CachingGQLDocumentManager;
 import io.zrz.graphql.zulu.doc.GQLDocumentManager;
 import io.zrz.graphql.zulu.doc.GQLPreparedDocument;
 import io.zrz.graphql.zulu.doc.GQLPreparedOperation;
+import io.zrz.graphql.zulu.doc.GQLPreparedSelection;
+import io.zrz.graphql.zulu.doc.GQLPreparedValidationListener;
+import io.zrz.graphql.zulu.executable.ExecutableElement;
 import io.zrz.graphql.zulu.executable.ExecutableInputField;
 import io.zrz.graphql.zulu.executable.ExecutableSchema;
 import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
 import io.zrz.graphql.zulu.server.ImmutableQuery;
 import io.zrz.graphql.zulu.server.ImmutableZuluServerRequest;
+import io.zrz.zulu.types.ZField;
 import io.zrz.zulu.types.ZTypeUse;
 import io.zrz.zulu.values.ZBoolValue;
 import io.zrz.zulu.values.ZDoubleValue;
@@ -135,7 +143,62 @@ public class ZuluEngine {
           new ZuluWarning.ParseWarning(ZuluWarningKind.SYNTAX_ERROR, queryString, ex));
     }
 
+    final AtomicBoolean error = new AtomicBoolean(false);
+
     final GQLPreparedDocument doc = this.docs.prepareDocument(parsed);
+    final ArrayList<ZuluWarning> errors = new ArrayList<>();
+
+    class CollectingListener implements GQLPreparedValidationListener {
+
+      @Override
+      public void error(final ZField field, final GQLSourceRange location, final String string) {
+
+        errors.add(new ZuluWarning() {
+
+          @Override
+          public ZuluWarningKind warningKind() {
+            return ZuluWarningKind.UNDEFINED_VARIABLE;
+          }
+
+          @Override
+          public GQLSourceLocation sourceLocation() {
+            return location.start();
+          }
+
+          @Override
+          public GQLPreparedSelection selection() {
+            return null;
+          }
+
+          @Override
+          public String detail() {
+            return string;
+          }
+
+          @Override
+          public ExecutableElement context() {
+            return null;
+          }
+
+          @Override
+          public Throwable cause() {
+            return null;
+          }
+
+        });
+
+        error.set(true);
+      }
+
+    }
+
+    doc.validate(new CollectingListener());
+
+    if (error.get()) {
+      final ZuluCompileResult compileResult = ZuluCompileResult.withErrors(errors.toArray(new ZuluWarning[0]));
+      this.cache.put(hashCode, compileResult);
+      return compileResult;
+    }
 
     final GQLPreparedOperation op = doc.operation(operationName).orElse(null);
 

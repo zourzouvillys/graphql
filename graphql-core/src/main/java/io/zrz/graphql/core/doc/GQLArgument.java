@@ -2,11 +2,14 @@ package io.zrz.graphql.core.doc;
 
 import org.immutables.value.Value;
 
+import io.zrz.graphql.core.parser.GQLSourceRange;
 import io.zrz.graphql.core.value.GQLValue;
 import io.zrz.graphql.core.value.GQLValues;
 
 @Value.Immutable(copy = true)
 public abstract class GQLArgument {
+
+  public abstract GQLSourceRange location();
 
   public abstract String name();
 

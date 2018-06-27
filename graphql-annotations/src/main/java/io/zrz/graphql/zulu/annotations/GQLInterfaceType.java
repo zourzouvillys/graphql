@@ -22,4 +22,6 @@ public @interface GQLInterfaceType {
 
   String name() default "";
 
+  Class<?>[] implementations() default {};
+
 }

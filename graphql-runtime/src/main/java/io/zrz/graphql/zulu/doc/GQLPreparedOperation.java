@@ -6,7 +6,6 @@ import java.util.Optional;
 import io.zrz.graphql.core.runtime.GQLOperationType;
 import io.zrz.graphql.zulu.doc.DefaultGQLPreparedOperation.OpInputType;
 import io.zrz.zulu.types.ZAnnotation;
-import io.zrz.zulu.types.ZStructType;
 
 public interface GQLPreparedOperation {
 
@@ -45,5 +44,11 @@ public interface GQLPreparedOperation {
    */
 
   GQLPreparedDocument document();
+
+  /**
+   *
+   */
+
+  void validate(GQLPreparedValidationListener listener);
 
 }

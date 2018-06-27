@@ -137,4 +137,8 @@ public class JavaBindingClassAnalysis {
     return ImmutableList.copyOf(this.type.getRawType().getAnnotationsByType(annotationClass));
   }
 
+  public Annotation[] annotations() {
+    return this.type.getRawType().getAnnotations();
+  }
+
 }

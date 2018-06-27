@@ -61,15 +61,33 @@ public class JavaBindingType {
    */
 
   public Stream<? extends JavaOutputField> outputFields(final OutputFieldFilter filter) {
+
+    final Stream<JavaBindingMethodAnalysis> impl = this.analysis.methods()
+        .filter(m -> !Modifier.isStatic(m.method.getModifiers()))
+        .filter(m -> filter.shouldInclude(m))
+        .map(x -> x.withContext(this.type));
+
     return Stream.concat(
-        this.analysis.methods()
-            .filter(m -> !Modifier.isStatic(m.method.getModifiers()))
-            .filter(m -> filter.shouldInclude(m)),
+        impl,
         this.analysis
             .superTypes()
-            .filter(a -> a.isMixin())
             .map(a -> this.generator.include(a.typeToken()))
-            .flatMap(t -> t.outputFields(filter.forSupertype(t))));
+            .flatMap(t -> t.outputFields(this.analysis.javaType(), filter.forSupertype(t))));
+  }
+
+  public Stream<? extends JavaOutputField> outputFields(final TypeToken<?> context, final OutputFieldFilter filter) {
+
+    final Stream<JavaBindingMethodAnalysis> impl = this.analysis.methods()
+        .filter(m -> !Modifier.isStatic(m.method.getModifiers()))
+        .filter(m -> filter.shouldInclude(m))
+        .map(m -> m.withContext(context));
+
+    return Stream.concat(
+        impl,
+        this.analysis
+            .superTypes()
+            .map(a -> this.generator.include(a.typeToken()))
+            .flatMap(t -> t.outputFields(context, filter.forSupertype(t))));
   }
 
   /**

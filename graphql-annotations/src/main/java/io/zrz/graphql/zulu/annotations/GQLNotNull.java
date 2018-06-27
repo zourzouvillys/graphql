@@ -7,12 +7,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * indicates a parameter may be null
+ * specifications for a type usage.
  */
 
 @Retention(RUNTIME)
-@Target({ ElementType.PARAMETER, ElementType.TYPE_USE })
-@GQLTypeUse(nullable = true)
-public @interface GQLNullable {
+@Target({ ElementType.TYPE_USE })
+@GQLTypeUse(nullable = false)
+public @interface GQLNotNull {
 
 }

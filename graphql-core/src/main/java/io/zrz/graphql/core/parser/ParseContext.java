@@ -696,10 +696,16 @@ public class ParseContext {
     final List<GQLArgument> args = new LinkedList<>();
 
     while (!this.is(")")) {
+      final GQLSourceLocation start = this.lexer.position();
       final String name = this.require(TokenType.NAME);
       this.require(":", "after argument name");
       final GQLValue value = this.parseValue();
-      args.add(GQLArgument.builder().name(name).value(value).build());
+      ;
+      args.add(GQLArgument.builder()
+          .name(name)
+          .value(value)
+          .location(this.lexer.range(start, this.lexer.position()))
+          .build());
     }
 
     this.require(")");

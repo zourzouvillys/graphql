@@ -4,15 +4,24 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.IntFunction;
 import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
+import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 
 import io.zrz.graphql.zulu.ZuluUtils;
+import io.zrz.graphql.zulu.executable.typehandlers.IterableHandler;
+import io.zrz.graphql.zulu.executable.typehandlers.ReturnTypeHandlerFactory.ReturnTypeHandler;
+import io.zrz.graphql.zulu.executable.typehandlers.StreamHandler;
 
 /**
  * extract the actual type that this type references. it removes any wrapping magic/sugar, e.g Optional, Flowable,
@@ -25,6 +34,29 @@ import io.zrz.graphql.zulu.ZuluUtils;
  */
 
 class JavaOutputMapper {
+
+  public static final Method M_streamToArray = ZuluUtils.getMethod(Stream.class, "toArray", IntFunction.class);
+
+  public static final MethodHandle MH_newArray = ZuluUtils.getMethodHandle(
+      MethodHandles.lookup(),
+      JavaOutputMapper.class,
+      "newArray",
+      Class.class,
+      Integer.TYPE);
+
+  public static final MethodHandle MH_streamToArray = ZuluUtils.unreflect(M_streamToArray);
+
+  /**
+   * runtime handle for unwrapping an Iterable to an array.
+   */
+
+  private static final MethodHandle MH_fromIterable = ZuluUtils
+      .unreflect(
+          MethodHandles.lookup(),
+          JavaOutputMapper.class,
+          "fromIterable",
+          Iterable.class,
+          Class.class);
 
   /**
    * the underlying type that we will receive an instance of.
@@ -54,12 +86,16 @@ class JavaOutputMapper {
    */
 
   JavaOutputMapper(final ExecutableOutputField field, final TypeToken<?> javaType) {
+    Preconditions.checkArgument(!javaType.getRawType().equals(Object.class));
+    // Preconditions.checkArgument(!TypeVariable.class.isAssignableFrom(javaType.getType().getClass()));
     this.javaType = javaType;
     this.modelType = javaType;
     this.apply = UnaryOperator.identity();
   }
 
   JavaOutputMapper(final JavaOutputMapper parent, final TypeToken<?> modelType) {
+    Preconditions.checkArgument(!modelType.getRawType().equals(Object.class), parent);
+    // Preconditions.checkArgument(!TypeVariable.class.isAssignableFrom(modelType.getType().getClass()));
     this.javaType = parent.javaType;
     this.modelType = modelType;
     this.apply = parent.apply;
@@ -67,6 +103,8 @@ class JavaOutputMapper {
   }
 
   JavaOutputMapper(final JavaOutputMapper parent, final TypeToken<?> modelType, final UnaryOperator<MethodHandle> transformer) {
+    Preconditions.checkArgument(!modelType.getRawType().equals(Object.class), parent);
+    // Preconditions.checkArgument(!TypeVariable.class.isAssignableFrom(modelType.getType().getClass()));
     this.javaType = modelType;
     this.modelType = modelType;
     this.apply = handle -> transformer.apply(parent.apply.apply(handle));
@@ -74,6 +112,8 @@ class JavaOutputMapper {
   }
 
   JavaOutputMapper(final JavaOutputMapper parent, final TypeToken<?> modelType, final UnaryOperator<MethodHandle> transformer, final int arity) {
+    Preconditions.checkArgument(!modelType.getRawType().equals(Object.class), parent);
+    // Preconditions.checkArgument(!TypeVariable.class.isAssignableFrom(modelType.getType().getClass()), modelType);
     this.javaType = modelType;
     this.modelType = modelType;
     this.apply = handle -> transformer.apply(parent.apply.apply(handle));
@@ -179,18 +219,6 @@ class JavaOutputMapper {
   }
 
   /**
-   * runtime handle for unwrapping an Iterable to an array.
-   */
-
-  private final MethodHandle MH_fromIterable = ZuluUtils
-      .unreflect(
-          MethodHandles.lookup(),
-          JavaOutputMapper.class,
-          "fromIterable",
-          Iterable.class,
-          Class.class);
-
-  /**
    * unwrap this type to the next supported type.
    */
 
@@ -198,6 +226,31 @@ class JavaOutputMapper {
     try {
 
       final TypeToken<?> wrapped = this.javaType;
+
+      if (wrapped.getType() instanceof WildcardType) {
+
+        // the wildcard type for a return can be mapped to the bounds.
+
+        final WildcardType type = (WildcardType) wrapped.getType();
+
+        Preconditions.checkArgument(
+            type.getLowerBounds().length == 1,
+            "currently only support single lower bound in return type");
+
+        return this.unwrap(TypeToken.of(type.getLowerBounds()[0]));
+
+      }
+      else if (wrapped.getType() instanceof TypeVariable) {
+
+        final TypeVariable<?> var = (TypeVariable<?>) wrapped.getType();
+
+        Preconditions.checkArgument(
+            var.getBounds().length == 1,
+            "currently only support single bound in return type");
+
+        return this.unwrap(TypeToken.of(var.getBounds()[0]));
+
+      }
 
       // array types...
       if (wrapped.isArray()) {
@@ -213,7 +266,7 @@ class JavaOutputMapper {
         final TypeToken<?> returnType = TypeToken.of(Array.newInstance(componentType.getRawType(), 0).getClass());
 
         // then generate filter to map to a raw array.
-        MethodHandle actualFilter = MethodHandles.insertArguments(this.MH_fromIterable, 1, componentType.getRawType());
+        MethodHandle actualFilter = MethodHandles.insertArguments(MH_fromIterable, 1, componentType.getRawType());
 
         actualFilter = actualFilter.asType(
             actualFilter.type()
@@ -228,6 +281,29 @@ class JavaOutputMapper {
             target -> MethodHandles.filterReturnValue(target, transformer),
             this.arity + 1)
                 .unwrap();
+
+      }
+      else if (wrapped.isSubtypeOf(Iterable.class)) {
+
+        final ReturnTypeHandler<?> handler = new IterableHandler<>().createHandler(wrapped.getSupertype((Class) Iterable.class));
+
+        return new JavaOutputMapper(
+            this,
+            handler.unwrap(),
+            target -> MethodHandles.filterReturnValue(target, handler.adapt()),
+            handler.arity()).unwrap();
+
+      }
+
+      else if (wrapped.isSubtypeOf(Stream.class)) {
+
+        final ReturnTypeHandler<?> handler = new StreamHandler<>().createHandler(wrapped);
+
+        return new JavaOutputMapper(
+            this,
+            handler.unwrap(),
+            target -> MethodHandles.filterReturnValue(target, handler.adapt()),
+            handler.arity()).unwrap();
 
       }
 
@@ -269,6 +345,20 @@ class JavaOutputMapper {
     catch (final Exception ex) {
       throw new RuntimeException(ex);
     }
+  }
+
+  public static <T> T[] newArray(final Class<T> componentType, final int length) {
+    return (T[]) Array.newInstance(componentType, length);
+  }
+
+  @SuppressWarnings("serial")
+  static <K> TypeToken<Stream<K>> streamOf(final TypeToken<K> keyType) {
+    return new TypeToken<Stream<K>>() {}.where(new TypeParameter<K>() {}, keyType);
+  }
+
+  @Override
+  public String toString() {
+    return this.javaType.toString();
   }
 
 }

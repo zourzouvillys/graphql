@@ -27,8 +27,12 @@ import io.zrz.graphql.core.types.GQLTypeKind;
 import io.zrz.graphql.zulu.JavaInputField;
 import io.zrz.graphql.zulu.JavaOutputField;
 import io.zrz.graphql.zulu.LogicalTypeKind;
+import io.zrz.graphql.zulu.annotations.GQLEnumType;
+import io.zrz.graphql.zulu.annotations.GQLInterfaceType;
 import io.zrz.graphql.zulu.annotations.GQLObjectType;
+import io.zrz.graphql.zulu.annotations.GQLScalarType;
 import io.zrz.graphql.zulu.annotations.GQLType.Kind;
+import io.zrz.graphql.zulu.annotations.GQLUnionType;
 import io.zrz.graphql.zulu.binding.JavaBindingProvider;
 import io.zrz.graphql.zulu.binding.JavaBindingType;
 import io.zrz.graphql.zulu.binding.JavaBindingUtils;
@@ -194,6 +198,8 @@ public final class ExecutableSchemaBuilder {
     this.types.put(symbol.typeToken, symbol);
     this.kinds.put(symbol.typeKind, symbol);
 
+    this.scanAddedSymbol(symbol);
+
     return symbol;
 
   }
@@ -290,7 +296,7 @@ public final class ExecutableSchemaBuilder {
    */
 
   public ExecutableSchemaBuilder addInterface(final Type klass) {
-    this.registerType(TypeToken.of(klass), null, LogicalTypeKind.INTERFACE);
+    final Symbol sym = this.registerType(TypeToken.of(klass), null, LogicalTypeKind.INTERFACE);
     return this;
   }
 
@@ -528,41 +534,45 @@ public final class ExecutableSchemaBuilder {
 
       changed.set(false);
 
-      final ValidationResult val = this.validate();
+      if (false) {
 
-      if (!val.requires.isEmpty()) {
+        final ValidationResult val = this.validate();
 
-        if (strict) {
-          val.requires.values().forEach(err -> log.error("validation error: {}", err.toString()));
-          throw new IllegalArgumentException("validation failed");
-        }
+        if (!val.requires.isEmpty()) {
 
-        final Set<TypeToken<?>> tried = new HashSet<>();
+          if (strict) {
+            val.requires.values().forEach(err -> log.error("validation error: {}", err.toString()));
+            throw new IllegalArgumentException("validation failed");
+          }
 
-        val.requires.values().forEach(err -> {
+          final Set<TypeToken<?>> tried = new HashSet<>();
 
-          // see if we can work out what the type is based on it's usage.
+          val.requires.values().forEach(err -> {
 
-          if (err instanceof MissingTypeValidationError) {
+            // see if we can work out what the type is based on it's usage.
 
-            final MissingTypeValidationError m = (MissingTypeValidationError) err;
+            if (err instanceof MissingTypeValidationError) {
 
-            final TypeToken<?> type = m.unmappedType();
+              final MissingTypeValidationError m = (MissingTypeValidationError) err;
 
-            if (tried.add(type)) {
+              final TypeToken<?> type = m.unmappedType();
 
-              if (this.shouldAutoMap(type)) {
-                changed.set(true);
-                final JavaBindingType handle = this.binder.registerType(type);
-                final Symbol symbol = this.addSymbol(type, this.generateName(type, handle), LogicalTypeKind.OUTPUT, handle);
-                symbol.exported = false;
+              if (tried.add(type)) {
+
+                if (this.shouldAutoMap(type)) {
+                  changed.set(true);
+                  final JavaBindingType handle = this.binder.registerType(type);
+                  final Symbol symbol = this.addSymbol(type, this.generateName(type, handle), LogicalTypeKind.OUTPUT, handle);
+                  symbol.exported = false;
+                }
+
               }
 
             }
 
-          }
+          });
 
-        });
+        }
 
       }
 
@@ -610,12 +620,37 @@ public final class ExecutableSchemaBuilder {
   private String generateName(final TypeToken<?> req, final JavaBindingType handle) {
 
     if (handle != null) {
-      // TODO: also for enum, scalar, etc ...
+
       for (final GQLObjectType a : handle.analysis().annotations(GQLObjectType.class)) {
         if (!StringUtils.isEmpty(a.name())) {
           return a.name();
         }
       }
+
+      for (final GQLInterfaceType a : handle.analysis().annotations(GQLInterfaceType.class)) {
+        if (!StringUtils.isEmpty(a.name())) {
+          return a.name();
+        }
+      }
+
+      for (final GQLEnumType a : handle.analysis().annotations(GQLEnumType.class)) {
+        if (!StringUtils.isEmpty(a.name())) {
+          return a.name();
+        }
+      }
+
+      for (final GQLScalarType a : handle.analysis().annotations(GQLScalarType.class)) {
+        if (!StringUtils.isEmpty(a.name())) {
+          return a.name();
+        }
+      }
+
+      for (final GQLUnionType a : handle.analysis().annotations(GQLUnionType.class)) {
+        if (!StringUtils.isEmpty(a.name())) {
+          return a.name();
+        }
+      }
+
     }
 
     return JavaBindingUtils.autoTypeName(req);
@@ -676,11 +711,33 @@ public final class ExecutableSchemaBuilder {
     final JavaBindingType handle = this.binder.registerType(javaType);
     final String typeName = this.generateName(javaType, handle);
     log.debug("autoloading {} type {} = {} (used by {})", kind.get(), typeName, javaType, user);
-    return this.addSymbol(
+
+    final Symbol sym = this.addSymbol(
         javaType,
         typeName,
         LogicalTypeKind.from(kind.get()),
         handle);
+
+    return sym;
+
+  }
+
+  void scanAddedSymbol(final Symbol sym) {
+
+    this.autoscan(sym.typeToken);
+
+    // check the parents to find any concrete typed declared in the annotation to avoid
+    // having to manually register them or scan packages.
+
+    if (sym.typeKind == LogicalTypeKind.INTERFACE) {
+      for (final GQLInterfaceType iface : sym.handle.analysis().annotations(GQLInterfaceType.class)) {
+        for (final Class<?> impl : iface.implementations()) {
+          if (!this.types.containsKey(TypeToken.of(impl))) {
+            this.addType(impl);
+          }
+        }
+      }
+    }
 
   }
 
@@ -717,6 +774,11 @@ public final class ExecutableSchemaBuilder {
   private Set<Symbol> supertypes(final JavaBindingType handle) {
 
     final Symbol symbol = this.types.get(handle.analysis().javaType());
+
+    if (symbol == null) {
+      throw new IllegalArgumentException("failed to find symbol for " + handle.analysis().javaType());
+    }
+
     final TypeToken<?>.TypeSet stypes = symbol.typeToken.getTypes();
 
     return stypes.stream()

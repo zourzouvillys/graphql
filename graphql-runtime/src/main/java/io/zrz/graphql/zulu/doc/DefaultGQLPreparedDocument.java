@@ -12,12 +12,12 @@ import io.zrz.graphql.core.doc.GQLSelectedOperation;
 
 class DefaultGQLPreparedDocument implements GQLPreparedDocument {
 
-  private List<GQLPreparedOperation> operations;
-  private GQLDocument document;
-  private Map<String, GQLPreparedOperation> named;
+  private final List<GQLPreparedOperation> operations;
+  private final GQLDocument document;
+  private final Map<String, GQLPreparedOperation> named;
   private Optional<GQLPreparedOperation> defaultOperation;
 
-  public DefaultGQLPreparedDocument(GQLTypeResolver resolver, GQLDocument doc) {
+  public DefaultGQLPreparedDocument(final GQLTypeResolver resolver, final GQLDocument doc) {
 
     this.document = doc;
 
@@ -41,14 +41,19 @@ class DefaultGQLPreparedDocument implements GQLPreparedDocument {
   }
 
   @Override
-  public Optional<GQLPreparedOperation> defaultOperation() {
-    return defaultOperation;
+  public void validate(final GQLPreparedValidationListener listener) {
+    this.operations.forEach(op -> op.validate(listener));
   }
 
   @Override
-  public Optional<GQLPreparedOperation> operation(String name) {
+  public Optional<GQLPreparedOperation> defaultOperation() {
+    return this.defaultOperation;
+  }
+
+  @Override
+  public Optional<GQLPreparedOperation> operation(final String name) {
     if (name == null) {
-      return defaultOperation();
+      return this.defaultOperation();
     }
     return Optional.ofNullable(this.named.get(name));
   }
@@ -66,9 +71,9 @@ class DefaultGQLPreparedDocument implements GQLPreparedDocument {
   @Override
   public String toString() {
 
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
-    sb.append("GQLPreparedDoc ops=").append(operations.size()).append("\n");
+    sb.append("GQLPreparedDoc ops=").append(this.operations.size()).append("\n");
 
     this.operations.forEach(op -> {
       sb.append("\n");
@@ -85,7 +90,7 @@ class DefaultGQLPreparedDocument implements GQLPreparedDocument {
 
   }
 
-  static void dump(GQLPreparedSelection sel, StringBuilder sb) {
+  static void dump(final GQLPreparedSelection sel, final StringBuilder sb) {
     sb.append(sel);
     sel.subselections().forEach(sub -> dump(sub, sb));
   }

@@ -13,25 +13,28 @@ import io.zrz.graphql.zulu.ZuluUtils;
 
 /**
  * a java bound method exposes the context and a set of parameters which can be used to create a method handle.
- * 
+ *
  * @author theo
  *
  */
 
 public class JavaBindingInvoker {
 
-  private JavaBindingMethodAnalysis method;
-  private MethodHandle handle;
-  private ImmutableList<JavaBindingParameter> parameters;
+  private final JavaBindingMethodAnalysis method;
+  private final MethodHandle handle;
+  private final ImmutableList<JavaBindingParameter> parameters;
+  private final TypeToken<?> context;
 
   /**
-   * 
+   * @param context
+   *
    */
 
-  JavaBindingInvoker(JavaBindingMethodAnalysis method) {
+  JavaBindingInvoker(final JavaBindingMethodAnalysis method, final TypeToken<?> context) {
     this.method = method;
     this.handle = ZuluUtils.unreflect(MethodHandles.lookup(), method.method);
     this.parameters = ImmutableList.copyOf(method.parameters());
+    this.context = context;
   }
 
   /**

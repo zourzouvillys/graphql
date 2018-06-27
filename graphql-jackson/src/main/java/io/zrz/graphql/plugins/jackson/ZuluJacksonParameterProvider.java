@@ -39,6 +39,8 @@ public class ZuluJacksonParameterProvider implements ZuluParameterReader {
 
   @Override
   public boolean has(final String parameterName) {
+    if (this.vars == null)
+      return false;
     return this.vars.containsKey(parameterName);
   }
 

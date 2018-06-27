@@ -1,16 +1,56 @@
 package io.zrz.graphql.zulu.executable;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Optional;
+
+import org.eclipse.jdt.annotation.NonNull;
 
 import com.google.common.reflect.TypeToken;
 
 import io.zrz.graphql.zulu.JavaInputField;
+import io.zrz.graphql.zulu.JavaOutputField;
 import io.zrz.graphql.zulu.annotations.GQLNullable;
 import io.zrz.graphql.zulu.annotations.GQLType;
 import io.zrz.graphql.zulu.annotations.GQLType.Kind;
 
 public class JavaExecutableUtils {
+
+  public static Method getDeclaredMethod(final Method myMethod) {
+    final Class<?> declaringClass = myMethod.getDeclaringClass();
+    try {
+
+      final Class<?> superClass = declaringClass.getSuperclass();
+      if (superClass != null) {
+        return superClass.getMethod(myMethod.getName(), myMethod.getParameterTypes());
+      }
+
+    }
+    catch (final NoSuchMethodException e) {
+      // ignore...
+    }
+
+    return TypeToken
+        .of(declaringClass)
+        .getTypes()
+        .stream()
+        .filter(tok -> !tok.getRawType().equals(declaringClass))
+        .flatMap(st -> Arrays.stream(st.getRawType().getMethods()))
+        .filter(st -> st.getName().equals(myMethod.getName()))
+        // .filter(st -> st.getParameterTypes().equals(myMethod.getParameterTypes()))
+        .reduce((a, b) -> {
+
+          if (a.getDeclaringClass().isAssignableFrom(b.getDeclaringClass())) {
+            return a;
+          }
+
+          return b;
+
+        })
+        .orElse(myMethod);
+
+  }
 
   public static class JavaTypeConfig {
 
@@ -56,8 +96,26 @@ public class JavaExecutableUtils {
    */
 
   public static ExecutableOutputField merge(final ExecutableReceiverType receiver, final ExecutableOutputField a, final ExecutableOutputField b) {
-    // simplest solution for now: return the first.
+
+    if (a.fieldType().javaType().isSubtypeOf(b.fieldType().javaType())) {
+      return a;
+    }
+
+    return b;
+
+  }
+
+  public static JavaOutputField merge(final ExecutableReceiverType receiver, final JavaOutputField a, final JavaOutputField b) {
+
+    final Method am = (@NonNull Method) a.origin().get();
+    final Method bm = (@NonNull Method) b.origin().get();
+
+    if (am.getDeclaringClass().isAssignableFrom(bm.getDeclaringClass())) {
+      return b;
+    }
+
     return a;
+
   }
 
   public static boolean isNullableInput(final JavaInputField spec) {

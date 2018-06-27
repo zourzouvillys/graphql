@@ -19,6 +19,7 @@ import io.zrz.zulu.types.ZTypeUse;
 import io.zrz.zulu.values.ZStructValue;
 import io.zrz.zulu.values.ZStructValueBuilder;
 import io.zrz.zulu.values.ZValue;
+import io.zrz.zulu.values.ZValueProvider;
 
 class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
@@ -28,23 +29,21 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
   private final GQLFieldSelection selection;
   private final DefaultGQLPreparedOperation req;
   private final DefaultGQLPreparedSelection parent;
+  private final List<ZAnnotation> annotations;
+  private final List<DefaultGQLPreparedSelection> subselections;
+  private final Optional<InputFieldStruct> parametersType;
 
-  public DefaultGQLPreparedSelection(final DefaultGQLPreparedOperation req, final DefaultGQLPreparedSelection parent, final GQLSelectionTypeCriteria condition,
+  public DefaultGQLPreparedSelection(
+      final DefaultGQLPreparedOperation req,
+      final DefaultGQLPreparedSelection parent,
+      final GQLSelectionTypeCriteria condition,
       final GQLFieldSelection selection) {
+
     this.req = req;
     this.parent = parent;
     this.condition = condition;
     this.selection = selection;
-  }
-
-  @Override
-  public GQLSourceLocation sourceLocation() {
-    return this.selection.location();
-  }
-
-  @Override
-  public List<ZAnnotation> annotations() {
-    return this.selection.directives().stream().map(x -> new ZAnnotation() {
+    this.annotations = this.selection.directives().stream().map(x -> new ZAnnotation() {
 
       @Override
       public Optional<ZStructValue> value() {
@@ -58,6 +57,35 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
     })
         .collect(Collectors.toList());
+
+    this.subselections = this.selection
+        .selections()
+        .stream()
+        .sequential()
+        .flatMap(x -> x.apply(new SelectionGenerator(this.req, this)))
+        .collect(Collectors.toList());
+
+    if (this.selection.args().isEmpty()) {
+      this.parametersType = Optional.empty();
+    }
+    else {
+      this.parametersType = Optional.of(new InputFieldStruct());
+    }
+
+  }
+
+  @Override
+  public GQLSourceLocation sourceLocation() {
+    return this.selection.location();
+  }
+
+  public void validate() {
+
+  }
+
+  @Override
+  public List<ZAnnotation> annotations() {
+    return this.annotations;
   }
 
   @Override
@@ -77,12 +105,7 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
   @Override
   public List<DefaultGQLPreparedSelection> subselections() {
-    return this.selection
-        .selections()
-        .stream()
-        .sequential()
-        .flatMap(x -> x.apply(new SelectionGenerator(this.req, this)))
-        .collect(Collectors.toList());
+    return this.subselections;
   }
 
   @Override
@@ -121,15 +144,17 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
     private final DefaultGQLPreparedOperation req;
     private final GQLArgument arg;
+    private final ZValueProvider provider;
 
     public ParamField(final DefaultGQLPreparedOperation req, final GQLArgument arg) {
       this.req = req;
       this.arg = arg;
+      this.provider = ValueResolvingVisitor.create(req, arg.value());
     }
 
     @Override
     public ZTypeUse fieldType() {
-      return ValueResolvingVisitor.create(this.req, this.arg.value()).type();
+      return this.provider.type();
     }
 
     @Override
@@ -153,7 +178,47 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
     @Override
     public String parameterName() {
-      return this.arg.value().apply(new VariableNameExtractor(this.req, this.arg));
+      return this.arg.value().apply(new VariableNameExtractor());
+    }
+
+    public void validate(final GQLPreparedValidationListener listener) {
+
+      if (this.provider == null) {
+        listener.error(this, this.arg.location(), "variable '$" + this.parameterName() + "' not defined");
+      }
+
+    }
+
+  }
+
+  private class InputFieldStruct implements ZStructType {
+
+    private final Map<String, ParamField> fields;
+
+    InputFieldStruct() {
+      this.fields = DefaultGQLPreparedSelection.this.selection.args()
+          .stream()
+          .collect(Collectors.toMap(x -> x.name(), x -> new ParamField(DefaultGQLPreparedSelection.this.req, x)));
+    }
+
+    @Override
+    public Map<String, ParamField> fields() {
+      return this.fields;
+    }
+
+    @Override
+    public String toString() {
+      return this.fields()
+          .entrySet()
+          .stream()
+          .map(x -> x.getKey() + ": " + x.getValue())
+          .collect(Collectors.joining(", ", "(", ")"));
+    }
+
+    public void validate(final GQLPreparedValidationListener listener) {
+
+      this.fields.values().forEach(param -> param.validate(listener));
+
     }
 
   }
@@ -165,32 +230,8 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
    */
 
   @Override
-  public Optional<ZStructType> parameters() {
-
-    if (this.selection.args().isEmpty()) {
-      return Optional.empty();
-    }
-
-    return Optional.of(new ZStructType() {
-
-      @Override
-      public Map<String, ZField> fields() {
-        return DefaultGQLPreparedSelection.this.selection.args()
-            .stream()
-            .collect(Collectors.toMap(x -> x.name(), x -> new ParamField(DefaultGQLPreparedSelection.this.req, x)));
-      }
-
-      @Override
-      public String toString() {
-        return this.fields()
-            .entrySet()
-            .stream()
-            .map(x -> x.getKey() + ": " + x.getValue())
-            .collect(Collectors.joining(", ", "(", ")"));
-      }
-
-    });
-
+  public Optional<InputFieldStruct> parameters() {
+    return this.parametersType;
   }
 
   /**
@@ -241,6 +282,12 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
     }
 
     return b.build();
+  }
+
+  public void validate(final GQLPreparedValidationListener listener) {
+    this.parametersType.ifPresent(val -> val.validate(listener));
+    this.subselections.forEach(sel -> sel.validate(listener));
+
   }
 
 }

@@ -1,5 +1,6 @@
 package io.zrz.graphql.zulu.executable;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -173,6 +174,30 @@ class BuildContext implements OutputFieldFilter {
 
   @Override
   public boolean shouldInclude(final JavaBindingMethodAnalysis m) {
+
+    if (m.origin().isPresent()) {
+
+      final Method method = m.origin().get();
+
+      final Method declaring = JavaExecutableUtils.getDeclaredMethod(method);
+
+      if (declaring.getDeclaringClass().equals(Object.class)) {
+        return false;
+      }
+      else if (declaring.getDeclaringClass().equals(Comparable.class)) {
+        return false;
+      }
+
+      if (method.getDeclaringClass().equals(declaring.getDeclaringClass())) {
+        return true;
+      }
+
+      // otherwise, only accept the most precise
+
+      return declaring.getDeclaringClass().isAssignableFrom(method.getDeclaringClass());
+
+    }
+
     return true;
   }
 

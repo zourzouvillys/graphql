@@ -9,7 +9,7 @@ public class ReturnTypeUse {
   private final ExecutableTypeUse typeuse;
   private final JavaOutputMapper returnType;
 
-  public ReturnTypeUse(ExecutableOutputField field, BuildContext types, TypeToken<?> returnType) {
+  public ReturnTypeUse(final ExecutableOutputField field, final BuildContext types, final TypeToken<?> returnType) {
 
     // mapper for the return type.
     this.returnType = types.builder().mapReturnType(field, returnType);
@@ -23,7 +23,7 @@ public class ReturnTypeUse {
     return this.typeuse;
   }
 
-  public MethodHandle filter(MethodHandle target) {
+  public MethodHandle filter(final MethodHandle target) {
     return this.returnType.applyTo(target);
   }
 

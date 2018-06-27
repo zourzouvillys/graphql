@@ -8,10 +8,10 @@ import io.zrz.graphql.core.doc.GQLDocument;
 /**
  * a prepared document, which is the result of parsing it and ensuring the types are valid. execution after preparing a
  * document is faster that parsing/analyzing each time.
- * 
+ *
  * all documents prepared in an instance will use the same runtime type system, so if you expose multiple type models to
  * different users ensure you prepare documents separately based on the types available to them.
- * 
+ *
  * @author theo
  *
  */
@@ -45,12 +45,12 @@ public interface GQLPreparedDocument {
 
   /**
    * returns the operation with the specified name (if it exists), else returns the default operation (if exists).
-   * 
+   *
    * @param opname
    * @return
    */
 
-  default Optional<GQLPreparedOperation> operation(Optional<String> opname) {
+  default Optional<GQLPreparedOperation> operation(final Optional<String> opname) {
 
     if (opname.isPresent()) {
       return operation(opname.get());
@@ -59,5 +59,7 @@ public interface GQLPreparedDocument {
     return this.defaultOperation();
 
   }
+
+  void validate(GQLPreparedValidationListener listener);
 
 }

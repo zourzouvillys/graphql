@@ -156,6 +156,10 @@ public interface ZuluWarning {
 
         final ImmutableLineInfo info = err.lineInfo();
 
+        if (info == null) {
+          return null;
+        }
+
         return ImmutableGQLSourceLocation.builder()
             .lineNumber(info.lineNumber())
             .lineOffset(info.lineOffset() + 1)

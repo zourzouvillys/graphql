@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 
+import io.zrz.graphql.zulu.JavaOutputField;
 import io.zrz.graphql.zulu.LogicalTypeKind;
 import io.zrz.graphql.zulu.ZOutputType;
 import io.zrz.graphql.zulu.annotations.GQLDocumentation;
@@ -60,20 +61,45 @@ public final class ExecutableOutputType implements ExecutableType, ZOutputType, 
     // interfaces are calculated based on the type hierachy.
     this.interfaces = buildctx.interfacesFor(symbol, this);
 
-    final Map<String, ExecutableOutputField> declaredFields = buildctx
-        .outputFieldsFor(symbol, this).map(field -> new ExecutableOutputField(this, symbol, field, buildctx))
-        .collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k));
+    // first pass selects best fields for this class.
+    final Map<String, JavaOutputField> fields = buildctx
+        .outputFieldsFor(symbol, this)
+        .collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k, (a, b) -> JavaExecutableUtils.merge(this, a, b)));
+
+    final Map<String, ExecutableOutputField> declaredFields = fields
+        .values()
+        .stream()
+        .map(field -> this.buildField(field, symbol, buildctx))
+
+        .collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k, (a, b) -> JavaExecutableUtils.merge(this, a, b)));
 
     this.fields = Stream.concat(
-        declaredFields.values().stream(),
+        declaredFields
+            .values()
+            .stream(),
         this.interfaces
             .stream()
             .flatMap(x -> x.fields().values().stream())
-            .filter(f -> !declaredFields.containsKey(f.fieldName())))
-        .collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k, (a, b) -> JavaExecutableUtils.merge(this, a, b)));
+            .filter(f -> !declaredFields.containsKey(f.fieldName()))
+
+    )
+        .collect(
+            ImmutableMap.toImmutableMap(
+                k -> k.fieldName(),
+                k -> k,
+                (a, b) -> JavaExecutableUtils.merge(this, a, b)));
 
     this.typeUse = buildctx.use(this, symbol.typeToken, 0);
 
+  }
+
+  private ExecutableOutputField buildField(final JavaOutputField field, final Symbol symbol, final BuildContext buildctx) {
+    try {
+      return new ExecutableOutputField(this, symbol, field, buildctx);
+    }
+    catch (final Throwable ex) {
+      throw new RuntimeException("error building field '" + field.fieldName() + "'", ex);
+    }
   }
 
   /**
@@ -115,6 +141,7 @@ public final class ExecutableOutputType implements ExecutableType, ZOutputType, 
    * the java type that this output type represents.
    */
 
+  @Override
   public TypeToken<?> javaType() {
     return this.javaType;
   }
