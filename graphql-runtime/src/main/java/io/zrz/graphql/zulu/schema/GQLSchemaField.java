@@ -28,8 +28,7 @@ public class GQLSchemaField {
   }
 
   // args: [__InputValue!]!
-
-  public List<io.zrz.graphql.zulu.schema.GQLSchemaInputValue> args() {
+  public List<GQLSchemaInputValue> args() {
     return this.field
         .parameters()
         .map(p -> p.fieldValues())
@@ -42,13 +41,7 @@ public class GQLSchemaField {
   // type: __Type!
 
   public GQLSchemaType type() {
-
-    // this.field.receiverType().field(this.field.fieldName());
-
-    // find the interface type decl, if there is one.
-
     return new GQLSchemaType(this.field.fieldType());
-
   }
 
   // isDeprecated: Boolean!

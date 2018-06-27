@@ -52,6 +52,8 @@ class BuildContext implements OutputFieldFilter {
 
     Symbol symbol = null;
 
+    String typeName = null;
+
     // overriden annotation?
     if (typeuseants.length > 0) {
 
@@ -63,26 +65,28 @@ class BuildContext implements OutputFieldFilter {
 
           nullable = tu.nullable();
 
-          final String typeName = tu.name();
+          final String lookupName = tu.name();
 
-          if (StringUtils.isEmpty(typeName)) {
+          if (StringUtils.isEmpty(lookupName)) {
             continue;
           }
 
           symbol = this.types
               .keySet()
               .stream()
-              .filter(msym -> msym.typeName.equals(typeName))
+              .filter(msym -> msym.typeName.equals(lookupName) || msym.hasName(lookupName))
               .findFirst()
               .orElse(null);
 
           if (symbol == null) {
-            symbol = this.b.resolve(typeName, javaType, tu);
+            symbol = this.b.resolve(lookupName, javaType, tu);
           }
 
           if (symbol == null) {
-            throw new IllegalArgumentException("typename '" + typeName + "' specified in @GQLTypeUse is unknown (used at " + user + ")");
+            throw new IllegalArgumentException("typename '" + lookupName + "' specified in @GQLTypeUse is unknown (used at " + user + ")");
           }
+
+          typeName = lookupName;
 
         }
 
@@ -152,7 +156,11 @@ class BuildContext implements OutputFieldFilter {
 
     }
 
-    final ExecutableTypeUse t = new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, found, nullable);
+    if (typeName == null) {
+      typeName = symbol.typeName;
+    }
+
+    final ExecutableTypeUse t = new ExecutableTypeUse(javaType, typeName, arity, symbol, found, nullable);
 
     return t;
 

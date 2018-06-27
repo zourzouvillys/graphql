@@ -36,8 +36,8 @@ public class IterableHandler<T> implements ReturnTypeHandlerFactory<Iterable<T>,
     if (!type.isSubtypeOf(Iterable.class)) {
       return null;
     }
-
-    return new Unwrapper<>(type.resolveType(TYPE_PARAM));
+    final TypeToken iterType = type.getSupertype((Class) Iterable.class);
+    return new Unwrapper<>(type, iterType.resolveType(TYPE_PARAM));
 
   }
 
@@ -48,7 +48,8 @@ public class IterableHandler<T> implements ReturnTypeHandlerFactory<Iterable<T>,
     // private final Class<?> rawComponentType;
     private final MethodHandle transformer;
 
-    Unwrapper(final TypeToken<?> wrapped) {
+    Unwrapper(final TypeToken<?> actualType, final TypeToken<?> componentType) {
+
       //
       // this.componentType = componentType;
       // this.returnType = TypeToken.of(Array.newInstance(this.componentType.getRawType(), 0).getClass());
@@ -66,7 +67,7 @@ public class IterableHandler<T> implements ReturnTypeHandlerFactory<Iterable<T>,
       // find the componentType....
       // this.iteratorType = wrapped.resolveType(Iterable.class.getMethod("iterator").getGenericReturnType());
 
-      this.componentType = wrapped;
+      this.componentType = componentType;
       this.returnType = TypeToken.of(Array.newInstance(this.componentType.getRawType(), 0).getClass());
 
       // then generate filter to map to a raw array.
@@ -74,7 +75,7 @@ public class IterableHandler<T> implements ReturnTypeHandlerFactory<Iterable<T>,
 
       actualFilter = actualFilter.asType(
           actualFilter.type()
-              .changeParameterType(0, wrapped.getRawType())
+              .changeParameterType(0, actualType.getRawType())
               .changeReturnType(this.returnType.getRawType()));
 
       this.transformer = actualFilter;

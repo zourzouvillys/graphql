@@ -6,7 +6,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.IntFunction;
@@ -80,6 +79,7 @@ class JavaOutputMapper {
   private int arity = 0;
 
   /**
+   * just adjust the type registration.
    *
    * @param field
    * @param javaType
@@ -237,7 +237,7 @@ class JavaOutputMapper {
             type.getLowerBounds().length == 1,
             "currently only support single lower bound in return type");
 
-        return this.unwrap(TypeToken.of(type.getLowerBounds()[0]));
+        return this.unwrap(TypeToken.of(type.getLowerBounds()[0]), UnaryOperator.identity());
 
       }
       else if (wrapped.getType() instanceof TypeVariable) {
@@ -248,7 +248,7 @@ class JavaOutputMapper {
             var.getBounds().length == 1,
             "currently only support single bound in return type");
 
-        return this.unwrap(TypeToken.of(var.getBounds()[0]));
+        return this.unwrap(TypeToken.of(var.getBounds()[0]), UnaryOperator.identity());
 
       }
 
@@ -258,40 +258,20 @@ class JavaOutputMapper {
         return this.unwrapArray(wrapped.getComponentType());
 
       }
+
       else if (wrapped.isSubtypeOf(Iterable.class)) {
 
-        // find the componentType....
-        final TypeToken<?> iteratorType = wrapped.resolveType(Iterable.class.getMethod("iterator").getGenericReturnType());
-        final TypeToken<?> componentType = iteratorType.resolveType(Iterator.class.getMethod("next").getGenericReturnType());
-        final TypeToken<?> returnType = TypeToken.of(Array.newInstance(componentType.getRawType(), 0).getClass());
-
-        // then generate filter to map to a raw array.
-        MethodHandle actualFilter = MethodHandles.insertArguments(MH_fromIterable, 1, componentType.getRawType());
-
-        actualFilter = actualFilter.asType(
-            actualFilter.type()
-                .changeParameterType(0, wrapped.getRawType())
-                .changeReturnType(returnType.getRawType()));
-
-        final MethodHandle transformer = actualFilter;
-
-        return new JavaOutputMapper(
-            this,
-            componentType,
-            target -> MethodHandles.filterReturnValue(target, transformer),
-            this.arity + 1)
-                .unwrap();
-
-      }
-      else if (wrapped.isSubtypeOf(Iterable.class)) {
-
-        final ReturnTypeHandler<?> handler = new IterableHandler<>().createHandler(wrapped.getSupertype((Class) Iterable.class));
+        final ReturnTypeHandler<?> handler = new IterableHandler<>()
+            .createHandler(wrapped);
 
         return new JavaOutputMapper(
             this,
             handler.unwrap(),
             target -> MethodHandles.filterReturnValue(target, handler.adapt()),
-            handler.arity()).unwrap();
+            handler.arity()
+        //
+        )
+            .unwrap();
 
       }
 

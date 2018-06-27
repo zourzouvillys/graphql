@@ -106,18 +106,35 @@ public final class ExecutableSchemaBuilder {
    */
 
   static class Symbol {
+
     String typeName;
     LogicalTypeKind typeKind;
+
     TypeToken<?> typeToken;
+
     JavaBindingType handle;
+
     // if we received explicit indication of this symbol being exported, e.g it was specified manually or through a
     // scanner.
     boolean exported;
+
+    // if it's a builtin type
     boolean builtin;
+
+    // the java type isn't a graphql handler, only extensions.
     boolean stub;
+
+    // aliases of this type.
+    Set<String> aliases;
 
     public String typeName() {
       return this.typeName;
+    }
+
+    public boolean hasName(final String typeName) {
+      if (this.aliases == null)
+        return false;
+      return this.aliases.contains(typeName);
     }
 
   }
@@ -216,6 +233,17 @@ public final class ExecutableSchemaBuilder {
         Preconditions.checkState(!this.names.containsKey(symbol.typeName), symbol.typeName);
         break;
 
+    }
+
+    final Symbol existingType = this.types.get(typeToken);
+
+    if (existingType != null) {
+      Preconditions.checkState(existingType.typeKind == typeKind, "%s != %s", existingType.typeKind, typeKind);
+      if (existingType.aliases == null)
+        existingType.aliases = new HashSet<>();
+      existingType.aliases.add(symbol.typeName);
+      this.names.put(symbol.typeName, symbol);
+      return existingType;
     }
 
     this.names.put(symbol.typeName, symbol);

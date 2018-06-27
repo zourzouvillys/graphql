@@ -21,6 +21,7 @@ public class GQLSchemaType {
   private final ExecutableType type;
   private final int arity;
   private final boolean nullable;
+  private final String typeName;
 
   public GQLSchemaType(final ExecutableType type) {
     this(type, 0, true);
@@ -28,11 +29,20 @@ public class GQLSchemaType {
 
   public GQLSchemaType(final ExecutableType type, final int arity, final boolean nullable) {
     this.type = Objects.requireNonNull(type);
+    this.typeName = type.typeName();
+    this.arity = arity;
+    this.nullable = nullable;
+  }
+
+  public GQLSchemaType(final ExecutableType type, final String typeName, final int arity, final boolean nullable) {
+    this.type = Objects.requireNonNull(type);
+    this.typeName = typeName;
     this.arity = arity;
     this.nullable = nullable;
   }
 
   public GQLSchemaType(final ExecutableTypeUse fieldType) {
+    this.typeName = fieldType.logicalType();
     this.type = fieldType.type();
     this.arity = fieldType.arity();
     this.nullable = fieldType.isNullable();
@@ -72,7 +82,7 @@ public class GQLSchemaType {
   public String name() {
     if (this.arity > 0)
       return null;
-    return this.type.typeName();
+    return this.typeName;
   }
 
   // description: String
@@ -164,11 +174,11 @@ public class GQLSchemaType {
   public GQLSchemaType ofType() {
 
     if (!this.nullable) {
-      return new GQLSchemaType(this.type, this.arity, true);
+      return new GQLSchemaType(this.type, this.typeName, this.arity, true);
     }
 
     if (this.arity > 0) {
-      return new GQLSchemaType(this.type, this.arity - 1, true);
+      return new GQLSchemaType(this.type, this.typeName, this.arity - 1, true);
     }
 
     return null;
