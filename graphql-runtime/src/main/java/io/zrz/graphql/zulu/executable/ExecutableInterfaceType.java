@@ -1,6 +1,7 @@
 package io.zrz.graphql.zulu.executable;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -20,6 +21,8 @@ public class ExecutableInterfaceType implements ExecutableType, ExecutableElemen
   private final TypeToken<?> javaType;
 
   public ExecutableInterfaceType(final ExecutableSchema schema, final Symbol symbol, final BuildContext buildctx) {
+
+    buildctx.add(symbol, this);
 
     this.javaType = symbol.typeToken;
     this.typeName = symbol.typeName;
@@ -57,7 +60,7 @@ public class ExecutableInterfaceType implements ExecutableType, ExecutableElemen
 
   @Override
   public Map<String, ExecutableOutputField> fields() {
-    return this.fields;
+    return Objects.requireNonNull(this.fields, "fields for '" + this.typeName + "' not yet loaded");
   }
 
   @Override

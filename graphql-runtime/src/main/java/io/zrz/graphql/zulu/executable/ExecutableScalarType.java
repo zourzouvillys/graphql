@@ -6,10 +6,11 @@ import io.zrz.zulu.types.ZTypeKind;
 
 public class ExecutableScalarType implements ExecutableType {
 
-  private ExecutableSchema schema;
-  private String typeName;
+  private final ExecutableSchema schema;
+  private final String typeName;
 
-  public ExecutableScalarType(ExecutableSchema schema, Symbol symbol, BuildContext buildContext) {
+  public ExecutableScalarType(final ExecutableSchema schema, final Symbol symbol, final BuildContext buildContext) {
+    buildContext.add(symbol, this);
     this.schema = schema;
     this.typeName = symbol.typeName;
   }

@@ -114,6 +114,11 @@ public final class ExecutableSchemaBuilder {
     boolean exported;
     boolean builtin;
     boolean stub;
+
+    public String typeName() {
+      return this.typeName;
+    }
+
   }
 
   /**
@@ -192,6 +197,18 @@ public final class ExecutableSchemaBuilder {
 
     if (handle == null) {
       symbol.handle = this.binder.include(typeToken);
+    }
+
+    switch (symbol.typeName) {
+      case "Int":
+      case "String":
+      case "Boolean":
+      case "Double":
+        break;
+      default:
+        Preconditions.checkState(!this.names.containsKey(symbol.typeName), symbol.typeName);
+        break;
+
     }
 
     this.names.put(symbol.typeName, symbol);
@@ -708,8 +725,15 @@ public final class ExecutableSchemaBuilder {
       return null;
     }
 
+    if (this.types.containsKey(javaType)) {
+      // already have this type.
+      return this.types.get(javaType);
+    }
+
     final JavaBindingType handle = this.binder.registerType(javaType);
+
     final String typeName = this.generateName(javaType, handle);
+
     log.debug("autoloading {} type {} = {} (used by {})", kind.get(), typeName, javaType, user);
 
     final Symbol sym = this.addSymbol(

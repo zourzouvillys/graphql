@@ -1,7 +1,9 @@
 package io.zrz.graphql.zulu.executable;
 
 import java.lang.reflect.Type;
+import java.util.Comparator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -12,6 +14,7 @@ import com.google.common.reflect.TypeToken;
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.runtime.GQLOperationType;
 import io.zrz.graphql.zulu.LogicalTypeKind;
+import io.zrz.graphql.zulu.executable.ExecutableSchemaBuilder.Symbol;
 import io.zrz.zulu.types.ZType;
 
 /**
@@ -34,7 +37,11 @@ public class ExecutableSchema implements ExecutableElement {
     final Builder<GQLOperationType, ExecutableOutputType> roots = ImmutableMap.<GQLOperationType, ExecutableOutputType>builder();
 
     b.operationRoots()
-        .forEach((type, symbol) -> roots.put(type, (ExecutableOutputType) ctx.compile(symbol)));
+        .entrySet()
+        .stream()
+        .sequential()
+        .sorted(Comparator.comparing(Entry::getValue, Comparator.comparing(Symbol::typeName)))
+        .forEach(e -> roots.put(e.getKey(), (ExecutableOutputType) ctx.compile(e.getValue())));
 
     this.operationRoots = roots.build();
 
@@ -42,11 +49,13 @@ public class ExecutableSchema implements ExecutableElement {
     // interfaces which are.
 
     b.additionalTypes(ctx.types.keySet())
+        .sorted(Comparator.comparing(Symbol::typeName))
         .forEach(sym -> ctx.use(this, sym.typeToken));
 
     this.types = ctx.types
         .entrySet()
         .stream()
+        .sorted(Comparator.comparing(Entry::getKey, Comparator.comparing(Symbol::typeName)))
         .collect(ImmutableMap.toImmutableMap(k -> k.getKey().typeName, k -> k.getValue(), (t1, t2) -> {
 
           return t1;
@@ -56,7 +65,13 @@ public class ExecutableSchema implements ExecutableElement {
     this.tokens = ctx.types
         .entrySet()
         .stream()
-        .collect(ImmutableMap.toImmutableMap(k -> k.getKey().typeToken, k -> k.getValue()));
+        .sorted(Comparator.comparing(Entry::getKey, Comparator.comparing(Symbol::typeName)))
+        .collect(ImmutableMap.toImmutableMap(k -> k.getKey().typeToken, k -> k.getValue(), (t1, t2) -> {
+
+          throw new IllegalArgumentException(
+              "type registered multiple times:\n - " + t1 + " (" + t1.typeName() + ")" + "\n - " + t2 + " (" + t2.typeName() + ")");
+
+        }));
 
   }
 

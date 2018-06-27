@@ -45,12 +45,16 @@ class BuildContext implements OutputFieldFilter {
     Symbol symbol = this.suppliers.get(javaType);
 
     if (symbol == null) {
+
       // a chance to autoload before failing it.
+
       symbol = this.b.autoload(javaType, user);
+
       if (symbol != null) {
         this.target.add(symbol);
         this.suppliers.put(javaType, symbol);
       }
+
     }
 
     Preconditions.checkState(
@@ -67,19 +71,27 @@ class BuildContext implements OutputFieldFilter {
       try {
 
         switch (symbol.typeKind) {
-          case OUTPUT: {
-            final ExecutableOutputType decl = new ExecutableOutputType(this.schema, symbol, this);
-            this.types.put(symbol, decl);
-            return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl);
-          }
+          case OUTPUT:
+            // {
+            // final ExecutableOutputType decl = new ExecutableOutputType(this.schema, symbol, this);
+            // Preconditions.checkArgument(this.types.containsKey(symbol));
+            // Preconditions.checkArgument(this.types.get(symbol) == decl);
+            // return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl);
+            // }
           case ENUM:
           case INPUT:
           case INTERFACE:
           case SCALAR:
           case UNION: {
+
             final ExecutableType decl = this.compile(symbol);
-            this.types.put(symbol, decl);
+
+            // this.types.put(symbol, decl);
+            Preconditions.checkArgument(this.types.containsKey(symbol));
+            Preconditions.checkArgument(this.types.get(symbol) == decl);
+
             return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl);
+
           }
           default:
             break;
@@ -108,7 +120,25 @@ class BuildContext implements OutputFieldFilter {
   }
 
   void add(final Symbol symbol, final ExecutableType type) {
-    this.types.putIfAbsent(symbol, type);
+
+    final ExecutableType existing = this.types.get(symbol);
+
+    if (existing != null) {
+      if (existing != type) {
+        throw new IllegalArgumentException("attempted to register symbol " + symbol.typeName + " multiple times");
+      }
+      return;
+    }
+
+    this.types.put(symbol, type);
+
+    this.target.remove(symbol);
+
+    if (this.suppliers.containsKey(symbol.typeToken)) {
+      // autoregistered, didn't know about type on start
+      this.suppliers.put(symbol.typeToken, symbol);
+    }
+
   }
 
   public ExecutableType compile(final Symbol symbol) {
@@ -122,27 +152,32 @@ class BuildContext implements OutputFieldFilter {
     switch (symbol.typeKind) {
       case OUTPUT: {
         final ExecutableOutputType value = new ExecutableOutputType(this.schema, symbol, this);
-        this.types.put(symbol, value);
+        Preconditions.checkArgument(this.types.containsKey(symbol));
+        Preconditions.checkArgument(this.types.get(symbol) == value);
         return value;
       }
       case SCALAR: {
         final ExecutableScalarType value = new ExecutableScalarType(this.schema, symbol, this);
-        this.types.put(symbol, value);
+        Preconditions.checkArgument(this.types.containsKey(symbol));
+        Preconditions.checkArgument(this.types.get(symbol) == value);
         return value;
       }
       case INPUT: {
         final ExecutableInputType value = new ExecutableInputType(this.schema, symbol, this);
-        this.types.put(symbol, value);
+        Preconditions.checkArgument(this.types.containsKey(symbol));
+        Preconditions.checkArgument(this.types.get(symbol) == value);
         return value;
       }
       case ENUM: {
         final ExecutableEnumType value = new ExecutableEnumType(this.schema, symbol, this);
-        this.types.put(symbol, value);
+        Preconditions.checkArgument(this.types.containsKey(symbol));
+        Preconditions.checkArgument(this.types.get(symbol) == value);
         return value;
       }
       case INTERFACE: {
         final ExecutableInterfaceType value = new ExecutableInterfaceType(this.schema, symbol, this);
-        this.types.put(symbol, value);
+        Preconditions.checkArgument(this.types.containsKey(symbol));
+        Preconditions.checkArgument(this.types.get(symbol) == value);
         return value;
       }
       case UNION:

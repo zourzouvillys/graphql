@@ -1,10 +1,12 @@
 package io.zrz.graphql.zulu.executable;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -64,23 +66,28 @@ public final class ExecutableOutputType implements ExecutableType, ZOutputType, 
     // first pass selects best fields for this class.
     final Map<String, JavaOutputField> fields = buildctx
         .outputFieldsFor(symbol, this)
-        .collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k, (a, b) -> JavaExecutableUtils.merge(this, a, b)));
+        .sorted(Comparator.comparing(JavaOutputField::fieldName))
+        .collect(ImmutableMap.toImmutableMap(JavaOutputField::fieldName, Function.identity(), this::mergeFields));
 
     final Map<String, ExecutableOutputField> declaredFields = fields
         .values()
         .stream()
+        .sorted(Comparator.comparing(JavaOutputField::fieldName))
         .map(field -> this.buildField(field, symbol, buildctx))
-
-        .collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k, (a, b) -> JavaExecutableUtils.merge(this, a, b)));
+        .collect(ImmutableMap.toImmutableMap(ExecutableOutputField::fieldName, Function.identity(), this::mergeFields));
 
     this.fields = Stream.concat(
+
         declaredFields
             .values()
-            .stream(),
+            .stream()
+            .sorted(Comparator.comparing(ExecutableOutputField::fieldName)),
+
         this.interfaces
             .stream()
             .flatMap(x -> x.fields().values().stream())
             .filter(f -> !declaredFields.containsKey(f.fieldName()))
+            .sorted(Comparator.comparing(ExecutableOutputField::fieldName))
 
     )
         .collect(
@@ -93,12 +100,20 @@ public final class ExecutableOutputType implements ExecutableType, ZOutputType, 
 
   }
 
+  private ExecutableOutputField mergeFields(final ExecutableOutputField a, final ExecutableOutputField b) {
+    return JavaExecutableUtils.merge(this, a, b);
+  }
+
+  private JavaOutputField mergeFields(final JavaOutputField a, final JavaOutputField b) {
+    return JavaExecutableUtils.merge(this, a, b);
+  }
+
   private ExecutableOutputField buildField(final JavaOutputField field, final Symbol symbol, final BuildContext buildctx) {
     try {
       return new ExecutableOutputField(this, symbol, field, buildctx);
     }
     catch (final Throwable ex) {
-      throw new RuntimeException("error building field '" + field.fieldName() + "'", ex);
+      throw new RuntimeException("error building field '" + field.fieldName() + "'" + " in '" + symbol.typeName + "'", ex);
     }
   }
 

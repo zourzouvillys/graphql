@@ -41,7 +41,12 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
         .map(f -> new ExecutableInputContext(this, f, types))
         .collect(ImmutableList.toImmutableList());
 
-    this.returnType = new ReturnTypeUse(this, types, field.returnType());
+    try {
+      this.returnType = new ReturnTypeUse(this, types, field.returnType());
+    }
+    catch (final Throwable ex) {
+      throw new RuntimeException("error calculating return type for '" + symbol.typeName + "." + field.fieldName() + "'", ex);
+    }
 
   }
 
