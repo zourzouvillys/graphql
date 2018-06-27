@@ -56,20 +56,13 @@ public class ExecutableSchema implements ExecutableElement {
         .entrySet()
         .stream()
         .sorted(Comparator.comparing(Entry::getKey, Comparator.comparing(Symbol::typeName)))
-        .collect(ImmutableMap.toImmutableMap(k -> k.getKey().typeName, Entry::getValue, this::mergeTypes));
+        .collect(ImmutableMap.toImmutableMap(k -> k.getKey().typeName, Entry::getValue, this::mergeTypenames));
 
     this.tokens = ctx.types
         .entrySet()
         .stream()
         .sorted(Comparator.comparing(Entry::getKey, Comparator.comparing(Symbol::typeName)))
-        .collect(ImmutableMap.toImmutableMap(k -> k.getKey().typeToken, k -> k.getValue(), (t1, t2) -> {
-
-          throw new IllegalArgumentException(
-              "type registered multiple times:\n - "
-                  + t1 + " (" + t1.typeName() + ")" + "\n - "
-                  + t2 + " (" + t2.typeName() + ")");
-
-        }));
+        .collect(ImmutableMap.toImmutableMap(k -> k.getKey().typeToken, k -> k.getValue(), this::mergeTypes));
 
   }
 
@@ -89,22 +82,33 @@ public class ExecutableSchema implements ExecutableElement {
    * @return
    */
 
-  private ExecutableType mergeTypes(final ExecutableType a, final ExecutableType b) {
+  private ExecutableType mergeTypenames(final ExecutableType a, final ExecutableType b) {
 
-    // , (t1, t2) -> { return t1; }));
-
-    switch (a.typeName()) {
-      case "Int":
-      case "Boolean":
-      case "Double":
-      case "String":
-        return a;
+    if (GraphQLUtils.isBuiltinScalar(a.typeName())) {
+      return a;
     }
 
-    System.err.println(a.logicalKind() + " " + a.typeName());
-    System.err.println(b.logicalKind() + " " + b.typeName());
+    throw new IllegalArgumentException(
+        "type name registered multiple times:\n - "
+            + a + " (" + a.typeName() + ")" + "\n - "
+            + b + " (" + b.typeName() + ")");
 
-    return a;
+  }
+
+  private ExecutableType mergeTypes(final ExecutableType a, final ExecutableType b) {
+
+    if (GraphQLUtils.isBuiltinScalar(a.typeName())) {
+      return a;
+    }
+
+    if (GraphQLUtils.isBuiltinScalar(b.typeName())) {
+      return b;
+    }
+
+    throw new IllegalArgumentException(
+        "type " + a.javaType() + " used with multiple names:\n - "
+            + " " + a.typeName() + "\n - "
+            + " " + b.typeName());
 
   }
 

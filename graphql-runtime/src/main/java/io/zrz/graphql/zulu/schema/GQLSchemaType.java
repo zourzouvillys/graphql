@@ -82,7 +82,8 @@ public class GQLSchemaType {
 
   // # OBJECT and INTERFACE only
   // fields(includeDeprecated: Boolean = false): [__Field!]
-  public List<@NonNull GQLSchemaField> fields(final boolean includeDeprecated) {
+
+  public List<@NonNull GQLSchemaField> fields(final Boolean includeDeprecated) {
 
     switch (this.type.logicalKind()) {
 

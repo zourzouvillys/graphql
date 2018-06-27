@@ -1,15 +1,15 @@
 package io.zrz.graphql.zulu.relay;
 
-import io.zrz.graphql.zulu.annotations.GQLNotNull;
 import io.zrz.graphql.zulu.annotations.GQLNullable;
+import io.zrz.graphql.zulu.annotations.GQLTypeUse;
 
-// doesn't export into GraphQL namespace
+// note: doesn't export into GraphQL namespace
 public interface RelayEdge<NodeT extends RelayNode> {
 
   @GQLNullable
   NodeT node();
 
-  @GQLNotNull
+  @GQLTypeUse(nullable = false)
   String cursor();
 
 }

@@ -1,5 +1,6 @@
 package io.zrz.graphql.zulu;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -45,10 +46,10 @@ public interface JavaOutputField {
 
   /**
    * if this field is related to an underlying java element, return it.
-   * 
+   *
    * if a handler replaces or generates dynamic code, this should point to the original element which triggered the
    * generation - if any.
-   * 
+   *
    */
 
   default Optional<? extends AnnotatedElement> origin() {
@@ -57,7 +58,7 @@ public interface JavaOutputField {
 
   /**
    * invokes
-   * 
+   *
    * @param request
    * @param context
    * @param args
@@ -72,6 +73,10 @@ public interface JavaOutputField {
 
   default JavaBindingInvoker invoker() {
     throw new RuntimeException("not implemented");
+  }
+
+  default Annotation[] returnTypeAnnotations() {
+    return new Annotation[0];
   }
 
 }

@@ -145,11 +145,15 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
     private final DefaultGQLPreparedOperation req;
     private final GQLArgument arg;
     private final ZValueProvider provider;
+    private final Optional<ZValue> constantValue;
+    private final Optional<ZValue> defaultValue;
 
     public ParamField(final DefaultGQLPreparedOperation req, final GQLArgument arg) {
       this.req = req;
       this.arg = arg;
       this.provider = ValueResolvingVisitor.create(req, arg.value());
+      this.constantValue = this.arg.value().apply(new ConstantZValueValueExtractor(this.req, this.arg, null));
+      this.defaultValue = this.arg.value().apply(new DefaultZValueValueExtractor(this.req, this.arg));
     }
 
     @Override
@@ -159,12 +163,12 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
     @Override
     public Optional<ZValue> defaultValue() {
-      return this.arg.value().apply(new DefaultZValueValueExtractor(this.req, this.arg));
+      return this.defaultValue;
     }
 
     @Override
     public Optional<ZValue> constantValue() {
-      return this.arg.value().apply(new ConstantZValueValueExtractor(this.req, this.arg, null));
+      return this.constantValue;
     }
 
     @Override

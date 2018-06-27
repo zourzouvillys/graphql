@@ -32,6 +32,7 @@ import io.zrz.graphql.zulu.annotations.GQLInterfaceType;
 import io.zrz.graphql.zulu.annotations.GQLObjectType;
 import io.zrz.graphql.zulu.annotations.GQLScalarType;
 import io.zrz.graphql.zulu.annotations.GQLType.Kind;
+import io.zrz.graphql.zulu.annotations.GQLTypeUse;
 import io.zrz.graphql.zulu.annotations.GQLUnionType;
 import io.zrz.graphql.zulu.binding.JavaBindingProvider;
 import io.zrz.graphql.zulu.binding.JavaBindingType;
@@ -200,8 +201,14 @@ public final class ExecutableSchemaBuilder {
     }
 
     switch (symbol.typeName) {
-      case "Int":
       case "String":
+        if (!this.names.containsKey(symbol.typeName)) {
+          this.types.put(symbol.typeToken, symbol);
+          this.names.put(symbol.typeName, symbol);
+          this.kinds.put(symbol.typeKind, symbol);
+        }
+        return symbol;
+      case "Int":
       case "Boolean":
       case "Double":
         break;
@@ -212,7 +219,11 @@ public final class ExecutableSchemaBuilder {
     }
 
     this.names.put(symbol.typeName, symbol);
-    this.types.put(symbol.typeToken, symbol);
+
+    if (!typeToken.getRawType().equals(String.class)) {
+      this.types.put(symbol.typeToken, symbol);
+    }
+
     this.kinds.put(symbol.typeKind, symbol);
 
     this.scanAddedSymbol(symbol);
@@ -832,4 +843,25 @@ public final class ExecutableSchemaBuilder {
         .forEach(type -> this.addType(type));
 
   }
+
+  /**
+   * resolve a typename to a symbol based on a {@link GQLTypeUse} seen in the code, but we don't know about the type.
+   *
+   * @param typeName
+   * @param tu
+   * @return
+   */
+
+  public Symbol resolve(final String typeName, final TypeToken<?> javaType, final GQLTypeUse tu) {
+
+    final Class<?> rawType = javaType.getRawType();
+
+    if (rawType.equals(String.class)) {
+      return this.addSymbol(javaType, tu.name(), LogicalTypeKind.SCALAR, null);
+    }
+
+    return null;
+
+  }
+
 }

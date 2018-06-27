@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList;
 import io.zrz.graphql.zulu.JavaOutputField;
 import io.zrz.graphql.zulu.ZOutputField;
 import io.zrz.graphql.zulu.annotations.GQLContext;
+import io.zrz.graphql.zulu.annotations.GQLTypeUse;
 import io.zrz.graphql.zulu.binding.JavaBindingUtils;
 import io.zrz.graphql.zulu.executable.ExecutableSchemaBuilder.Symbol;
 
@@ -31,21 +32,35 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
 
     this.params = new ExecutableInputType(
         this,
-        field.inputFields()
+        field
+            .inputFields()
             .filter(f -> !f.annotation(GQLContext.class).isPresent())
             .map(f -> new ExecutableInputField(this, f, types))
             .collect(ImmutableList.toImmutableList()));
 
-    this.context = field.inputFields()
+    this.context = field
+        .inputFields()
         .filter(f -> f.annotation(GQLContext.class).isPresent())
         .map(f -> new ExecutableInputContext(this, f, types))
         .collect(ImmutableList.toImmutableList());
 
     try {
-      this.returnType = new ReturnTypeUse(this, types, field.returnType());
+
+      final GQLTypeUse[] ants = JavaExecutableUtils
+          .getMethodReturnTypeUseAnnotations(field)
+          .toArray(GQLTypeUse[]::new);
+
+      this.returnType = new ReturnTypeUse(
+          this,
+          types,
+          field.returnType(),
+          ants);
+
     }
     catch (final Throwable ex) {
+
       throw new RuntimeException("error calculating return type for '" + symbol.typeName + "." + field.fieldName() + "'", ex);
+
     }
 
   }

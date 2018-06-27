@@ -1,5 +1,6 @@
 package io.zrz.graphql.zulu.executable;
 
+import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 
 import com.google.common.reflect.TypeToken;
@@ -9,7 +10,7 @@ public class ReturnTypeUse {
   private final ExecutableTypeUse typeuse;
   private final JavaOutputMapper returnType;
 
-  public ReturnTypeUse(final ExecutableOutputField field, final BuildContext types, final TypeToken<?> returnType) {
+  public ReturnTypeUse(final ExecutableOutputField field, final BuildContext types, final TypeToken<?> returnType, final Annotation[] returnTypeAnnotations) {
 
     // mapper for the return type.
     this.returnType = types.builder().mapReturnType(
@@ -21,7 +22,8 @@ public class ReturnTypeUse {
         field,
         this.returnType.modelType(),
         this.returnType.returnTypeArity(),
-        this.returnType.isNullable());
+        this.returnType.isNullable(),
+        returnTypeAnnotations);
 
   }
 

@@ -1,5 +1,6 @@
 package io.zrz.graphql.zulu.executable;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,11 +9,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
 
 import io.zrz.graphql.zulu.JavaOutputField;
 import io.zrz.graphql.zulu.LogicalTypeKind;
+import io.zrz.graphql.zulu.annotations.GQLTypeUse;
 import io.zrz.graphql.zulu.binding.JavaBindingMethodAnalysis;
 import io.zrz.graphql.zulu.binding.OutputFieldFilter;
 import io.zrz.graphql.zulu.executable.ExecutableSchemaBuilder.Symbol;
@@ -37,12 +41,58 @@ class BuildContext implements OutputFieldFilter {
   }
 
   ExecutableTypeUse use(final ExecutableElement user, final TypeToken<?> javaType, final boolean nullable) {
-    return this.use(user, javaType, 0, nullable);
+    return this.use(user, javaType, 0, nullable, new Annotation[0]);
   }
 
   ExecutableTypeUse use(final ExecutableElement user, final TypeToken<?> javaType, final int arity, final boolean nullable) {
+    return this.use(user, javaType, arity, nullable, new Annotation[0]);
+  }
 
-    Symbol symbol = this.suppliers.get(javaType);
+  ExecutableTypeUse use(final ExecutableElement user, final TypeToken<?> javaType, final int arity, boolean nullable, final Annotation[] typeuseants) {
+
+    Symbol symbol = null;
+
+    // overriden annotation?
+    if (typeuseants.length > 0) {
+
+      for (final Annotation ant : typeuseants) {
+
+        if (ant.annotationType().equals(GQLTypeUse.class)) {
+
+          final GQLTypeUse tu = (GQLTypeUse) ant;
+
+          nullable = tu.nullable();
+
+          final String typeName = tu.name();
+
+          if (StringUtils.isEmpty(typeName)) {
+            continue;
+          }
+
+          symbol = this.types
+              .keySet()
+              .stream()
+              .filter(msym -> msym.typeName.equals(typeName))
+              .findFirst()
+              .orElse(null);
+
+          if (symbol == null) {
+            symbol = this.b.resolve(typeName, javaType, tu);
+          }
+
+          if (symbol == null) {
+            throw new IllegalArgumentException("typename '" + typeName + "' specified in @GQLTypeUse is unknown (used at " + user + ")");
+          }
+
+        }
+
+      }
+
+    }
+
+    if (symbol == null) {
+      symbol = this.suppliers.get(javaType);
+    }
 
     if (symbol == null) {
 
@@ -64,7 +114,7 @@ class BuildContext implements OutputFieldFilter {
         javaType,
         user);
 
-    final ExecutableType found = this.types.get(symbol);
+    ExecutableType found = this.types.get(symbol);
 
     if (found == null) {
 
@@ -78,13 +128,13 @@ class BuildContext implements OutputFieldFilter {
           case SCALAR:
           case UNION: {
 
-            final ExecutableType decl = this.compile(symbol);
+            found = this.compile(symbol);
 
             // this.types.put(symbol, decl);
             Preconditions.checkArgument(this.types.containsKey(symbol));
-            Preconditions.checkArgument(this.types.get(symbol) == decl);
+            Preconditions.checkArgument(this.types.get(symbol) == found);
 
-            return new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, decl, nullable);
+            break;
 
           }
           default:
@@ -102,12 +152,15 @@ class BuildContext implements OutputFieldFilter {
 
     }
 
-    return new ExecutableTypeUse(javaType, found, arity, symbol, nullable);
+    final ExecutableTypeUse t = new ExecutableTypeUse(javaType, symbol.typeName, arity, symbol, found, nullable);
+
+    return t;
 
   }
 
   Set<Symbol> pending() {
-    return this.target.stream()
+    return this.target
+        .stream()
         .filter(s -> s.typeKind == LogicalTypeKind.OUTPUT)
         .filter(s -> !this.types.containsKey(s))
         .collect(Collectors.toSet());

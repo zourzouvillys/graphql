@@ -65,8 +65,7 @@ class ValueResolvingVisitor implements GQLValueVisitor<ZValueProvider> {
 
   @Override
   public ZValueProvider visitListValue(final GQLListValue arg0) {
-    // TODO Auto-generated method stub
-    return null;
+    return StaticZValueProvider.of(false);
   }
 
   @Override

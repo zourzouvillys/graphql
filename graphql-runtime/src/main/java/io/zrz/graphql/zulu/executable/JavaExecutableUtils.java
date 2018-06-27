@@ -1,11 +1,14 @@
 package io.zrz.graphql.zulu.executable;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 import com.google.common.reflect.TypeToken;
 
@@ -14,6 +17,7 @@ import io.zrz.graphql.zulu.JavaOutputField;
 import io.zrz.graphql.zulu.annotations.GQLNullable;
 import io.zrz.graphql.zulu.annotations.GQLType;
 import io.zrz.graphql.zulu.annotations.GQLType.Kind;
+import io.zrz.graphql.zulu.annotations.GQLTypeUse;
 
 public class JavaExecutableUtils {
 
@@ -128,6 +132,56 @@ public class JavaExecutableUtils {
     }
 
     return false;
+  }
+
+  /**
+   *
+   */
+
+  public static Stream<Method> getMethods(final Method myMethod) {
+
+    return TypeToken
+        .of(myMethod.getDeclaringClass())
+        .getTypes()
+        .stream()
+        .flatMap(st -> Arrays.stream(st.getRawType().getMethods()))
+        .filter(st -> st.getName().equals(myMethod.getName()))
+    // .filter(st -> st.getParameterTypes().equals(myMethod.getParameterTypes()))
+    ;
+
+  }
+
+  /**
+   * @return
+   *
+   */
+
+  static Stream<GQLTypeUse> getMethodReturnTypeUseAnnotations(final JavaOutputField field) {
+
+    final @Nullable Method method = field.origin()
+        .filter(Method.class::isInstance)
+        .map(m -> (@Nullable Method) m)
+        .orElse(null);
+
+    if (method == null) {
+      return Stream.empty();
+    }
+
+    return getMethods(method)
+        .map(a -> a.getAnnotatedReturnType().getAnnotationsByType(GQLTypeUse.class))
+        .flatMap(a -> Arrays.stream(a));
+
+  }
+
+  /**
+   * makes an array of the given length for input data.
+   *
+   * @param param
+   * @param length
+   * @return
+   */
+  public static Object[] makeArray(final ExecutableInputField param, final int length) {
+    return (Object[]) Array.newInstance(param.javaType().getComponentType().getRawType(), length);
   }
 
 }

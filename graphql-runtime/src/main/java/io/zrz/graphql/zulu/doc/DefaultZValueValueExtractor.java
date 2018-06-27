@@ -18,61 +18,61 @@ import io.zrz.zulu.values.ZValues;
 
 /**
  * provides a default value for an argument if none is provided at runtime.
- * 
+ *
  * @author theo
  *
  */
 
 public class DefaultZValueValueExtractor implements GQLValueVisitor<Optional<ZValue>> {
 
-  private DefaultGQLPreparedOperation req;
-  private GQLArgument arg;
+  private final DefaultGQLPreparedOperation req;
+  private final GQLArgument arg;
 
-  public DefaultZValueValueExtractor(DefaultGQLPreparedOperation req, GQLArgument arg) {
+  public DefaultZValueValueExtractor(final DefaultGQLPreparedOperation req, final GQLArgument arg) {
     this.req = req;
     this.arg = arg;
   }
 
   @Override
-  public Optional<ZValue> visitBooleanValue(GQLBooleanValue value) {
+  public Optional<ZValue> visitBooleanValue(final GQLBooleanValue value) {
     return Optional.of(ZValues.of(value.value()));
   }
 
   @Override
-  public Optional<ZValue> visitIntValue(GQLIntValue value) {
+  public Optional<ZValue> visitIntValue(final GQLIntValue value) {
     return Optional.of(ZValues.of(value.value()));
   }
 
   @Override
-  public Optional<ZValue> visitStringValue(GQLStringValue value) {
+  public Optional<ZValue> visitStringValue(final GQLStringValue value) {
     return Optional.of(ZValues.of(value.value()));
   }
 
   @Override
-  public Optional<ZValue> visitFloatValue(GQLFloatValue value) {
+  public Optional<ZValue> visitFloatValue(final GQLFloatValue value) {
     return Optional.of(ZValues.of(value.value()));
   }
 
   // deferred
 
   @Override
-  public Optional<ZValue> visitVarValue(GQLVariableRef value) {
-    Optional<? extends ZField> field = this.req.inputType().field(value.name());
+  public Optional<ZValue> visitVarValue(final GQLVariableRef value) {
+    final Optional<? extends ZField> field = this.req.inputType().field(value.name());
     return field.flatMap(x -> Optional.ofNullable(x.constantValue().orElse(x.defaultValue().orElse(null))));
   }
 
   @Override
-  public Optional<ZValue> visitObjectValue(GQLObjectValue value) {
+  public Optional<ZValue> visitObjectValue(final GQLObjectValue value) {
     throw new RuntimeException("not implemented");
   }
 
   @Override
-  public Optional<ZValue> visitListValue(GQLListValue value) {
-    throw new RuntimeException("not implemented");
+  public Optional<ZValue> visitListValue(final GQLListValue value) {
+    return LocalZValues.toList(value);
   }
 
   @Override
-  public Optional<ZValue> visitEnumValueRef(GQLEnumValueRef value) {
+  public Optional<ZValue> visitEnumValueRef(final GQLEnumValueRef value) {
     throw new RuntimeException("not implemented");
   }
 

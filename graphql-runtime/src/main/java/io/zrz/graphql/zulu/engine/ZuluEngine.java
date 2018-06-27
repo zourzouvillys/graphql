@@ -30,10 +30,12 @@ import io.zrz.graphql.zulu.executable.ExecutableElement;
 import io.zrz.graphql.zulu.executable.ExecutableInputField;
 import io.zrz.graphql.zulu.executable.ExecutableSchema;
 import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
+import io.zrz.graphql.zulu.executable.JavaExecutableUtils;
 import io.zrz.graphql.zulu.server.ImmutableQuery;
 import io.zrz.graphql.zulu.server.ImmutableZuluServerRequest;
 import io.zrz.zulu.types.ZField;
 import io.zrz.zulu.types.ZTypeUse;
+import io.zrz.zulu.values.ZArrayValue;
 import io.zrz.zulu.values.ZBoolValue;
 import io.zrz.zulu.values.ZDoubleValue;
 import io.zrz.zulu.values.ZIntValue;
@@ -258,6 +260,10 @@ public class ZuluEngine {
         throw new IllegalArgumentException(scalar.valueType().baseType().toString());
       }
       case ARRAY:
+        return ((ZArrayValue) value)
+            .values()
+            .map(val -> this.get(param, val))
+            .toArray(length -> JavaExecutableUtils.makeArray(param, length));
       case ENUM:
       case STRUCT:
       case TUPLE:

@@ -126,8 +126,9 @@ public class JavaBindingMethodAnalysis implements JavaOutputField {
     // return TypeToken.of(this.method.getGenericReturnType());
   }
 
-  public String returnTypeAnnotations() {
-    return Arrays.toString(this.returnTypeUse());
+  @Override
+  public Annotation[] returnTypeAnnotations() {
+    return this.returnTypeUse();
   }
 
   public String typeParameters() {
