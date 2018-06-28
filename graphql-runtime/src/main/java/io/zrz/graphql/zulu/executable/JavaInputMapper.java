@@ -94,11 +94,13 @@ public class JavaInputMapper {
         return this.unwrapArray(wrapped.getComponentType());
 
       }
-      // else if (wrapped.isSubtypeOf(Iterable.class)) {
-      //
-      // // return unwrapWith(Iterable.class.getMethod("iterator"));
-      //
-      // }
+      else if (wrapped.isSubtypeOf(Iterable.class)) {
+
+        final TypeToken<?> type = wrapped.resolveType(Iterable.class.getTypeParameters()[0]);
+
+        return this.unwrapArray(type);
+
+      }
       // else if (wrapped.isSubtypeOf(Iterator.class)) {
       //
       // // the component type.

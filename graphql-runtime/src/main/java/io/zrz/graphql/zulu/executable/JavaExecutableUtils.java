@@ -3,8 +3,11 @@ package io.zrz.graphql.zulu.executable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -26,8 +29,10 @@ public class JavaExecutableUtils {
     try {
 
       final Class<?> superClass = declaringClass.getSuperclass();
+
       if (superClass != null) {
-        return superClass.getMethod(myMethod.getName(), myMethod.getParameterTypes());
+        if (Modifier.isPublic(superClass.getModifiers()))
+          return superClass.getMethod(myMethod.getName(), myMethod.getParameterTypes());
       }
 
     }
@@ -181,7 +186,14 @@ public class JavaExecutableUtils {
    * @return
    */
   public static Object[] makeArray(final ExecutableInputField param, final int length) {
-    return (Object[]) Array.newInstance(param.javaType().getComponentType().getRawType(), length);
+    return (Object[]) Array.newInstance(param.fieldType().javaType().getRawType(), length);
+  }
+
+  public static List<String> enumValuesFrom(final Class<?> rawType) {
+
+    final Class<? extends Enum<?>> enumType = (Class<? extends Enum<?>>) rawType;
+
+    return Arrays.stream(enumType.getEnumConstants()).map(e -> e.name()).collect(Collectors.toList());
   }
 
 }

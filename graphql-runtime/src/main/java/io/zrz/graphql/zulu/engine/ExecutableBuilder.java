@@ -4,6 +4,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -468,7 +469,42 @@ class ExecutableBuilder {
 
     // if the value is constant, we can bind now and avoid doing anything at invocation time.
     if (provided.constantValue().isPresent()) {
-      return target.insertArguments(param.index() - offset, this.engine.get(param, provided.constantValue().get()));
+
+      // TODO: this needs some work. input types should be generic pipelines like output types.
+
+      // the input could be in any raw shape. need to convert to the target.
+
+      Object javaValue = this.engine.get(param, provided.constantValue().get());
+
+      TypeToken<?> javaValueType = TypeToken.of(javaValue.getClass());
+
+      if (javaValueType.isArray()) {
+        javaValueType = javaValueType.getComponentType();
+      }
+
+      if (!param.fieldType().javaType().isSupertypeOf(javaValueType)) {
+        log.warn("require type {}, but got {}", param.fieldType().javaType(), javaValueType);
+        this.addWarning(new ZuluWarning.InternalError(param, sel, "failed to bind constant value for parameter '" + param.fieldName() + "'"));
+        return null;
+      }
+
+      if (param.javaType().getRawType().equals(List.class)) {
+        if (javaValue.getClass().isArray()) {
+          javaValue = Arrays.asList((Object[]) javaValue);
+        }
+        else {
+          this.addWarning(new ZuluWarning.IncompatibleTypes(param, provided, sel));
+          return null;
+        }
+      }
+
+      //
+      if (param.javaType().getRawType().equals(Optional.class)) {
+        javaValue = Optional.ofNullable(javaValue);
+      }
+
+      return target.insertArguments(param.index() - offset, javaValue);
+
     }
 
     // the value is a variable (or depends on the output of another field/operation), so we need to defer to runtime.

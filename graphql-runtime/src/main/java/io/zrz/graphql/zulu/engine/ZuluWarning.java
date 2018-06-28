@@ -1,5 +1,7 @@
 package io.zrz.graphql.zulu.engine;
 
+import java.util.Objects;
+
 import io.zrz.graphql.core.parser.GQLException;
 import io.zrz.graphql.core.parser.GQLSourceLocation;
 import io.zrz.graphql.core.parser.ImmutableGQLSourceLocation;
@@ -431,6 +433,47 @@ public interface ZuluWarning {
 
     @Override
     public String detail() {
+      if (error.getMessage() == null) {
+        return error.toString();
+      }
+      return error.getMessage();
+    }
+
+  }
+
+  public class InternalError extends AbstractWarning<ExecutableElement> {
+
+    private final Throwable error;
+    private final String detail;
+    private final ExecutableReceiverType etype;
+
+    public InternalError(final ExecutableInputField param, final GQLPreparedSelection sel, final String message) {
+      super(ZuluWarningKind.INTERNAL_ERROR, param, sel);
+      this.etype = param.enclosingType();
+      this.detail = Objects.requireNonNull(message);
+      try {
+        throw new RuntimeException();
+      }
+      catch (final RuntimeException ex) {
+        this.error = ex;
+      }
+    }
+
+    @Override
+    public ExecutableType context() {
+      return this.etype;
+    }
+
+    @Override
+    public Throwable cause() {
+      return this.error;
+    }
+
+    @Override
+    public String detail() {
+      if (this.detail != null) {
+        return this.detail;
+      }
       if (error.getMessage() == null) {
         return error.toString();
       }

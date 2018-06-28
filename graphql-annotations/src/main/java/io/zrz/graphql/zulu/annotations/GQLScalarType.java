@@ -16,7 +16,7 @@ import io.zrz.graphql.zulu.annotations.GQLType.Kind;
  */
 
 @Retention(RUNTIME)
-@Target(TYPE)
+@Target({ TYPE })
 @GQLType(kind = Kind.SCALAR)
 public @interface GQLScalarType {
 

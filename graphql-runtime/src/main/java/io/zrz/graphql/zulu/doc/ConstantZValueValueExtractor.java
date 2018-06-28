@@ -72,7 +72,7 @@ public class ConstantZValueValueExtractor implements GQLValueVisitor<Optional<ZV
 
   @Override
   public Optional<ZValue> visitEnumValueRef(final GQLEnumValueRef value) {
-    throw new RuntimeException("not implemented");
+    return Optional.of(ZValues.of(value.value()));
   }
 
 }

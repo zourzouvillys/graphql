@@ -422,6 +422,7 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
         }
 
         gen.writeEndObject();
+
       }
 
       final Throwable cause = warn.cause();

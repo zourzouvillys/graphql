@@ -3,6 +3,7 @@ package io.zrz.graphql.zulu.engine;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
@@ -242,6 +243,7 @@ public class ZuluEngine {
    */
 
   public Object get(final ExecutableInputField param, final ZValue value) {
+    final Class<?> rawType = param.fieldType().javaType().getRawType();
     switch (value.valueType().typeKind()) {
       case SCALAR: {
         final ZScalarValue scalar = (ZScalarValue) value;
@@ -252,8 +254,17 @@ public class ZuluEngine {
             return ((ZDoubleValue) scalar).toString();
           case INT:
             return ((ZIntValue) scalar).intValue();
-          case STRING:
-            return ((ZStringValue) scalar).stringValue();
+          case STRING: {
+            final String stringValue = ((ZStringValue) scalar).stringValue();
+            if (rawType.isEnum()) {
+              return Arrays.stream(rawType.getEnumConstants())
+                  .map(e -> Enum.class.cast(e))
+                  .filter(e -> e.name().equals(stringValue))
+                  .findFirst()
+                  .get();
+            }
+            return stringValue;
+          }
           default:
             break;
         }

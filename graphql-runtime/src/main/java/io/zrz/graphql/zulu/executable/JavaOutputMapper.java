@@ -279,6 +279,10 @@ class JavaOutputMapper {
 
         final ReturnTypeHandler<?> handler = new StreamHandler<>().createHandler(wrapped);
 
+        System.err.println(wrapped);
+        System.err.println(handler);
+        System.err.println(handler.unwrap());
+
         return new JavaOutputMapper(
             this,
             handler.unwrap(),

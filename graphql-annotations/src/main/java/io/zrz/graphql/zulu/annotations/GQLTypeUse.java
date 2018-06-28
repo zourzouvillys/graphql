@@ -17,8 +17,7 @@ import java.lang.annotation.Target;
 public @interface GQLTypeUse {
 
   /**
-   *
-   * @return
+   * if this type usage is nullable or not.
    */
 
   boolean nullable() default true;

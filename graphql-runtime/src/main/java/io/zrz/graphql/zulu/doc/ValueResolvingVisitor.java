@@ -48,8 +48,7 @@ class ValueResolvingVisitor implements GQLValueVisitor<ZValueProvider> {
 
   @Override
   public ZValueProvider visitEnumValueRef(final GQLEnumValueRef arg0) {
-    // TODO Auto-generated method stub
-    return null;
+    return StaticZValueProvider.of(arg0.value());
   }
 
   @Override

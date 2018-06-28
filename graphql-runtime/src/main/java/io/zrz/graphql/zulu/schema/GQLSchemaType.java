@@ -10,6 +10,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import io.zrz.graphql.core.types.GQLTypeKind;
 import io.zrz.graphql.zulu.LogicalTypeKind;
 import io.zrz.graphql.zulu.annotations.GQLObjectType;
+import io.zrz.graphql.zulu.executable.ExecutableEnumType;
 import io.zrz.graphql.zulu.executable.ExecutableInterfaceType;
 import io.zrz.graphql.zulu.executable.ExecutableOutputType;
 import io.zrz.graphql.zulu.executable.ExecutableType;
@@ -153,16 +154,21 @@ public class GQLSchemaType {
   //
   // # ENUM only
   // enumValues(includeDeprecated: Boolean = false): [__EnumValue!]
-  public List<io.zrz.graphql.zulu.schema.GQLSchemaEnumValue> enumValues(final boolean includeDeprecated) {
+  public List<GQLSchemaEnumValue> enumValues(final boolean includeDeprecated) {
+
     if (this.type.logicalKind() != LogicalTypeKind.ENUM)
       return null;
-    return Collections.emptyList();
+
+    final ExecutableEnumType enumType = (ExecutableEnumType) this.type;
+
+    return enumType.values().stream().map(GQLSchemaEnumValue::new).collect(Collectors.toList());
+
   }
 
   //
   // # INPUT_OBJECT only
   // inputFields: [__InputValue!]
-  public List<io.zrz.graphql.zulu.schema.GQLSchemaInputValue> inputFields() {
+  public List<GQLSchemaInputValue> inputFields() {
     if (this.type.logicalKind() != LogicalTypeKind.INPUT)
       return null;
     return Collections.emptyList();

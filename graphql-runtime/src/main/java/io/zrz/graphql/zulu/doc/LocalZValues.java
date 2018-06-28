@@ -59,9 +59,9 @@ public class LocalZValues {
 
     switch (type) {
       case String:
+      case Enum:
         return Optional.of(LocalZValues.ofList(value.values().stream().map(x -> x.apply(GQLValueConverters.stringConverter())).toArray(String[]::new)));
       case Boolean:
-      case Enum:
       case Float:
       case Int:
       case List:

@@ -73,7 +73,8 @@ public class DefaultZValueValueExtractor implements GQLValueVisitor<Optional<ZVa
 
   @Override
   public Optional<ZValue> visitEnumValueRef(final GQLEnumValueRef value) {
-    throw new RuntimeException("not implemented");
+    return Optional.of(ZValues.of(value.value()));
+
   }
 
 }

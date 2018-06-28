@@ -50,6 +50,9 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
           .getMethodReturnTypeUseAnnotations(field)
           .toArray(GQLTypeUse[]::new);
 
+      // final Type resolvedReturnType = JavaExecutableUtils.getDeclaredMethod((Method)
+      // field.origin().get()).getGenericReturnType();
+
       this.returnType = new ReturnTypeUse(
           this,
           types,

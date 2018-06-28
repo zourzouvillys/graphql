@@ -10,6 +10,13 @@ import io.zrz.graphql.core.value.GQLStringValue;
 import io.zrz.graphql.core.value.GQLValueVisitor;
 import io.zrz.graphql.core.value.GQLVariableRef;
 
+/**
+ * if the value is a variable, provides the name - else null.
+ *
+ * @author theo
+ *
+ */
+
 public class VariableNameExtractor implements GQLValueVisitor<String> {
 
   public VariableNameExtractor() {
@@ -17,22 +24,22 @@ public class VariableNameExtractor implements GQLValueVisitor<String> {
 
   @Override
   public String visitBooleanValue(final GQLBooleanValue value) {
-    throw new IllegalArgumentException();
+    return null;
   }
 
   @Override
   public String visitIntValue(final GQLIntValue value) {
-    throw new IllegalArgumentException();
+    return null;
   }
 
   @Override
   public String visitStringValue(final GQLStringValue value) {
-    throw new IllegalArgumentException();
+    return null;
   }
 
   @Override
   public String visitFloatValue(final GQLFloatValue value) {
-    throw new IllegalArgumentException();
+    return null;
   }
 
   // deferred
@@ -44,17 +51,18 @@ public class VariableNameExtractor implements GQLValueVisitor<String> {
 
   @Override
   public String visitObjectValue(final GQLObjectValue value) {
-    throw new RuntimeException("not implemented");
+    return null;
   }
 
   @Override
   public String visitListValue(final GQLListValue value) {
-    throw new RuntimeException("not implemented");
+    // note: may have variables in the list ... ?
+    return null;
   }
 
   @Override
   public String visitEnumValueRef(final GQLEnumValueRef value) {
-    throw new RuntimeException("not implemented");
+    return null;
   }
 
 }

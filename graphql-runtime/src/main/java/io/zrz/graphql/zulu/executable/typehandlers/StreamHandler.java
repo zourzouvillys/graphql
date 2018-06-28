@@ -29,7 +29,7 @@ public class StreamHandler<T> implements ReturnTypeHandlerFactory<Stream<T>, T> 
     if (!type.isSubtypeOf(Stream.class)) {
       return null;
     }
-    return new Unwrapper<>(type.resolveType(STREAM_TYPE_PARAM));
+    return new Unwrapper<>(type.getSupertype((Class) Stream.class).resolveType(STREAM_TYPE_PARAM));
   }
 
   private static <T> IntFunction<Object> newInstanceProvider(final Class<T> componentType) {
