@@ -19,16 +19,16 @@ public class ZuluEngineTest {
   }
 
   /**
-   * 
+   *
    */
 
   public static class QueryRoot {
 
-    public String hello(String name) {
+    public String hello(final String name) {
       return "Hello, " + name + "!";
     }
 
-    public int sum(int a, int b) {
+    public int sum(final int a, final int b) {
       return a + b;
     }
 
@@ -65,7 +65,7 @@ public class ZuluEngineTest {
   public void test() {
 
     // compile query, resulting in an executable.
-    ZuluCompileResult result = engine.compile("{ "
+    final ZuluCompileResult result = this.engine.compile("{ "
         // + "a: hello(name: 'theo'),"
         // + "b: child { a: hello(name: 'alice'), b: hello(name: 'bob') }, "
         // + "c: sum(xa: 1, b: 2)"
@@ -77,15 +77,15 @@ public class ZuluEngineTest {
       result.warnings().forEach(System.err::println);
     }
 
-    ZuluExecutable executable = result.executable();
+    final ZuluExecutable executable = result.executable();
 
     System.err.println(" --- executing");
 
     // bind executable to a context.
-    ZuluContext context = executable.bind(new QueryRoot());
+    final ZuluContext context = executable.bind(new QueryRoot(), new ZuluExecutionScope());
 
     // now invoke a single field without parameters.
-    Map<ZuluSelection, Object> values = context.execute();
+    final Map<ZuluSelection, Object> values = context.execute();
 
     values.forEach((sel, val) -> System.err.println(sel.path() + "[" + sel.fieldType() + "]" + ": " + val));
 

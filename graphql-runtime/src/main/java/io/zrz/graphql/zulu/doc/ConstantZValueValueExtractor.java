@@ -60,10 +60,18 @@ public class ConstantZValueValueExtractor implements GQLValueVisitor<Optional<ZV
 
   }
 
+  /**
+   * an input object has been passed in, defined in
+   */
+
   @Override
   public Optional<ZValue> visitObjectValue(final GQLObjectValue value) {
     throw new RuntimeException("not implemented");
   }
+
+  /**
+   *
+   */
 
   @Override
   public Optional<ZValue> visitListValue(final GQLListValue value) {

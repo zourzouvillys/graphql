@@ -13,39 +13,40 @@ import io.zrz.zulu.values.ZValues;
 
 class VarRefValueProvider implements ZValueProvider {
 
-  private GQLVariableDefinition var;
-  private GQLVariableRef ref;
-  private GQLTypeResolver resolver;
+  private final GQLVariableDefinition var;
+  private final GQLVariableRef ref;
+  private final GQLTypeResolver resolver;
 
-  public VarRefValueProvider(GQLTypeResolver resolver, GQLVariableRef ref, GQLVariableDefinition var) {
+  public VarRefValueProvider(final GQLTypeResolver resolver, final GQLVariableRef ref, final GQLVariableDefinition var) {
     this.resolver = resolver;
     this.ref = ref;
     this.var = var;
   }
 
-  public static ZValueProvider ofVar(GQLTypeResolver resolver, GQLVariableRef ref, GQLVariableDefinition var) {
+  public static ZValueProvider ofVar(final GQLTypeResolver resolver, final GQLVariableRef ref, final GQLVariableDefinition var) {
     return new VarRefValueProvider(resolver, ref, var);
   }
 
   @Override
   public ZTypeUse type() {
 
-    return var.type().apply(new GQLTypeVisitor<ZTypeUse>() {
+    return this.var.type().apply(new GQLTypeVisitor<ZTypeUse>() {
 
       @Override
-      public ZTypeUse visitDeclarationRef(GQLDeclarationRef arg0) {
+      public ZTypeUse visitDeclarationRef(final GQLDeclarationRef arg0) {
         // TODO: attach directives
-        return ZTypeUse.of(resolver.resolve(arg0.name()));
+
+        return ZTypeUse.of(VarRefValueProvider.this.resolver.resolve(arg0.name()));
       }
 
       @Override
-      public ZTypeUse visitList(GQLListType arg0) {
+      public ZTypeUse visitList(final GQLListType arg0) {
         // TODO: attach directives
         return arg0.type().apply(this);
       }
 
       @Override
-      public ZTypeUse visitNonNull(GQLNonNullType arg0) {
+      public ZTypeUse visitNonNull(final GQLNonNullType arg0) {
         // TODO: attach directives & nullability
         return arg0.type().apply(this);
       }
@@ -61,7 +62,7 @@ class VarRefValueProvider implements ZValueProvider {
 
   @Override
   public String toString() {
-    return "$" + var.name() + "(" + var.type() + var.directives() + ")";
+    return "$" + this.var.name() + "(" + this.var.type() + this.var.directives() + ")";
   }
 
 }

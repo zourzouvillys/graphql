@@ -16,7 +16,7 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
 
   private final ExecutableReceiverType receiverType;
   private final JavaOutputField field;
-  private final ExecutableInputType params;
+  private final ExecutableOutputFieldParameters params;
   private final ReturnTypeUse returnType;
 
   /**
@@ -30,12 +30,12 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
     this.receiverType = receiverType;
     this.field = field;
 
-    this.params = new ExecutableInputType(
+    this.params = new ExecutableOutputFieldParameters(
         this,
         field
             .inputFields()
             .filter(f -> !f.annotation(GQLContext.class).isPresent())
-            .map(f -> new ExecutableInputField(this, f, types))
+            .map(f -> new ExecutableOutputFieldParam(this, f, types))
             .collect(ImmutableList.toImmutableList()));
 
     this.context = field
@@ -106,7 +106,7 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
    */
 
   @Override
-  public Optional<ExecutableInputType> parameters() {
+  public Optional<ExecutableOutputFieldParameters> parameters() {
     if (this.params.fields().isEmpty())
       return Optional.empty();
     return Optional.of(this.params);
@@ -117,7 +117,7 @@ public final class ExecutableOutputField implements ZOutputField, ExecutableElem
    */
 
   @Override
-  public ExecutableInputField parameter(final String pname) {
+  public ExecutableOutputFieldParam parameter(final String pname) {
     if (this.params.fields().isEmpty())
       return null;
     return this.params.field(pname).get();

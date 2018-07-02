@@ -28,12 +28,16 @@ public class ExecutableInterfaceType implements ExecutableType, ExecutableElemen
 
     final Map<String, ExecutableOutputField> declaredFields = buildctx
         .outputFieldsFor(symbol, this).map(field -> new ExecutableOutputField(this, symbol, field, buildctx))
-        .collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k));
+        .collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k, this::mergeFields));
 
     this.interfaces = buildctx.interfacesFor(symbol, this);
 
     this.fields = ImmutableMap.copyOf(declaredFields);
 
+  }
+
+  private ExecutableOutputField mergeFields(final ExecutableOutputField a, final ExecutableOutputField b) {
+    return JavaExecutableUtils.merge(this, a, b);
   }
 
   @Override

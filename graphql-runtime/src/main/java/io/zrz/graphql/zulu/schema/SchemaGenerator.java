@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import io.zrz.graphql.zulu.executable.ExecutableInputField;
 import io.zrz.graphql.zulu.executable.ExecutableOutputField;
+import io.zrz.graphql.zulu.executable.ExecutableOutputFieldParam;
 import io.zrz.graphql.zulu.executable.ExecutableOutputType;
 import io.zrz.graphql.zulu.executable.ExecutableScalarType;
 import io.zrz.graphql.zulu.executable.ExecutableSchema;
@@ -14,25 +15,25 @@ import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
 
 public class SchemaGenerator {
 
-  private ExecutableSchema j;
+  private final ExecutableSchema j;
 
-  public SchemaGenerator(ExecutableSchema j) {
+  public SchemaGenerator(final ExecutableSchema j) {
     this.j = j;
   }
 
   public String generate() {
 
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
-    j.types()
+    this.j.types()
         .forEach(nt -> {
 
           switch (nt.logicalKind()) {
             case OUTPUT:
-              generate((ExecutableOutputType) nt, sb);
+              this.generate((ExecutableOutputType) nt, sb);
               break;
             case SCALAR:
-              generate((ExecutableScalarType) nt, sb);
+              this.generate((ExecutableScalarType) nt, sb);
             case ENUM:
             case INPUT:
             case INTERFACE:
@@ -43,10 +44,10 @@ public class SchemaGenerator {
 
         });
 
-    if (!j.operationTypes().isEmpty()) {
+    if (!this.j.operationTypes().isEmpty()) {
       sb.append("schema {\n");
 
-      j.operationTypes()
+      this.j.operationTypes()
           .forEach((op, type) -> {
             sb.append("  ");
             sb.append(op);
@@ -62,13 +63,13 @@ public class SchemaGenerator {
 
   }
 
-  private void generate(ExecutableScalarType nt, StringBuilder sb) {
+  private void generate(final ExecutableScalarType nt, final StringBuilder sb) {
 
     sb.append("scalar ").append(nt.typeName()).append("\n\n");
 
   }
 
-  private void generate(ExecutableOutputType nt, StringBuilder sb) {
+  private void generate(final ExecutableOutputType nt, final StringBuilder sb) {
 
     sb.append("type");
 
@@ -90,7 +91,7 @@ public class SchemaGenerator {
     nt.fields().values().stream()
         .forEach(m -> {
 
-          sb.append(" ").append(StringUtils.replaceAll(generate(m), "\n", "\n ")).append("\n\n");
+          sb.append(" ").append(StringUtils.replaceAll(this.generate(m), "\n", "\n ")).append("\n\n");
 
         });
 
@@ -98,8 +99,8 @@ public class SchemaGenerator {
 
   }
 
-  private String generate(ExecutableOutputField m) {
-    StringBuilder sb = new StringBuilder();
+  private String generate(final ExecutableOutputField m) {
+    final StringBuilder sb = new StringBuilder();
 
     Optional.ofNullable(m.documentation())
         .ifPresent(doc -> sb.append("# ").append(doc).append("\n"));
@@ -108,26 +109,40 @@ public class SchemaGenerator {
 
     if (m.parameters().isPresent()) {
       sb.append("(");
-      sb.append(m.parameters().get().fields().values().stream().map(p -> generate(p)).collect(Collectors.joining(", ")));
+      sb.append(m.parameters().get().fields().values().stream().map(p -> this.generate(p)).collect(Collectors.joining(", ")));
       sb.append(")");
     }
 
     sb.append(": ");
-    sb.append(typeUse(m.fieldType()));
+    sb.append(this.typeUse(m.fieldType()));
     return sb.toString();
   }
 
   /**
-   * 
+   *
    * @param p
    * @return
    */
 
-  private String generate(ExecutableInputField p) {
-    StringBuilder sb = new StringBuilder();
+  private String generate(final ExecutableOutputFieldParam p) {
+    final StringBuilder sb = new StringBuilder();
     sb.append(p.fieldName());
     sb.append(": ");
-    sb.append(typeUse(p.fieldType()));
+    sb.append(this.typeUse(p.fieldType()));
+    return sb.toString();
+  }
+
+  /**
+   *
+   * @param p
+   * @return
+   */
+
+  private String generate(final ExecutableInputField p) {
+    final StringBuilder sb = new StringBuilder();
+    sb.append(p.fieldName());
+    sb.append(": ");
+    sb.append(this.typeUse(p.fieldType()));
     return sb.toString();
   }
 
@@ -135,11 +150,11 @@ public class SchemaGenerator {
    * write out a type token.
    */
 
-  private String typeUse(ExecutableTypeUse use) {
+  private String typeUse(final ExecutableTypeUse use) {
     try {
       return StringUtils.repeat("[", use.arity()) + use.logicalType() + StringUtils.repeat("]", use.arity());
     }
-    catch (Exception ex) {
+    catch (final Exception ex) {
       ex.printStackTrace();
       return "???";
     }

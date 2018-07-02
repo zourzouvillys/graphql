@@ -11,19 +11,19 @@ import io.zrz.graphql.zulu.doc.DefaultGQLPreparedOperation.OpInputField;
 import io.zrz.graphql.zulu.doc.GQLPreparedDocument;
 import io.zrz.graphql.zulu.doc.GQLPreparedSelection;
 import io.zrz.graphql.zulu.executable.ExecutableElement;
-import io.zrz.graphql.zulu.executable.ExecutableInputField;
 import io.zrz.graphql.zulu.executable.ExecutableOutputField;
+import io.zrz.graphql.zulu.executable.ExecutableOutputFieldParam;
 import io.zrz.graphql.zulu.executable.ExecutableReceiverType;
 import io.zrz.graphql.zulu.executable.ExecutableType;
 import io.zrz.zulu.types.ZField;
 
 public interface ZuluWarning {
 
-  public class IncompatibleTypes extends AbstractWarning<ExecutableInputField> {
+  public class IncompatibleTypes extends AbstractWarning<ExecutableOutputFieldParam> {
 
     private final ZField provided;
 
-    public IncompatibleTypes(final ExecutableInputField param, final ZField provided, final GQLPreparedSelection sel) {
+    public IncompatibleTypes(final ExecutableOutputFieldParam param, final ZField provided, final GQLPreparedSelection sel) {
       super(ZuluWarningKind.INCOMPATIBLE_TYPE, param, sel);
       this.provided = provided;
     }
@@ -348,11 +348,11 @@ public interface ZuluWarning {
 
   }
 
-  public class MissingRequiredParameter extends AbstractWarning<ExecutableInputField> {
+  public class MissingRequiredParameter extends AbstractWarning<ExecutableOutputFieldParam> {
 
-    private final ExecutableInputField param;
+    private final ExecutableOutputFieldParam param;
 
-    public MissingRequiredParameter(final ExecutableInputField param, final GQLPreparedSelection sel) {
+    public MissingRequiredParameter(final ExecutableOutputFieldParam param, final GQLPreparedSelection sel) {
       super(ZuluWarningKind.MISSING_PARAMETER, param, sel);
       this.param = param;
     }
@@ -447,7 +447,7 @@ public interface ZuluWarning {
     private final String detail;
     private final ExecutableReceiverType etype;
 
-    public InternalError(final ExecutableInputField param, final GQLPreparedSelection sel, final String message) {
+    public InternalError(final ExecutableOutputFieldParam param, final GQLPreparedSelection sel, final String message) {
       super(ZuluWarningKind.INTERNAL_ERROR, param, sel);
       this.etype = param.enclosingType();
       this.detail = Objects.requireNonNull(message);

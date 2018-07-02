@@ -185,7 +185,7 @@ public class JavaExecutableUtils {
    * @param length
    * @return
    */
-  public static Object[] makeArray(final ExecutableInputField param, final int length) {
+  public static Object[] makeArray(final ExecutableInput param, final int length) {
     return (Object[]) Array.newInstance(param.fieldType().javaType().getRawType(), length);
   }
 

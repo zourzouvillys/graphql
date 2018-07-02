@@ -11,6 +11,7 @@ import io.zrz.graphql.core.types.GQLTypeKind;
 import io.zrz.graphql.zulu.LogicalTypeKind;
 import io.zrz.graphql.zulu.annotations.GQLObjectType;
 import io.zrz.graphql.zulu.executable.ExecutableEnumType;
+import io.zrz.graphql.zulu.executable.ExecutableInputType;
 import io.zrz.graphql.zulu.executable.ExecutableInterfaceType;
 import io.zrz.graphql.zulu.executable.ExecutableOutputType;
 import io.zrz.graphql.zulu.executable.ExecutableType;
@@ -81,7 +82,7 @@ public class GQLSchemaType {
 
   // name: String
   public String name() {
-    if (this.arity > 0)
+    if (this.arity > 0 || !this.nullable)
       return null;
     return this.typeName;
   }
@@ -171,7 +172,10 @@ public class GQLSchemaType {
   public List<GQLSchemaInputValue> inputFields() {
     if (this.type.logicalKind() != LogicalTypeKind.INPUT)
       return null;
-    return Collections.emptyList();
+
+    final ExecutableInputType tt = (ExecutableInputType) this.type;
+
+    return tt.fieldValues().stream().map(GQLSchemaInputValue::new).collect(Collectors.toList());
   }
 
   //

@@ -10,11 +10,11 @@ import io.zrz.graphql.zulu.binding.JavaBindingInvoker;
 
 public class ExecutableInvoker {
 
-  private JavaBindingInvoker invoker;
-  private ExecutableOutputField field;
-  private ReturnTypeUse returnTypeFilter;
+  private final JavaBindingInvoker invoker;
+  private final ExecutableOutputField field;
+  private final ReturnTypeUse returnTypeFilter;
 
-  public ExecutableInvoker(ExecutableOutputField field, JavaBindingInvoker invoker, ReturnTypeUse returnTypeFilter) {
+  public ExecutableInvoker(final ExecutableOutputField field, final JavaBindingInvoker invoker, final ReturnTypeUse returnTypeFilter) {
     this.field = field;
     this.invoker = invoker;
     this.returnTypeFilter = returnTypeFilter;
@@ -32,26 +32,26 @@ public class ExecutableInvoker {
    * the parameters required.
    */
 
-  public Optional<ExecutableInputType> parameters() {
+  public Optional<ExecutableOutputFieldParameters> parameters() {
     return this.field.parameters();
   }
 
   /**
    * provides a method handle for binding this executable.
-   * 
+   *
    * @param returnType
-   *          the expected return type.
+   *                     the expected return type.
    * @param args
-   *          The parameters which will be passed in.
+   *                     The parameters which will be passed in.
    */
 
   public <R> MethodHandle methodHandle() {
-    return returnTypeFilter.filter(this.invoker.methodHandle());
+    return this.returnTypeFilter.filter(this.invoker.methodHandle());
   }
 
   /**
    * the return type dimensions
-   * 
+   *
    * @return
    */
 
@@ -64,7 +64,7 @@ public class ExecutableInvoker {
    */
 
   public Optional<? extends AnnotatedElement> origin() {
-    return field.field().origin();
+    return this.field.field().origin();
   }
 
 }

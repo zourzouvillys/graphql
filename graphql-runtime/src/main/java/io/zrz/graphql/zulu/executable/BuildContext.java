@@ -16,10 +16,13 @@ import com.google.common.reflect.TypeToken;
 
 import io.zrz.graphql.zulu.JavaOutputField;
 import io.zrz.graphql.zulu.LogicalTypeKind;
+import io.zrz.graphql.zulu.annotations.GQLIgnore;
 import io.zrz.graphql.zulu.annotations.GQLTypeUse;
 import io.zrz.graphql.zulu.binding.JavaBindingMethodAnalysis;
 import io.zrz.graphql.zulu.binding.OutputFieldFilter;
 import io.zrz.graphql.zulu.executable.ExecutableSchemaBuilder.Symbol;
+import io.zrz.zulu.types.ZField;
+import io.zrz.zulu.types.ZTypeKind;
 
 class BuildContext implements OutputFieldFilter {
 
@@ -48,13 +51,45 @@ class BuildContext implements OutputFieldFilter {
     return this.use(user, javaType, arity, nullable, new Annotation[0]);
   }
 
+  /**
+   * convert a field in an input type into a type use.
+   */
+
+  ExecutableTypeUse use(final ExecutableInputField container, final ZField p) {
+
+    final ZTypeKind typeKind = p.fieldType().type().typeKind();
+
+    switch (typeKind) {
+      case SCALAR:
+        return this.use(container, TypeToken.of(String.class), 0, false, new Annotation[0]);
+      case STRUCT:
+      case ARRAY:
+      case ENUM:
+      case TUPLE:
+      case VOID:
+      default:
+        throw new IllegalArgumentException(typeKind.name());
+    }
+
+  }
+
+  /**
+   *
+   * @param user
+   * @param javaType
+   * @param arity
+   * @param nullable
+   * @param typeuseants
+   * @return
+   */
+
   ExecutableTypeUse use(final ExecutableElement user, final TypeToken<?> javaType, final int arity, boolean nullable, final Annotation[] typeuseants) {
 
     Symbol symbol = null;
 
     String typeName = null;
 
-    // overriden annotation?
+    // overridden annotation?
     if (typeuseants.length > 0) {
 
       for (final Annotation ant : typeuseants) {
@@ -219,7 +254,7 @@ class BuildContext implements OutputFieldFilter {
       }
       case INPUT: {
         final ExecutableInputType value = new ExecutableInputType(this.schema, symbol, this);
-        Preconditions.checkArgument(this.types.containsKey(symbol));
+        Preconditions.checkArgument(this.types.containsKey(symbol), "symbol [%s] wasn't registered after invocation", symbol.typeName, symbol.typeToken);
         Preconditions.checkArgument(this.types.get(symbol) == value);
         return value;
       }
@@ -268,6 +303,14 @@ class BuildContext implements OutputFieldFilter {
     if (m.origin().isPresent()) {
 
       final Method method = m.origin().get();
+
+      if (method.getReturnType().equals(Void.TYPE)) {
+        return false;
+      }
+
+      if (method.isAnnotationPresent(GQLIgnore.class)) {
+        return false;
+      }
 
       final Method declaring = JavaExecutableUtils.getDeclaredMethod(method);
 

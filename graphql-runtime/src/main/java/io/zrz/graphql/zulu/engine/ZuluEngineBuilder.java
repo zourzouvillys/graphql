@@ -9,6 +9,8 @@ import org.eclipse.jdt.annotation.NonNull;
 
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.runtime.GQLOperationType;
+import io.zrz.graphql.zulu.api.ZuluTypeBinder;
+import io.zrz.graphql.zulu.api.ZuluTypeLoader;
 import io.zrz.graphql.zulu.doc.GQLDocumentManager;
 import io.zrz.graphql.zulu.executable.ExecutableSchema;
 import io.zrz.graphql.zulu.executable.ExecutableSchemaBuilder;
@@ -19,6 +21,7 @@ public class ZuluEngineBuilder {
   private final List<ZuluPlugin> plugins = new LinkedList<>();
   private final ExecutableSchemaBuilder schema = ExecutableSchema.builder();
   private GQLDocumentManager docmgr = null;
+  private ZuluTypeBinder typeBinder;
 
   public ZuluEngineBuilder queryRoot(final Type type) {
     return this.addRoot(GQLOpType.Query, type);
@@ -83,6 +86,11 @@ public class ZuluEngineBuilder {
     this.plugins.forEach(plugin -> plugin.onEngine(engine));
 
     return engine;
+  }
+
+  public ZuluEngineBuilder typeLoader(final ZuluTypeLoader typeLoader) {
+    this.schema.typeLoader(typeLoader);
+    return this;
   }
 
 }

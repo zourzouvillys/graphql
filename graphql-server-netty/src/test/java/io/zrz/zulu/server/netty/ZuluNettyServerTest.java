@@ -7,6 +7,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.junit.Test;
 
+import io.zrz.graphql.plugins.jackson.ZuluJacksonPlugin;
 import io.zrz.graphql.zulu.annotations.GQLDocumentation;
 import io.zrz.graphql.zulu.annotations.GQLField;
 import io.zrz.graphql.zulu.annotations.GQLObjectType;

@@ -5,11 +5,14 @@ dependencies {
   
   // runtime shared dependencies.
   api                 'org.slf4j:slf4j-api:1.7.25'
-  
+
   // these are internal only, shaded for deploy.
   implementation      'com.google.guava:guava:25.1-jre'
   implementation      'org.apache.commons:commons-lang3:3.7'
-  api      'com.github.zourzouvillys:commons:950d929406'
+  api      'com.github.zourzouvillys:commons:2502e272a8'
+  
+  // api      'io.zrz:zulu:1.0'
+  
   implementation      'org.apache.commons:commons-text:1.4'
   implementation      'net.jodah:typetools:0.5.0'
   

@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -34,11 +35,16 @@ import io.zrz.graphql.zulu.annotations.GQLScalarType;
 import io.zrz.graphql.zulu.annotations.GQLType.Kind;
 import io.zrz.graphql.zulu.annotations.GQLTypeUse;
 import io.zrz.graphql.zulu.annotations.GQLUnionType;
+import io.zrz.graphql.zulu.api.ZuluBeanType;
+import io.zrz.graphql.zulu.api.ZuluSymbol;
+import io.zrz.graphql.zulu.api.ZuluTypeBinder;
+import io.zrz.graphql.zulu.api.ZuluTypeLoader;
 import io.zrz.graphql.zulu.binding.JavaBindingProvider;
 import io.zrz.graphql.zulu.binding.JavaBindingType;
 import io.zrz.graphql.zulu.binding.JavaBindingUtils;
 import io.zrz.graphql.zulu.binding.OutputFieldFilter;
 import io.zrz.graphql.zulu.spi.ExtensionGenerator;
+import io.zrz.zulu.types.ZType;
 
 /**
  * builds a schema that is bound to the defined handlers, and exposes a GraphQL compatible model that can be
@@ -77,6 +83,9 @@ public final class ExecutableSchemaBuilder {
   private final Map<TypeToken<?>, Symbol> types = new HashMap<>();
   private final Multimap<LogicalTypeKind, Symbol> kinds = HashMultimap.create();
 
+  private ZuluTypeBinder typeBinder;
+  private ZuluTypeLoader typeLoader = null;
+
   public ExecutableSchemaBuilder() {
 
     this.addBuiltin(String.class, "String", LogicalTypeKind.SCALAR);
@@ -108,6 +117,7 @@ public final class ExecutableSchemaBuilder {
   static class Symbol {
 
     String typeName;
+
     LogicalTypeKind typeKind;
 
     TypeToken<?> typeToken;
@@ -126,6 +136,8 @@ public final class ExecutableSchemaBuilder {
 
     // aliases of this type.
     Set<String> aliases;
+
+    public ZType ztype;
 
     public String typeName() {
       return this.typeName;
@@ -742,8 +754,20 @@ public final class ExecutableSchemaBuilder {
     return new JavaOutputMapper(field, returnType).unwrap();
   }
 
-  JavaInputMapper mapInputType(final ExecutableInputField field) {
+  JavaInputMapper mapInputType(final ExecutableOutputFieldParam field) {
     return new JavaInputMapper(field).unwrap();
+  }
+
+  public class TypeRegistry {
+
+    public TypeRegistry(final TypeToken<?> causedBy) {
+      // TODO Auto-generated constructor stub
+    }
+
+    public void addType(final String name, final ZuluBeanType type, final LogicalTypeKind input) {
+      // TODO
+    }
+
   }
 
   /**
@@ -756,17 +780,40 @@ public final class ExecutableSchemaBuilder {
 
   Symbol autoload(final TypeToken<?> javaType, final ExecutableElement user) {
 
+    if (this.types.containsKey(javaType)) {
+      // already have this type.
+      return this.types.get(javaType);
+    }
+
+    if (this.typeLoader != null) {
+
+      final ZuluSymbol symbol = this.typeLoader.load(javaType.getType(), new TypeRegistry(javaType));
+
+      if (symbol != null) {
+
+        final JavaBindingType handle = this.binder.registerType(javaType);
+
+        final Symbol sym = this.addSymbol(
+            javaType,
+            symbol.typeName(),
+            symbol.typeKind(),
+            handle);
+
+        //
+        sym.ztype = symbol.type();
+
+        return sym;
+
+      }
+
+    }
+
     // see if any annotations with @GQLType are present
 
     final Optional<Kind> kind = JavaExecutableUtils.getType(javaType);
 
     if (!kind.isPresent()) {
       return null;
-    }
-
-    if (this.types.containsKey(javaType)) {
-      // already have this type.
-      return this.types.get(javaType);
     }
 
     final JavaBindingType handle = this.binder.registerType(javaType);
@@ -890,6 +937,24 @@ public final class ExecutableSchemaBuilder {
 
     return null;
 
+  }
+
+  public ExecutableSchemaBuilder typeBinder(final ZuluTypeBinder typeBinder) {
+    this.typeBinder = typeBinder;
+    return this;
+  }
+
+  public ZuluTypeBinder typeBinder() {
+    return Objects.requireNonNull(this.typeBinder, "no ZuluTypeBinder configured");
+  }
+
+  public ExecutableSchemaBuilder typeLoader(final ZuluTypeLoader typeLoader) {
+    this.typeLoader = typeLoader;
+    return this;
+  }
+
+  public ZuluTypeLoader typeLoader() {
+    return Objects.requireNonNull(this.typeLoader, "no ZuluTypeLoader configured");
   }
 
 }

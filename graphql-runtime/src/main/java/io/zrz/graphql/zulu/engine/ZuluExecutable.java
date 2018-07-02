@@ -48,12 +48,12 @@ public class ZuluExecutable implements ZuluSelectionContainer, ExecutableElement
     return this.outputNames;
   }
 
-  public <RootT> ZuluContext bind(final RootT root, final ZuluParameterReader reader) {
-    return new DefaultExecutionContext<>(this, Objects.requireNonNull(root), reader);
+  public <RootT> ZuluContext bind(final RootT root, final ZuluParameterReader reader, final ZuluExecutionScope scope) {
+    return new DefaultExecutionContext<>(this, Objects.requireNonNull(root), reader, scope);
   }
 
-  public <RootT> ZuluContext bind(final RootT root) {
-    return this.bind(root, EmptyParameterReader.INSTANCE);
+  public <RootT> ZuluContext bind(final RootT root, final ZuluExecutionScope scope) {
+    return this.bind(root, EmptyParameterReader.INSTANCE, scope);
   }
 
   @Override
@@ -103,33 +103,50 @@ public class ZuluExecutable implements ZuluSelectionContainer, ExecutableElement
     return this.inputType;
   }
 
+  @Deprecated
   public ZuluExecutionResult execute(final ZuluRequest req, final ZuluResultReceiver receiver) {
 
-    Object instance;
+    final ZuluExecutionScope scope = new ZuluExecutionScope();
+
     try {
-      instance = this.javaType()
-          .getRawType()
-          .getDeclaredConstructor()
-          .newInstance();
+
+      Object instance;
+      try {
+        instance = this.javaType()
+            .getRawType()
+            .getDeclaredConstructor()
+            .newInstance();
+      }
+      catch (final RuntimeException e) {
+        throw e;
+      }
+      catch (final Throwable e) {
+        throw new RuntimeException(e);
+      }
+
+      // bind to the context for this caller.
+      final ZuluContext ctx = this.bind(instance, scope);
+
+      final ZuluExecutionResult execres = ctx.execute(req, receiver);
+
+      final ExecutionResult.Builder res = ExecutionResult.builder();
+
+      res.addAllNotes(execres.notes());
+
+      // and execute it to get result.
+      final ExecutionResult eval = res.build();
+
+      scope.complete(new ZuluExecutionResult[] { eval });
+
+      return eval;
+
     }
-    catch (final RuntimeException e) {
-      throw e;
+    catch (final Throwable t) {
+
+      scope.error(t);
+      throw t;
+
     }
-    catch (final Throwable e) {
-      throw new RuntimeException(e);
-    }
-
-    // bind to the context for this caller.
-    final ZuluContext ctx = this.bind(instance);
-
-    final ZuluExecutionResult execres = ctx.execute(req, receiver);
-
-    final ExecutionResult.Builder res = ExecutionResult.builder();
-
-    res.addAllNotes(execres.notes());
-
-    // and execute it.
-    return res.build();
 
   }
 

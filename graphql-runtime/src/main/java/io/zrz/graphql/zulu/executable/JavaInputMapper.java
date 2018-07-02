@@ -19,12 +19,12 @@ import io.zrz.graphql.zulu.ZuluUtils;
 
 public class JavaInputMapper {
 
-  private final ExecutableInputField field;
+  private final ExecutableOutputFieldParam field;
   private final TypeToken<?> javaType;
   private final TypeToken<?> modelType;
   private final int arity;
 
-  public JavaInputMapper(final ExecutableInputField field) {
+  public JavaInputMapper(final ExecutableOutputFieldParam field) {
     this.field = field;
     this.javaType = field.javaType();
     this.modelType = field.javaType();

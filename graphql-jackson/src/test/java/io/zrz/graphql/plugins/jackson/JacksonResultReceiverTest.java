@@ -16,6 +16,7 @@ import io.zrz.graphql.zulu.engine.ZuluContext;
 import io.zrz.graphql.zulu.engine.ZuluEngine;
 import io.zrz.graphql.zulu.engine.ZuluExecutable;
 import io.zrz.graphql.zulu.engine.ZuluExecutionResult;
+import io.zrz.graphql.zulu.engine.ZuluExecutionScope;
 
 public class JacksonResultReceiverTest {
 
@@ -29,16 +30,16 @@ public class JacksonResultReceiverTest {
   }
 
   /**
-   * 
+   *
    */
 
   public static class QueryRoot {
 
-    public String hello(String name) {
+    public String hello(final String name) {
       return "Hello, " + name + "!";
     }
 
-    public int sum(int a, int b) {
+    public int sum(final int a, final int b) {
       return a + b;
     }
 
@@ -75,7 +76,7 @@ public class JacksonResultReceiverTest {
   public void test() throws IOException {
 
     // compile query, resulting in an executable.
-    ZuluCompileResult result = engine.compile("{ "
+    final ZuluCompileResult result = this.engine.compile("{ "
         // + "a: hello(name: 'theo'),"
         // + "b: child { a: hello(name: 'alice'), b: hello(name: 'bob') }, "
         // + "c: sum(xa: 1, b: 2)"
@@ -87,18 +88,18 @@ public class JacksonResultReceiverTest {
       result.warnings().forEach(System.err::println);
     }
 
-    ZuluExecutable executable = result.executable();
+    final ZuluExecutable executable = result.executable();
 
     System.err.println(" --- executing");
 
     // bind executable to a context.
-    ZuluContext context = executable.bind(new QueryRoot());
+    final ZuluContext context = executable.bind(new QueryRoot(), new ZuluExecutionScope());
 
-    JsonFactory f = new JsonFactory();
-    JsonGenerator jg = f.createGenerator(System.out);
+    final JsonFactory f = new JsonFactory();
+    final JsonGenerator jg = f.createGenerator(System.out);
 
     // now invoke a single field without parameters.
-    ZuluExecutionResult eres = context.execute(new JacksonResultReceiver(jg));
+    final ZuluExecutionResult eres = context.execute(new JacksonResultReceiver(jg));
 
     jg.flush();
     jg.close();

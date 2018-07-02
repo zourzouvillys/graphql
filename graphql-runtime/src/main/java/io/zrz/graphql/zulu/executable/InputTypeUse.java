@@ -10,7 +10,7 @@ public class InputTypeUse {
   private final ExecutableTypeUse typeuse;
   private final boolean nullable;
 
-  public InputTypeUse(final ExecutableInputField field, final JavaInputField spec, final BuildContext types) {
+  public InputTypeUse(final ExecutableOutputFieldParam field, final JavaInputField spec, final BuildContext types) {
 
     this.inputType = types.builder().mapInputType(field);
 

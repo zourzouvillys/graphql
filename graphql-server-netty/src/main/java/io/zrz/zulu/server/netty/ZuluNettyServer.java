@@ -3,11 +3,15 @@ package io.zrz.zulu.server.netty;
 import java.lang.reflect.Type;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.reflect.TypeToken;
 
 import io.zrz.graphql.zulu.engine.ZuluEngine;
 import io.zrz.graphql.zulu.engine.ZuluEngineBuilder;
+import io.zrz.graphql.zulu.engine.ZuluExecutionScopeProvider;
 
 public class ZuluNettyServer {
 
@@ -16,7 +20,13 @@ public class ZuluNettyServer {
   private final ZuluHttpResponder responder;
 
   ZuluNettyServer(final int port, final ZuluEngine zulu) {
-    this.responder = new ZuluHttpResponder(zulu);
+    this.responder = new ZuluHttpResponder(zulu, new ObjectMapper());
+    this.http = new HttpServer(port, this.responder);
+    this.zulu = zulu;
+  }
+
+  ZuluNettyServer(final int port, final ZuluEngine zulu, final ObjectMapper mapper) {
+    this.responder = new ZuluHttpResponder(zulu, mapper);
     this.http = new HttpServer(port, this.responder);
     this.zulu = zulu;
   }
@@ -40,6 +50,10 @@ public class ZuluNettyServer {
     return new ZuluNettyServer(port, engine);
   }
 
+  public static ZuluNettyServer create(final int port, final ZuluEngine engine, final ObjectMapper mapper) {
+    return new ZuluNettyServer(port, engine, mapper);
+  }
+
   public static ZuluNettyServer create(final int port, final Type queryRoot) {
     return new ZuluNettyServer(port, new ZuluEngine(queryRoot));
   }
@@ -55,6 +69,16 @@ public class ZuluNettyServer {
 
   public <T> ZuluNettyServer bind(final Type type, final T instance) {
     this.responder.bind(TypeToken.of(type), instance);
+    return this;
+  }
+
+  public <T> ZuluNettyServer contextProvider(final Type type, final ZuluExecutionScopeProvider<?> provider) {
+    this.responder.contextProvider(type, provider);
+    return this;
+  }
+
+  public <T> ZuluNettyServer exceptionMapper(final Type exceptionType, final Function<Throwable, ObjectNode> mapper) {
+    this.responder.exceptionMappers.put(exceptionType, mapper);
     return this;
   }
 

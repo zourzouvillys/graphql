@@ -1,5 +1,6 @@
 package io.zrz.graphql.zulu.engine;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -11,16 +12,18 @@ import java.util.Set;
 import com.google.common.base.Preconditions;
 
 import io.zrz.graphql.zulu.doc.DefaultGQLPreparedOperation.OpInputField;
-import io.zrz.graphql.zulu.executable.ExecutableInputField;
+import io.zrz.graphql.zulu.executable.ExecutableInput;
 
 class DefaultExecutionContext<RootT> implements ZuluContext {
 
   private final ZuluExecutable exec;
   private final RootT root;
   private final ZuluParameterReader defaultValues;
+  private final ZuluExecutionScope scope;
 
-  DefaultExecutionContext(final ZuluExecutable exec, final RootT root, final ZuluParameterReader defaultValues) {
+  DefaultExecutionContext(final ZuluExecutable exec, final RootT root, final ZuluParameterReader defaultValues, final ZuluExecutionScope scope) {
     this.exec = exec;
+    this.scope = scope;
     this.root = Objects.requireNonNull(root, "missing root instance");
     this.defaultValues = defaultValues;
   }
@@ -211,8 +214,22 @@ class DefaultExecutionContext<RootT> implements ZuluContext {
     }
 
     @Override
-    public Object parameter(final String parameterName, final ExecutableInputField targetType) {
+    public Object parameter(final String parameterName, final ExecutableInput targetType) {
       return this.req.parameter(parameterName, targetType);
+    }
+
+    /**
+     * provide the context parameter.
+     *
+     * TODO: move to method handle model for early binding.
+     *
+     */
+
+    @Override
+    public Object context(final Type type) {
+
+      return DefaultExecutionContext.this.scope.context(type);
+
     }
 
   }

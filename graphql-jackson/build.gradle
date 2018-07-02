@@ -19,6 +19,7 @@ dependencies {
   implementation      'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.6'
   implementation      'com.fasterxml.jackson.module:jackson-module-parameter-names:2.9.6'
   implementation      'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.6'
+  implementation      'com.fasterxml.jackson.module:jackson-module-jsonSchema:2.9.6'
 
   // compile time only dependencies
   compileOnly         'com.google.errorprone:error_prone_annotations:2.3.1'

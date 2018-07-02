@@ -1,13 +1,13 @@
 package io.zrz.graphql.zulu.engine;
 
-import io.zrz.graphql.zulu.executable.ExecutableInputField;
+import io.zrz.graphql.zulu.executable.ExecutableInput;
 
 public enum EmptyParameterReader implements ZuluParameterReader {
 
   INSTANCE {
 
     @Override
-    public Object get(final String parameterName, final ExecutableInputField targetType) {
+    public Object get(final String parameterName, final ExecutableInput targetType) {
       return null;
     }
 

@@ -28,7 +28,7 @@ import io.zrz.graphql.zulu.doc.GQLPreparedOperation;
 import io.zrz.graphql.zulu.doc.GQLPreparedSelection;
 import io.zrz.graphql.zulu.doc.GQLPreparedValidationListener;
 import io.zrz.graphql.zulu.executable.ExecutableElement;
-import io.zrz.graphql.zulu.executable.ExecutableInputField;
+import io.zrz.graphql.zulu.executable.ExecutableInput;
 import io.zrz.graphql.zulu.executable.ExecutableSchema;
 import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
 import io.zrz.graphql.zulu.executable.JavaExecutableUtils;
@@ -67,8 +67,10 @@ public class ZuluEngine {
   public ZuluEngine(final ExecutableSchema schema, final GQLDocumentManager docmgr) {
     this.schema = Objects.requireNonNull(schema);
 
-    if (docmgr == null)
-      this.docs = new CachingGQLDocumentManager();
+    if (docmgr == null) {
+      System.err.println("schema: " + schema);
+      this.docs = new CachingGQLDocumentManager(schema);
+    }
     else
       this.docs = Objects.requireNonNull(docmgr);
 
@@ -242,7 +244,7 @@ public class ZuluEngine {
    * @return
    */
 
-  public Object get(final ExecutableInputField param, final ZValue value) {
+  public Object get(final ExecutableInput param, final ZValue value) {
     final Class<?> rawType = param.fieldType().javaType().getRawType();
     switch (value.valueType().typeKind()) {
       case SCALAR: {
@@ -304,18 +306,32 @@ public class ZuluEngine {
 
   public ZuluExecutionResult[] processRequestBatch(final ImmutableZuluServerRequest req) {
 
-    final ZuluExecutionResult[] res = new ZuluExecutionResult[req.queries().size()];
+    final ZuluExecutionScope scope = new ZuluExecutionScope(this, req.injector());
 
-    for (int i = 0; i < req.queries().size(); ++i) {
-      final ImmutableQuery q = req.queries().get(i);
-      res[i] = this.processRequest(req, q);
+    try {
+
+      final ZuluExecutionResult[] res = new ZuluExecutionResult[req.queries().size()];
+
+      for (int i = 0; i < req.queries().size(); ++i) {
+        final ImmutableQuery q = req.queries().get(i);
+        res[i] = this.processRequest(req, q, scope);
+      }
+
+      scope.complete(res);
+
+      return res;
+
     }
+    catch (final Throwable t) {
 
-    return res;
+      scope.error(t);
+      throw t;
+
+    }
 
   }
 
-  private ZuluExecutionResult processRequest(final ImmutableZuluServerRequest req, final ImmutableQuery q) {
+  private ZuluExecutionResult processRequest(final ImmutableZuluServerRequest req, final ImmutableQuery q, final ZuluExecutionScope scope) {
 
     final ExecutionResult.Builder res = ExecutionResult.builder();
 
@@ -352,7 +368,7 @@ public class ZuluEngine {
     }
 
     // bind to the context for this caller.
-    final ZuluContext ctx = doc.executable().bind(instance);
+    final ZuluContext ctx = doc.executable().bind(instance, scope);
 
     final ZuluExecutionResult execres = ctx.execute(new ZuluRequest(q.variables()), receiver);
 

@@ -3,19 +3,18 @@ package io.zrz.graphql.zulu.schema;
 import org.eclipse.jdt.annotation.NonNull;
 
 import io.zrz.graphql.zulu.annotations.GQLObjectType;
-import io.zrz.graphql.zulu.executable.ExecutableInputField;
+import io.zrz.graphql.zulu.executable.ExecutableInput;
 
 @GQLObjectType(name = "__InputValue")
 public class GQLSchemaInputValue {
 
-  private final ExecutableInputField field;
+  private final ExecutableInput field;
 
-  public GQLSchemaInputValue(final ExecutableInputField field) {
+  public GQLSchemaInputValue(final ExecutableInput field) {
     this.field = field;
   }
 
   // name: String!
-
   public @NonNull String name() {
     return this.field.fieldName();
   }
@@ -26,7 +25,6 @@ public class GQLSchemaInputValue {
   }
 
   // type: __Type!
-
   public GQLSchemaType type() {
     if (this.field.fieldType().type() == null) {
       throw new IllegalStateException();

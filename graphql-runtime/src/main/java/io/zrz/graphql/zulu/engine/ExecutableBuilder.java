@@ -3,6 +3,7 @@ package io.zrz.graphql.zulu.engine;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,11 +23,12 @@ import io.zrz.graphql.zulu.doc.GQLPreparedOperation;
 import io.zrz.graphql.zulu.doc.GQLPreparedSelection;
 import io.zrz.graphql.zulu.doc.GQLSelectionTypeCriteria;
 import io.zrz.graphql.zulu.doc.RuntimeParameterHolder;
+import io.zrz.graphql.zulu.executable.ExecutableInput;
 import io.zrz.graphql.zulu.executable.ExecutableInputContext;
-import io.zrz.graphql.zulu.executable.ExecutableInputField;
-import io.zrz.graphql.zulu.executable.ExecutableInputType;
 import io.zrz.graphql.zulu.executable.ExecutableInvoker;
 import io.zrz.graphql.zulu.executable.ExecutableOutputField;
+import io.zrz.graphql.zulu.executable.ExecutableOutputFieldParam;
+import io.zrz.graphql.zulu.executable.ExecutableOutputFieldParameters;
 import io.zrz.graphql.zulu.executable.ExecutableOutputType;
 import io.zrz.graphql.zulu.executable.ExecutableReceiverType;
 import io.zrz.graphql.zulu.executable.ExecutableSchema;
@@ -258,7 +260,7 @@ class ExecutableBuilder {
       return null;
     }
 
-    final ExecutableInputType params = field
+    final ExecutableOutputFieldParameters params = field
         .invoker()
         .parameters()
         .orElse(null);
@@ -343,7 +345,7 @@ class ExecutableBuilder {
 
     int offset = field.contextParameters().size() - CONTEXT_ARGS;
 
-    for (final ExecutableInputField param : params.fieldValues()) {
+    for (final ExecutableOutputFieldParam param : params.fieldValues()) {
 
       handle = this.map(param, sel, handle, offset);
 
@@ -406,7 +408,17 @@ class ExecutableBuilder {
     }
 
     return new TypeTokenMethodHandle(mh);
+
   }
+
+  /**
+   *
+   * @param mh
+   * @param index
+   * @param ctx
+   *
+   * @return
+   */
 
   private MethodHandle insertContextParam(final MethodHandle mh, final int index, final ExecutableInputContext ctx) {
 
@@ -418,7 +430,55 @@ class ExecutableBuilder {
 
     }
 
-    throw new IllegalArgumentException("unable to calculate value for @GQLContext " + targetType);
+    // defer to the request itself.
+
+    final MethodHandle supplier = this.requestContextProvider(targetType);
+
+    final MethodHandle mapped = MethodHandles.collectArguments(mh, index, supplier);
+
+    // map the arguments.
+
+    final int mapping[] = new int[mapped.type().parameterCount()];
+    mapping[0] = 0;
+    mapping[1] = 1;
+    mapping[2] = 0;
+
+    for (int i = 3; i < mapped.type().parameterCount(); ++i) {
+      mapping[i] = i - 1;
+    }
+
+    return MethodHandles.permuteArguments(
+        mapped,
+        mapped.type().dropParameterTypes(2, 3), // new handle type with 1 less param
+        mapping);
+
+  }
+
+  /**
+   * @param targetType
+   * @return
+   */
+
+  private MethodHandle requestContextProvider(final TypeToken<?> targetType) {
+
+    MethodHandle mh;
+    try {
+
+      mh = MethodHandles
+          .publicLookup()
+          .findVirtual(
+              ZuluRequestContext.class,
+              "context",
+              MethodType.methodType(Object.class, Type.class));
+
+      mh = MethodHandles.insertArguments(mh, 1, targetType.getType());
+
+      return mh = mh.asType(mh.type().changeReturnType(targetType.getRawType()));
+
+    }
+    catch (NoSuchMethodException | IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
 
   }
 
@@ -432,7 +492,11 @@ class ExecutableBuilder {
    *
    */
 
-  private TypeTokenMethodHandle map(final ExecutableInputField param, final GQLPreparedSelection sel, final TypeTokenMethodHandle target, final int offset) {
+  private TypeTokenMethodHandle map(
+      final ExecutableOutputFieldParam param,
+      final GQLPreparedSelection sel,
+      final TypeTokenMethodHandle target,
+      final int offset) {
 
     if (target == null) {
       throw new IllegalArgumentException("target");
@@ -482,6 +546,10 @@ class ExecutableBuilder {
         javaValueType = javaValueType.getComponentType();
       }
 
+      if (param.fieldType().javaType().isPrimitive()) {
+        javaValueType = javaValueType.unwrap();
+      }
+
       if (!param.fieldType().javaType().isSupertypeOf(javaValueType)) {
         log.warn("require type {}, but got {}", param.fieldType().javaType(), javaValueType);
         this.addWarning(new ZuluWarning.InternalError(param, sel, "failed to bind constant value for parameter '" + param.fieldName() + "'"));
@@ -527,7 +595,7 @@ class ExecutableBuilder {
           .findStatic(
               ExecutableBuilder.class,
               "resolveParameter",
-              MethodType.methodType(Object.class, ZuluRequestContext.class, ExecutableInputField.class, String.class));
+              MethodType.methodType(Object.class, ZuluRequestContext.class, ExecutableInput.class, String.class));
 
       mh = MethodHandles.insertArguments(mh, 1, param, holder.parameterName());
 
@@ -560,7 +628,7 @@ class ExecutableBuilder {
 
   }
 
-  public static Object resolveParameter(final ZuluRequestContext ctx, final ExecutableInputField targetType, final String name) {
+  public static Object resolveParameter(final ZuluRequestContext ctx, final ExecutableInput targetType, final String name) {
     return ctx.parameter(name, targetType);
   }
 

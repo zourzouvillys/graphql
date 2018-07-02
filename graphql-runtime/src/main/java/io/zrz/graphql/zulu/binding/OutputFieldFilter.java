@@ -16,6 +16,10 @@ public interface OutputFieldFilter {
 
       final Method method = m.origin().get();
 
+      if (method.getReturnType().equals(Void.TYPE)) {
+        return false;
+      }
+
       final Method declaring = JavaExecutableUtils.getDeclaredMethod(method);
 
       if (declaring.getDeclaringClass().equals(Object.class)) {

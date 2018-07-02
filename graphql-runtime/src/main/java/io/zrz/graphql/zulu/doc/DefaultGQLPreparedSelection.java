@@ -195,6 +195,11 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
     }
 
+    @Override
+    public String fieldName() {
+      return this.arg.name();
+    }
+
   }
 
   private class InputFieldStruct implements ZStructType {

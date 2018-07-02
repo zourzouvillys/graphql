@@ -51,7 +51,11 @@ public class LocalZValues {
         .distinct()
         .collect(Collectors.toSet());
 
-    if (types.size() != 1) {
+    if (types.size() == 0) {
+      return Optional.of(LocalZValues.ofList());
+    }
+
+    if (types.size() > 1) {
       throw new IllegalArgumentException("all types in a list must be the same");
     }
 

@@ -9,9 +9,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -22,6 +24,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.net.MediaType;
@@ -45,6 +48,7 @@ import io.zrz.graphql.plugins.jackson.ZuluJacksonParameterProvider;
 import io.zrz.graphql.zulu.doc.GQLPreparedSelection;
 import io.zrz.graphql.zulu.engine.ZuluEngine;
 import io.zrz.graphql.zulu.engine.ZuluExecutionResult;
+import io.zrz.graphql.zulu.engine.ZuluExecutionScopeProvider;
 import io.zrz.graphql.zulu.engine.ZuluWarning;
 import io.zrz.graphql.zulu.engine.ZuluWarning.ExecutionError;
 import io.zrz.graphql.zulu.executable.ExecutableElement;
@@ -58,12 +62,18 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
   private static Logger log = LoggerFactory.getLogger(ZuluHttpResponder.class);
 
-  private static ObjectMapper mapper = new ObjectMapper();
   private final Map<TypeToken<?>, Object> instances = new HashMap<>();
+  private final Map<Type, ZuluExecutionScopeProvider<?>> providers = new HashMap<>();
   private final ZuluEngine zulu;
 
-  public ZuluHttpResponder(final ZuluEngine zulu) {
+  private final ObjectMapper mapper;
+  private ZuluRequestProcessor proc;
+
+  final Map<Type, Function<Throwable, ObjectNode>> exceptionMappers = new HashMap<>();
+
+  public ZuluHttpResponder(final ZuluEngine zulu, final ObjectMapper mapper) {
     this.zulu = zulu;
+    this.mapper = mapper;
   }
 
   /**
@@ -139,14 +149,14 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
           params.operationName = decoder.parameters().get("operationName").get(0);
 
         if (decoder.parameters().containsKey("variables"))
-          params.variables = mapper.readValue(
+          params.variables = this.mapper.readValue(
               decoder.parameters().get("variables").get(0),
-              mapper.getTypeFactory().constructMapType(Map.class, String.class, JsonNode.class));
+              this.mapper.getTypeFactory().constructMapType(Map.class, String.class, JsonNode.class));
 
         if (decoder.parameters().containsKey("extensions"))
-          params.extensions = mapper.readValue(
+          params.extensions = this.mapper.readValue(
               decoder.parameters().get("extensions").get(0),
-              mapper.getTypeFactory().constructMapType(Map.class, String.class, JsonNode.class));
+              this.mapper.getTypeFactory().constructMapType(Map.class, String.class, JsonNode.class));
 
         // If-None-Match
         final String ifNoneMatch = request.headers().get(HttpHeaderNames.IF_NONE_MATCH);
@@ -209,13 +219,13 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
     try (ByteBufInputStream in = new ByteBufInputStream(byteBuf, true)) {
 
-      final JsonNode tree = mapper.readTree(in);
+      final JsonNode tree = this.mapper.readTree(in);
 
       if (tree.isArray()) {
-        return mapper.convertValue(tree, mapper.getTypeFactory().constructArrayType(RequestParams.class));
+        return this.mapper.convertValue(tree, this.mapper.getTypeFactory().constructArrayType(RequestParams.class));
       }
       else if (tree.isObject()) {
-        return new RequestParams[] { mapper.convertValue(tree, RequestParams.class) };
+        return new RequestParams[] { this.mapper.convertValue(tree, RequestParams.class) };
       }
 
     }
@@ -226,8 +236,6 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
     throw new IllegalArgumentException();
 
   }
-
-  private ZuluRequestProcessor proc;
 
   /**
    * actually process the request.
@@ -256,7 +264,7 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
       q.operationName(param.operationName);
       q.query(param.query);
-      q.variables(new ZuluJacksonParameterProvider(param.variables));
+      q.variables(new ZuluJacksonParameterProvider(this.mapper, param.variables));
 
       if (param.extensions != null && param.extensions.containsKey("persistedQuery")) {
 
@@ -268,7 +276,7 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
       final ByteBufOutputStream os = new ByteBufOutputStream(buffers[i]);
 
-      final JsonGenerator jg = mapper.getFactory().createGenerator((OutputStream) os);
+      final JsonGenerator jg = this.mapper.getFactory().createGenerator((OutputStream) os);
       jg.enable(Feature.AUTO_CLOSE_TARGET);
 
       jgs[i] = new JacksonResultReceiver(jg);
@@ -294,7 +302,7 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
     try (final ByteBufOutputStream os = new ByteBufOutputStream(buffer)) {
 
-      final JsonGenerator gen = mapper.getFactory().createGenerator((OutputStream) os);
+      final JsonGenerator gen = this.mapper.getFactory().createGenerator((OutputStream) os);
 
       if (params.length > 1) {
         gen.writeStartArray();
@@ -379,6 +387,38 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
   private void writeError(final JsonGenerator gen, final ZuluWarning warn) {
     try {
 
+      Throwable cause = warn.cause();
+
+      if (cause != null) {
+
+        if (cause.getCause() != null) {
+          cause = cause.getCause();
+        }
+
+        final Function<Throwable, ObjectNode> emap = this.exceptionMappers.get(cause.getClass());
+
+        if (emap != null) {
+
+          final ObjectNode node = emap.apply(cause);
+
+          if (node != null) {
+
+            final GQLPreparedSelection sel = warn.selection();
+
+            if (sel != null && !node.has("path")) {
+              node.put("path", sel.path());
+            }
+
+            gen.writeObject(node);
+
+            return;
+
+          }
+
+        }
+
+      }
+
       gen.writeStartObject();
 
       gen.writeStringField("message", warn.detail());
@@ -424,8 +464,6 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
         gen.writeEndObject();
 
       }
-
-      final Throwable cause = warn.cause();
 
       if (cause != null) {
 
@@ -484,9 +522,12 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
       }
 
       gen.writeEndObject();
+
     }
     catch (final Exception ex) {
+
       throw new RuntimeException(ex);
+
     }
   }
 
@@ -513,6 +554,15 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
       throw new RuntimeException(e);
     }
 
+  }
+
+  public <T> void contextProvider(final Type type, final ZuluExecutionScopeProvider<?> provider) {
+    this.providers.put(type, provider);
+  }
+
+  @Override
+  public <T> ZuluExecutionScopeProvider<T> contextProvider(final Type type) {
+    return (ZuluExecutionScopeProvider<T>) this.providers.get(type);
   }
 
 }

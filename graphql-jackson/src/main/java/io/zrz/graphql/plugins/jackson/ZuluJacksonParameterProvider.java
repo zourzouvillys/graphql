@@ -4,28 +4,22 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 import io.zrz.graphql.zulu.engine.ZuluParameterReader;
-import io.zrz.graphql.zulu.executable.ExecutableInputField;
+import io.zrz.graphql.zulu.executable.ExecutableInput;
 
 public class ZuluJacksonParameterProvider implements ZuluParameterReader {
 
-  private final static ObjectMapper mapper = new ObjectMapper()
-      .registerModule(new ParameterNamesModule())
-      .registerModule(new Jdk8Module())
-      .registerModule(new JavaTimeModule());
-
   private final Map<String, JsonNode> vars;
+  private final ObjectMapper mapper;
 
-  public ZuluJacksonParameterProvider(final Map<String, JsonNode> variables) {
+  public ZuluJacksonParameterProvider(final ObjectMapper mapper, final Map<String, JsonNode> variables) {
+    this.mapper = mapper;
     this.vars = variables;
   }
 
   @Override
-  public Object get(final String parameterName, final ExecutableInputField targetType) {
+  public Object get(final String parameterName, final ExecutableInput targetType) {
 
     final JsonNode value = this.vars.get(parameterName);
 
@@ -33,7 +27,9 @@ public class ZuluJacksonParameterProvider implements ZuluParameterReader {
       return null;
     }
 
-    return mapper.convertValue(value, mapper.getTypeFactory().constructType(targetType.javaType().getType()));
+    return this.mapper.convertValue(
+        value,
+        this.mapper.getTypeFactory().constructType(targetType.javaType().getType()));
 
   }
 

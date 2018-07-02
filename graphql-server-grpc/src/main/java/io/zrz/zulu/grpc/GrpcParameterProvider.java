@@ -5,7 +5,7 @@ import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
 
 import io.zrz.graphql.zulu.engine.ZuluParameterReader;
-import io.zrz.graphql.zulu.executable.ExecutableInputField;
+import io.zrz.graphql.zulu.executable.ExecutableInput;
 import io.zrz.zulu.graphql.GraphQLProtos.QueryRequest;
 
 public class GrpcParameterProvider implements ZuluParameterReader {
@@ -22,7 +22,7 @@ public class GrpcParameterProvider implements ZuluParameterReader {
   }
 
   @Override
-  public Object get(final String parameterName, final ExecutableInputField targetType) {
+  public Object get(final String parameterName, final ExecutableInput targetType) {
 
     final Value value = this.req.getFieldsMap().get(parameterName);
 

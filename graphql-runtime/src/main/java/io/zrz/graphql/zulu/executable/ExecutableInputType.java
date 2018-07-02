@@ -14,20 +14,8 @@ import io.zrz.zulu.types.ZStructType;
 public class ExecutableInputType extends AbstractExecutableType implements ZStructType, ExecutableElement, ExecutableType {
 
   private final ImmutableMap<String, ExecutableInputField> fields;
-  private String name;
-  private ImmutableList<ExecutableInputField> list;
-
-  /**
-   * construct from a parameter list.
-   *
-   * @param method
-   * @param fields
-   */
-
-  public ExecutableInputType(final ExecutableOutputField method, final ImmutableList<ExecutableInputField> fields) {
-    this.fields = fields.stream().collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k));
-    this.list = fields;
-  }
+  private final String name;
+  private final ImmutableList<ExecutableInputField> list;
 
   /**
    * construct from a declared input type.
@@ -38,8 +26,25 @@ public class ExecutableInputType extends AbstractExecutableType implements ZStru
    */
 
   public ExecutableInputType(final ExecutableSchema schema, final Symbol symbol, final BuildContext buildContext) {
+
+    buildContext.add(symbol, this);
+
     this.name = symbol.typeName;
-    this.fields = ImmutableMap.of();
+
+    final ZStructType bean = symbol.ztype != null
+        ? (ZStructType) symbol.ztype
+        : (ZStructType) buildContext.builder().typeBinder().scan(symbol.typeToken.getType());
+
+    this.list = bean
+        .fields()
+        .values()
+        .stream()
+        .map(p -> new ExecutableInputField(this, p, buildContext))
+        .collect(ImmutableList.toImmutableList());
+
+    this.fields = this.list.stream()
+        .collect(ImmutableMap.toImmutableMap(e -> e.fieldName(), e -> e));
+
   }
 
   @Override

@@ -1,6 +1,6 @@
 package io.zrz.graphql.zulu.engine;
 
-import io.zrz.graphql.zulu.executable.ExecutableInputField;
+import io.zrz.graphql.zulu.executable.ExecutableInput;
 
 public class ZuluRequest {
 
@@ -10,7 +10,7 @@ public class ZuluRequest {
     this.vars = variables;
   }
 
-  public Object parameter(final String parameterName, final ExecutableInputField targetType) {
+  public Object parameter(final String parameterName, final ExecutableInput targetType) {
     return this.vars.get(parameterName, targetType);
   }
 

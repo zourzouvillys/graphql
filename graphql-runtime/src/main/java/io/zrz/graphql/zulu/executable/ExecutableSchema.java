@@ -14,6 +14,7 @@ import com.google.common.reflect.TypeToken;
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.runtime.GQLOperationType;
 import io.zrz.graphql.zulu.LogicalTypeKind;
+import io.zrz.graphql.zulu.doc.GQLTypeResolver;
 import io.zrz.graphql.zulu.executable.ExecutableSchemaBuilder.Symbol;
 import io.zrz.zulu.types.ZType;
 
@@ -24,7 +25,7 @@ import io.zrz.zulu.types.ZType;
  *
  */
 
-public class ExecutableSchema implements ExecutableElement {
+public class ExecutableSchema implements ExecutableElement, GQLTypeResolver {
 
   private final ImmutableMap<GQLOperationType, ExecutableOutputType> operationRoots;
   private final ImmutableMap<String, ExecutableType> types;
@@ -231,6 +232,15 @@ public class ExecutableSchema implements ExecutableElement {
 
   public ExecutableType type(final TypeToken<? extends Object> type) {
     return this.tokens.get(type);
+  }
+
+  public ExecutableType type(final Type type) {
+    return this.tokens.get(TypeToken.of(type));
+  }
+
+  @Override
+  public ZType resolve(final String typeName) {
+    return this.resolveType(typeName);
   }
 
 }
