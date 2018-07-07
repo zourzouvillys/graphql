@@ -191,10 +191,6 @@ public class ParseContext {
 
       final ImmutableGQLParameterableFieldDeclaration.Builder fb = GQLParameterableFieldDeclaration.builder();
 
-      if (this.is("@")) {
-        fb.directives(this.parseDirectives());
-      }
-
       fb.name(this.require(TokenType.NAME));
 
       if (this.is("(")) {
@@ -204,6 +200,11 @@ public class ParseContext {
       this.require(":");
 
       fb.type(this.parseTypeRef());
+
+      if (this.is("@")) {
+        final List<GQLDirective> directives = this.parseDirectives();
+        fb.directives(directives);
+      }
 
       b.addFields(fb.build());
 

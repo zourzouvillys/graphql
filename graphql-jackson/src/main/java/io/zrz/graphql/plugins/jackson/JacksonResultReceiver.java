@@ -29,15 +29,43 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
 
   @Override
   public void push(final ZuluSelectionContainer container, final Object instance) {
+  }
+
+  @Override
+  public void pop(final ZuluSelectionContainer container, final Object instance) {
+  }
+
+  @Override
+  public void startStruct(final ZuluSelectionContainer container, final Object context) {
     try {
-      if (container instanceof ZuluExecutable) {
+      if (this.jg.getOutputContext().inArray() || container instanceof ZuluExecutable)
         this.jg.writeStartObject();
-      }
-      else if (container.isList()) {
+      else
+        this.jg.writeObjectFieldStart(container.outputName());
+    }
+    catch (final IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public void endStruct(final ZuluSelectionContainer container, final Object context) {
+    try {
+      this.jg.writeEndObject();
+    }
+    catch (final IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public void startList(final ZuluSelection container, final Object context) {
+    try {
+      if (this.jg.getOutputContext().inObject()) {
         this.jg.writeArrayFieldStart(container.outputName());
       }
       else {
-        this.jg.writeObjectFieldStart(container.outputName());
+        this.jg.writeStartArray();
       }
     }
     catch (final IOException e) {
@@ -46,14 +74,9 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   }
 
   @Override
-  public void pop(final ZuluSelectionContainer container, final Object instance) {
+  public void endList(final ZuluSelection container, final Object context) {
     try {
-      if (this.jg.getOutputContext().inObject()) {
-        this.jg.writeEndObject();
-      }
-      if (this.jg.getOutputContext().inArray()) {
-        this.jg.writeEndArray();
-      }
+      this.jg.writeEndArray();
     }
     catch (final IOException e) {
       throw new RuntimeException(e);
@@ -62,11 +85,16 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
 
   @Override
   public void next(final Object instance) {
+  }
+
+  @Override
+  public void write(final ZuluSelection field) {
     try {
       if (this.jg.getOutputContext().inObject()) {
-        this.jg.writeEndObject();
+        this.jg.writeNullField(field.outputName());
       }
-      this.jg.writeStartObject();
+      else
+        this.jg.writeNull();
     }
     catch (final IOException e) {
       throw new RuntimeException(e);
@@ -74,19 +102,12 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   }
 
   @Override
-  public void write(final ZuluSelection field) {
-    // try {
-    // this.jg.writeNullField(field.outputName());
-    // }
-    // catch (final IOException e) {
-    // throw new RuntimeException(e);
-    // }
-  }
-
-  @Override
   public void write(final ZuluSelection field, final int value) {
     try {
-      this.jg.writeNumberField(field.outputName(), value);
+      if (this.jg.getOutputContext().inObject())
+        this.jg.writeNumberField(field.outputName(), value);
+      else
+        this.jg.writeNumber(value);
     }
     catch (final IOException e) {
       throw new RuntimeException(e);
@@ -97,7 +118,10 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   @Override
   public void write(final ZuluSelection field, final long value) {
     try {
-      this.jg.writeNumberField(field.outputName(), value);
+      if (this.jg.getOutputContext().inObject())
+        this.jg.writeNumberField(field.outputName(), value);
+      else
+        this.jg.writeNumber(value);
     }
     catch (final IOException e) {
       throw new RuntimeException(e);
@@ -107,7 +131,10 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   @Override
   public void write(final ZuluSelection field, final boolean value) {
     try {
-      this.jg.writeBooleanField(field.outputName(), value);
+      if (this.jg.getOutputContext().inObject())
+        this.jg.writeBooleanField(field.outputName(), value);
+      else
+        this.jg.writeBoolean(value);
     }
     catch (final IOException e) {
       throw new RuntimeException(e);
@@ -118,7 +145,10 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   @Override
   public void write(final ZuluSelection field, final double value) {
     try {
-      this.jg.writeNumberField(field.outputName(), value);
+      if (this.jg.getOutputContext().inObject())
+        this.jg.writeNumberField(field.outputName(), value);
+      else
+        this.jg.writeNumber(value);
     }
     catch (final IOException e) {
       throw new RuntimeException(e);
@@ -128,7 +158,10 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   @Override
   public void write(final ZuluSelection field, final String value) {
     try {
-      this.jg.writeStringField(field.outputName(), value);
+      if (this.jg.getOutputContext().inObject())
+        this.jg.writeStringField(field.outputName(), value);
+      else
+        this.jg.writeString(value);
     }
     catch (final IOException e) {
       throw new RuntimeException(e);
@@ -138,7 +171,10 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   @Override
   public void write(final ZuluSelection field, final Object value) {
     try {
-      this.jg.writeObjectField(field.outputName(), value);
+      if (this.jg.getOutputContext().inObject())
+        this.jg.writeObjectField(field.outputName(), value);
+      else
+        this.jg.writeObject(value);
     }
     catch (final IOException e) {
       throw new RuntimeException(e);

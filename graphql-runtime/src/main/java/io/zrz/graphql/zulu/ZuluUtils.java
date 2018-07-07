@@ -81,4 +81,13 @@ public class ZuluUtils {
     }
   }
 
+  public static <T> Method getDeclaredMethod(final Class<T> receiver, final String methodName, final Class<?>... parameterTypes) {
+    try {
+      return receiver.getDeclaredMethod(methodName, parameterTypes);
+    }
+    catch (NoSuchMethodException | SecurityException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
 }

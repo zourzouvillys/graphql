@@ -47,11 +47,19 @@ class DefaultExecutionContext<RootT> implements ZuluContext {
       for (final Entry<String, OpInputField> field : this.exec.inputType().fields().entrySet()) {
 
         if (!req.hasVariable(field.getKey())) {
+
+          if (field.getValue().isOptional()) {
+            continue;
+          }
+
           if (missing == null) {
             missing = new HashSet<>();
           }
+
           missing.add(field.getKey());
+
           state.note(new ZuluWarning.MissingRequiredVariable(field.getValue(), this.exec), null);
+
         }
 
       }
@@ -115,6 +123,11 @@ class DefaultExecutionContext<RootT> implements ZuluContext {
 
         result = leaf.invoke(this, value);
 
+        if (result == null && leaf.typeCritera().isPresent()) {
+          // FIXME: this should actually check if the type matches or not.
+          return;
+        }
+
         if (leaf.isList()) {
 
           this.receiver.startList(leaf, this.receiver);
@@ -122,12 +135,17 @@ class DefaultExecutionContext<RootT> implements ZuluContext {
           try {
             if (result != null) {
               for (final Object element : (Object[]) result) {
-                this.receiver.write(leaf, element);
+                if (element == null)
+                  this.receiver.write(leaf);
+                else
+                  this.receiver.write(leaf, element);
               }
             }
           }
           finally {
+
             this.receiver.endList(leaf, this.receiver);
+
           }
 
         }
@@ -160,30 +178,51 @@ class DefaultExecutionContext<RootT> implements ZuluContext {
         if (context != null) {
 
           this.receiver.push(container, context);
+
           try {
 
             if (container.isList()) {
 
               this.receiver.startList(container, context);
 
-              for (final Object element : (Object[]) context) {
-                this.receiver.next(element);
-                container.selections().forEach(sub -> {
+              try {
+
+                for (final Object element : (Object[]) context) {
+
+                  this.receiver.next(element);
 
                   this.receiver.startStruct(container, null);
-                  sub.apply(this, element);
-                  this.receiver.endStruct(container, null);
+                  try {
 
-                });
+                    container.selections().forEach(sub -> {
+
+                      sub.apply(this, element);
+
+                    });
+
+                  }
+                  finally {
+
+                    this.receiver.endStruct(container, null);
+
+                  }
+
+                }
+
               }
-
-              this.receiver.endList(container, context);
+              finally {
+                this.receiver.endList(container, context);
+              }
 
             }
             else {
               this.receiver.startStruct(container, null);
-              container.selections().forEach(sub -> sub.apply(this, context));
-              this.receiver.endStruct(container, null);
+              try {
+                container.selections().forEach(sub -> sub.apply(this, context));
+              }
+              finally {
+                this.receiver.endStruct(container, null);
+              }
             }
 
           }
@@ -193,6 +232,11 @@ class DefaultExecutionContext<RootT> implements ZuluContext {
 
         }
         else {
+
+          if (container.typeCritera().isPresent()) {
+            // FIXME: this should actually check if the type matches or not.
+            return;
+          }
 
           // TODO: if it's a non-null return in the model, propogate up to parent.
           this.receiver.write(container);
@@ -215,7 +259,8 @@ class DefaultExecutionContext<RootT> implements ZuluContext {
 
     @Override
     public Object parameter(final String parameterName, final ExecutableInput targetType) {
-      return this.req.parameter(parameterName, targetType);
+      final Object value = this.req.parameter(parameterName, targetType);
+      return value;
     }
 
     /**

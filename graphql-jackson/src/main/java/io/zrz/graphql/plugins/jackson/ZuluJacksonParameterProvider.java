@@ -29,7 +29,7 @@ public class ZuluJacksonParameterProvider implements ZuluParameterReader {
 
     return this.mapper.convertValue(
         value,
-        this.mapper.getTypeFactory().constructType(targetType.javaType().getType()));
+        this.mapper.getTypeFactory().constructType(targetType.javaGenericType()));
 
   }
 

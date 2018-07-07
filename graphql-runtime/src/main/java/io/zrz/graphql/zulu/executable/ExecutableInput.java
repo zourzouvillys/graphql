@@ -1,5 +1,6 @@
 package io.zrz.graphql.zulu.executable;
 
+import java.lang.reflect.Type;
 import java.util.Optional;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -20,5 +21,9 @@ public interface ExecutableInput {
   Optional<ZValue> defaultValue();
 
   TypeToken<?> javaType();
+
+  default Type javaGenericType() {
+    return javaType().getType();
+  }
 
 }

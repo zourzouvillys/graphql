@@ -34,12 +34,20 @@ public abstract class GQLParameterableFieldDeclaration implements GQLFieldDeclar
   @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder("GQLField(");
-    sb.append(this.name()).append(": ").append(this.type());
+    sb
+        .append(this.name())
+        .append(": ")
+        .append(this.type());
+
+    if (!this.directives().isEmpty()) {
+      sb.append(", fieldDirectives = ");
+      sb.append(this.directives());
+    }
     return sb.append(')').toString();
 
   }
 
-  public GQLArgumentDefinition arg(String name) {
+  public GQLArgumentDefinition arg(final String name) {
     return this.args().stream().filter(arg -> name.equals(arg.name())).findAny().orElse(null);
   }
 

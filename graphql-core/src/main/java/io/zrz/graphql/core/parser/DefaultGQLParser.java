@@ -104,6 +104,7 @@ public class DefaultGQLParser implements GQLParser {
    * @return A list of schema declarations encountered.
    */
 
+  @Override
   public List<GQLDeclaration> readSchema(final String schema, final GQLSourceInput source) {
     return new ParseContext(schema, source).parseSchema();
   }
@@ -119,6 +120,7 @@ public class DefaultGQLParser implements GQLParser {
    * @return
    */
 
+  @Override
   public GQLTypeRegistry parseSchema(final String schema) {
     return this.parseSchema(schema, GQLSourceInput.emptySource());
   }
@@ -145,7 +147,8 @@ public class DefaultGQLParser implements GQLParser {
   @Override
   public GQLTypeRegistry parseSchema(final InputStream schema, final GQLSourceInput source) {
     return new GQLSchemaBuilder().add(GQLTypes.builtins())
-        .add(new ParseContext(streamToString(schema), source).parseSchema()).build();
+        .add(new ParseContext(streamToString(schema), source).parseSchema())
+        .build();
   }
 
   private static String streamToString(final InputStream inputStream) {

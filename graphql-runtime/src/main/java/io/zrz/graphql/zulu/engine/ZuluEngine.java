@@ -136,6 +136,11 @@ public class ZuluEngine {
 
     }
 
+    if (queryString == null) {
+      return ZuluCompileResult.withErrors(
+          new ZuluWarning.ParseWarning(ZuluWarningKind.SYNTAX_ERROR, "empty query string", null));
+    }
+
     final String hashCode = Hashing.sha256().hashString(queryString, StandardCharsets.UTF_8).toString();
 
     final GQLDocument parsed;

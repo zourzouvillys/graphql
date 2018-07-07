@@ -11,6 +11,7 @@ import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.doc.GQLOperationDefinition;
 import io.zrz.graphql.core.doc.GQLSelectedOperation;
 import io.zrz.graphql.core.doc.GQLVariableDefinition;
+import io.zrz.graphql.core.types.GQLTypeRefKind;
 import io.zrz.graphql.core.value.GQLValue;
 import io.zrz.zulu.types.ZAnnotation;
 import io.zrz.zulu.types.ZField;
@@ -120,8 +121,14 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
       return Collections.emptyList();
     }
 
+    @Override
     public String fieldName() {
       return this.var.name();
+    }
+
+    @Override
+    public boolean isOptional() {
+      return this.var.type().typeRefKind() != GQLTypeRefKind.NOT_NULL;
     }
 
   }

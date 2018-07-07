@@ -30,11 +30,9 @@ public class ZuluExecutionScope {
 
   public void complete(final ZuluExecutionResult[] res) {
     this.contexts.values().forEach(ZuluScopedContext::complete);
-    System.err.println("compelted");
   }
 
   public void error(final Throwable t) {
-    System.err.println("failed");
     this.contexts.values().forEach(ZuluScopedContext::error);
   }
 

@@ -511,7 +511,7 @@ class ExecutableBuilder {
 
       if (param.isNullable()) {
 
-        // hack for Optional
+        // FIXME: hack for Optional
         if (param.javaType().getRawType().equals(Optional.class)) {
           return target.insertArguments(param.index() - offset, new Object[] { Optional.empty() });
         }
@@ -520,7 +520,9 @@ class ExecutableBuilder {
       }
 
       this.addWarning(new ZuluWarning.MissingRequiredParameter(param, sel));
+
       return null;
+
     }
 
     final ExecutableTypeUse fieldType = param.fieldType();
@@ -629,7 +631,14 @@ class ExecutableBuilder {
   }
 
   public static Object resolveParameter(final ZuluRequestContext ctx, final ExecutableInput targetType, final String name) {
-    return ctx.parameter(name, targetType);
+    //
+    Object value = ctx.parameter(name, targetType);
+
+    if (value == null && targetType.javaType().getRawType().equals(Optional.class)) {
+      value = Optional.empty();
+    }
+
+    return value;
   }
 
   /**
