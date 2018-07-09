@@ -47,7 +47,6 @@ eclipse {
 eclipse.classpath.file {
   whenMerged {
     entries
-      .each { println (it.kind.equals('lib')) + " " + it }
       .findAll { it.kind == 'lib' }
       .each {
         it.entryAttributes['module'] = 'true' 
