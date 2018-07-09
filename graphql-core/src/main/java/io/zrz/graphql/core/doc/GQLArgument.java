@@ -7,6 +7,7 @@ import io.zrz.graphql.core.value.GQLValue;
 import io.zrz.graphql.core.value.GQLValues;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLArgument {
 
   public abstract GQLSourceRange location();

@@ -1,0 +1,51 @@
+plugins {
+  id "java-library"
+  id "eclipse"
+}
+
+eclipse.project.name = 'graphql:zulu-types'
+
+dependencies {
+  
+  compileOnly         'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.100'
+
+  // compileOnly         'org.immutables:builder:2.6.1'
+  compileOnly         'org.immutables:value:2.6.1'
+
+  // annotationProcessor 'org.immutables:builder:2.6.1'
+  annotationProcessor 'org.immutables:value:2.6.1'
+
+  testImplementation  'junit:junit:4.12'
+  testImplementation  'org.assertj:assertj-core:3.6.1'
+
+}
+
+//javadoc {
+//  options.addBooleanOption('html5', true)
+//  doFirst {
+//    options.addStringOption('-module-path', classpath.asPath)
+//  }
+//}  
+
+compileJava {
+    inputs.property("moduleName", "zrz.graphql.zulu")
+    doFirst {
+        options.compilerArgs = [ '--module-path', classpath.asPath ]
+        classpath = files() // classpath.filter { true }
+    }
+}
+
+eclipse.classpath.file {
+  whenMerged {
+    entries
+      .findAll { it.kind == 'lib' }
+      //.findAll { it.moduleVersion.module.group != 'org.hamcrest' && it.moduleVersion.module.group != 'org.assertj' && it.moduleVersion.module.group != 'junit' }
+      //.findAll { 
+      //  it.moduleVersion.module.group == 'org.immutables' && 
+      //  it.moduleVersion.module.name == 'value'  }
+      .each {
+        println it
+        it.entryAttributes['module'] = 'true' 
+      } 
+  }
+}

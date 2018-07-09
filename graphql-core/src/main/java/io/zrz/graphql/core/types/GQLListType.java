@@ -15,6 +15,7 @@ import io.zrz.graphql.core.lang.GQLTypeVisitor;
  */
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLListType implements GQLTypeReference {
 
   @Override

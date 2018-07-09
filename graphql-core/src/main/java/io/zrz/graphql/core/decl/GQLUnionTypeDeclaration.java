@@ -8,6 +8,7 @@ import io.zrz.graphql.core.types.GQLDeclarationRef;
 import io.zrz.graphql.core.types.GQLTypeDeclKind;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLUnionTypeDeclaration implements GQLExtendableTypeDeclaration {
 
   @Override
@@ -18,7 +19,7 @@ public abstract class GQLUnionTypeDeclaration implements GQLExtendableTypeDeclar
   public abstract List<GQLDeclarationRef> types();
 
   @Override
-  public final <R> R apply(GQLTypeDeclarationVisitor<R> visitor) {
+  public final <R> R apply(final GQLTypeDeclarationVisitor<R> visitor) {
     return visitor.visitUnion(this);
   }
 

@@ -3,6 +3,7 @@ package io.zrz.graphql.core.parser;
 import org.immutables.value.Value;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLSourceLocation {
 
   public abstract GQLSourceInput input();
@@ -22,6 +23,14 @@ public abstract class GQLSourceLocation {
 
     return String.format("(line %d col %d)", this.lineNumber(), this.lineOffset());
 
+  }
+
+  public static class Builder extends ImmutableGQLSourceLocation.Builder {
+
+  }
+
+  public static Builder builder() {
+    return ImmutableGQLSourceLocation.builder();
   }
 
 }

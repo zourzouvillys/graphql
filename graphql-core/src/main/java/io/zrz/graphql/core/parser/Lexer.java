@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.immutables.value.Value;
+
 public final class Lexer {
 
   private static final String[] PUNCTUATORS = {
@@ -291,8 +293,9 @@ public final class Lexer {
     return this.input;
   }
 
-  @org.immutables.value.Value.Immutable(copy = true)
-  public static abstract class AbstractLineInfo {
+  @Value.Immutable(copy = true)
+  @Value.Style(allowedClasspathAnnotations = { Override.class })
+  public static abstract class LineInfo {
 
     public abstract GQLSourceInput source();
 

@@ -4,8 +4,7 @@ import java.util.Objects;
 
 import io.zrz.graphql.core.parser.GQLException;
 import io.zrz.graphql.core.parser.GQLSourceLocation;
-import io.zrz.graphql.core.parser.ImmutableGQLSourceLocation;
-import io.zrz.graphql.core.parser.ImmutableLineInfo;
+import io.zrz.graphql.core.parser.Lexer.LineInfo;
 import io.zrz.graphql.core.parser.SyntaxErrorException;
 import io.zrz.graphql.zulu.doc.DefaultGQLPreparedOperation.OpInputField;
 import io.zrz.graphql.zulu.doc.GQLPreparedDocument;
@@ -156,13 +155,13 @@ public interface ZuluWarning {
 
         final SyntaxErrorException err = (SyntaxErrorException) error;
 
-        final ImmutableLineInfo info = err.lineInfo();
+        final LineInfo info = err.lineInfo();
 
         if (info == null) {
           return null;
         }
 
-        return ImmutableGQLSourceLocation.builder()
+        return GQLSourceLocation.builder()
             .lineNumber(info.lineNumber())
             .lineOffset(info.lineOffset() + 1)
             .input(info.source())

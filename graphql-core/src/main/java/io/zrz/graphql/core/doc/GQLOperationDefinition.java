@@ -8,6 +8,7 @@ import org.immutables.value.Value;
 import io.zrz.graphql.core.parser.GQLSourceRange;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLOperationDefinition implements GQLDefinition {
 
   /**

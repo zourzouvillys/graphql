@@ -8,6 +8,7 @@ import io.zrz.graphql.core.doc.GQLDirective;
 import io.zrz.graphql.core.types.GQLTypeReference;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class }, overshadowImplementation = true)
 public abstract class GQLParameterableFieldDeclaration implements GQLFieldDeclaration {
 
   public abstract List<GQLArgumentDefinition> args();
@@ -51,7 +52,10 @@ public abstract class GQLParameterableFieldDeclaration implements GQLFieldDeclar
     return this.args().stream().filter(arg -> name.equals(arg.name())).findAny().orElse(null);
   }
 
-  public static ImmutableGQLParameterableFieldDeclaration.Builder builder() {
+  public static class Builder extends ImmutableGQLParameterableFieldDeclaration.Builder {
+  }
+
+  public static Builder builder() {
     return ImmutableGQLParameterableFieldDeclaration.builder();
   }
 

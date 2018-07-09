@@ -1,4 +1,4 @@
-package io.zrz.graphql.core.runtime;
+package io.zrz.graphql.zulu.runtime;
 
 import static org.junit.Assert.assertEquals;
 

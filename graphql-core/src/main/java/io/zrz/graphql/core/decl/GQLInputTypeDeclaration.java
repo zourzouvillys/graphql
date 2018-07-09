@@ -7,6 +7,7 @@ import org.immutables.value.Value;
 import io.zrz.graphql.core.types.GQLTypeDeclKind;
 
 @Value.Immutable(copy = true, builder = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLInputTypeDeclaration implements GQLExtendableTypeDeclaration {
 
   public abstract List<GQLInputFieldDeclaration> fields();
@@ -17,7 +18,7 @@ public abstract class GQLInputTypeDeclaration implements GQLExtendableTypeDeclar
   }
 
   @Override
-  public <R> R apply(GQLTypeDeclarationVisitor<R> visitor) {
+  public <R> R apply(final GQLTypeDeclarationVisitor<R> visitor) {
     return visitor.visitInput(this);
   }
 

@@ -7,6 +7,7 @@ import org.immutables.value.Value;
 import io.zrz.graphql.core.types.GQLDeclarationRef;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLSchemaDeclaration implements GQLDeclaration {
 
   public abstract Map<String, GQLDeclarationRef> entries();

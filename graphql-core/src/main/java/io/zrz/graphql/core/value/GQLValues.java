@@ -14,12 +14,11 @@ public final class GQLValues {
   }
 
   /**
-   *
    * @param values
    * @return
    */
 
-  public static GQLObjectValue objectValue(Map<String, GQLValue> values) {
+  public static GQLObjectValue objectValue(final Map<String, GQLValue> values) {
     return GQLObjectValue.builder().values(values).build();
   }
 
@@ -73,11 +72,11 @@ public final class GQLValues {
     return GQLListValue.emptyListValue();
   }
 
-  public static GQLValue listValue(List<GQLValue> values) {
+  public static GQLValue listValue(final List<GQLValue> values) {
     return GQLListValue.builder().values(values).build();
   }
 
-  public static GQLValue listValue(GQLValue... values) {
+  public static GQLValue listValue(final GQLValue... values) {
     return GQLListValue.newValueList(values);
   }
 

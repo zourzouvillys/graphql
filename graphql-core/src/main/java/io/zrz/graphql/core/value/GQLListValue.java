@@ -11,6 +11,7 @@ import org.immutables.value.Value;
  */
 
 @Value.Immutable
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLListValue implements GQLValue {
 
   private static final GQLListValue EMPTY = builder().build();
@@ -24,6 +25,7 @@ public abstract class GQLListValue implements GQLValue {
 
   /**
    *
+   *
    */
 
   public static GQLListValue emptyListValue() {
@@ -34,7 +36,7 @@ public abstract class GQLListValue implements GQLValue {
    *
    */
 
-  public static GQLListValue newValueList(GQLValue... values) {
+  public static GQLListValue newValueList(final GQLValue... values) {
     return builder().addValues(values).build();
   }
 

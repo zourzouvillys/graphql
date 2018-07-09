@@ -5,6 +5,7 @@ import java.util.function.Function;
 import org.immutables.value.Value;
 
 @Value.Immutable
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLStringValue implements GQLScalarValue {
 
   private static final Function<GQLValue, String> STRING_EXTRACTOR_INSTANCE = arg -> arg.apply(GQLValueConverters.stringConverter());

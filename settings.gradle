@@ -6,12 +6,12 @@ rootProject.name = 'graphql'
  'core',
  'runtime',
  'schema',
- 'validator',
- 'generator',
+ //'validator',
+ //'generator',
  'jackson',
  'server-netty',
- 'client-grpc',
- 'server-grpc'
+// 'client-grpc',
+// 'server-grpc'
  ].each { _ ->
 
 
@@ -19,3 +19,6 @@ rootProject.name = 'graphql'
   project(':graphql-' + _).projectDir = file('graphql-' + _)
 
 }
+
+include 'zulu-types'
+project(':zulu-types').projectDir = file('zulu-types')

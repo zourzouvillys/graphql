@@ -10,6 +10,7 @@ import org.immutables.value.Value;
  */
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLVariableRef implements GQLValue {
 
   /**

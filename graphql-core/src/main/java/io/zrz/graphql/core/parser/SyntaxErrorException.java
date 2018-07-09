@@ -1,5 +1,7 @@
 package io.zrz.graphql.core.parser;
 
+import io.zrz.graphql.core.parser.Lexer.LineInfo;
+
 public class SyntaxErrorException extends GQLException {
 
   private static final long serialVersionUID = 1L;
@@ -8,10 +10,10 @@ public class SyntaxErrorException extends GQLException {
   private String expected;
   private final String message;
 
-  public SyntaxErrorException(ParseContext ctx, String expected, String message) {
+  public SyntaxErrorException(final ParseContext ctx, final String expected, final String message) {
     super(String.format("syntax error in %s at '%s': expected '%s' %s",
         calculateLine(ctx),
-        (ctx.lexer().peek() == null) ? "EOF" : ctx.lexer().peek().value(),
+        ctx.lexer().peek() == null ? "EOF" : ctx.lexer().peek().value(),
         expected,
         message != null ? message : ""));
     this.ctx = ctx;
@@ -19,14 +21,14 @@ public class SyntaxErrorException extends GQLException {
     this.message = message;
   }
 
-  public SyntaxErrorException(ParseContext ctx, String message) {
-    super(String.format("syntax error on %s at or near '%s': %s", calculateLine(ctx), (ctx.lexer().peek() == null) ? "EOF" : ctx.lexer().peek().toString(),
+  public SyntaxErrorException(final ParseContext ctx, final String message) {
+    super(String.format("syntax error on %s at or near '%s': %s", calculateLine(ctx), ctx.lexer().peek() == null ? "EOF" : ctx.lexer().peek().toString(),
         message));
     this.ctx = ctx;
     this.message = message;
   }
 
-  private static ImmutableLineInfo calculateLine(ParseContext ctx) {
+  private static ImmutableLineInfo calculateLine(final ParseContext ctx) {
     if (ctx.lexer().peek() == null) {
       return null;
     }
@@ -34,8 +36,8 @@ public class SyntaxErrorException extends GQLException {
     return ctx.lexer().lineNumberAtOffset(pos.start());
   }
 
-  public ImmutableLineInfo lineInfo() {
-    return calculateLine(ctx);
+  public LineInfo lineInfo() {
+    return calculateLine(this.ctx);
   }
 
   /**

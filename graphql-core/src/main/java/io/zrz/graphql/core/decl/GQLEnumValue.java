@@ -8,6 +8,7 @@ import org.immutables.value.Value;
 import io.zrz.graphql.core.doc.GQLDirective;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public interface GQLEnumValue {
 
   String name();
@@ -20,7 +21,7 @@ public interface GQLEnumValue {
 
   List<GQLDirective> directives();
 
-  public static ImmutableGQLEnumValue.Builder builder() {
+  static ImmutableGQLEnumValue.Builder builder() {
     return ImmutableGQLEnumValue.builder();
   }
 

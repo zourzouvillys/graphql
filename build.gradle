@@ -62,12 +62,12 @@ subprojects {
 
 
   repositories {
-    jcenter()
     maven { url 'https://jitpack.io' }
+    jcenter()
   }
 
-  sourceCompatibility = 8
-  targetCompatibility = 8
+  sourceCompatibility = 9
+  targetCompatibility = 9
 
 
 
@@ -116,11 +116,11 @@ eclipse {
 
   artifacts {
     archives sourcesJar
-    archives javadocJar
+    //archives javadocJar
   }
 
   javadoc {
-    title = "Pravega Client API"
+    title = "ZRZ GraphQL"
     failOnError = false
     exclude "**/impl/**";
   }

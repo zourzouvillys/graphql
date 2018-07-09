@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLDirective {
 
   public abstract String name();
@@ -18,7 +19,7 @@ public abstract class GQLDirective {
     return builder().name(name).args(Arrays.asList(args)).build();
   }
 
-  public Optional<GQLArgument> arg(String string) {
+  public Optional<GQLArgument> arg(final String string) {
     return this.args().stream().filter(c -> c.name().equals(string)).findAny();
   }
 

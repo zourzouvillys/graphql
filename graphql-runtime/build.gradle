@@ -9,7 +9,10 @@ dependencies {
   // these are internal only, shaded for deploy.
   implementation      'com.google.guava:guava:25.1-jre'
   implementation      'org.apache.commons:commons-lang3:3.7'
-  api      'com.github.zourzouvillys:commons:2502e272a8'
+  
+  //api      'io.zrz:zulu:1.0'
+  // api 'com.github.zourzouvillys:commons:2502e272a8'
+  api      project(':zulu-types')
   
   // api      'io.zrz:zulu:1.0'
   
@@ -24,10 +27,10 @@ dependencies {
   
   // compile time only dependencies
   compileOnly         'com.google.errorprone:error_prone_annotations:2.3.1'
-  compileOnly         'org.glassfish:javax.annotation:10.0-b28'
+  //compileOnly         'org.glassfish:javax.annotation:10.0-b28'
 
   compileOnly         'org.immutables:builder:2.6.1'
-  compileOnly         'org.immutables:value:2.6.1:annotations'
+  compileOnly         'org.immutables:value:2.6.1'
 
   annotationProcessor 'org.immutables:builder:2.6.1'
   annotationProcessor 'org.immutables:value:2.6.1'
@@ -36,4 +39,32 @@ dependencies {
   testImplementation  'org.assertj:assertj-core:3.6.1'
   testImplementation  'ch.qos.logback:logback-classic:1.2.3'
 
+}
+
+
+compileJava {
+    inputs.property("moduleName", "zrz.graphql.runtime")
+    doFirst {
+        options.compilerArgs = [ '--module-path', classpath.asPath ]
+        classpath = files()
+    }
+}
+
+
+eclipse {
+    classpath {
+        file.whenMerged { cp ->
+            cp.entries.add( new org.gradle.plugins.ide.eclipse.model.SourceFolder('build/generated/source/apt/main/', null) )
+        }
+    }
+}
+
+eclipse.classpath.file {
+  whenMerged {
+    entries
+      .findAll { it.kind.equals('lib') || it.kind.equals('src') }
+      .each {
+        it.entryAttributes['module'] = 'true' 
+      } 
+  }
 }

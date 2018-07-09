@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLDocument {
 
   public abstract List<GQLDefinition> definitions();
@@ -18,7 +19,7 @@ public abstract class GQLDocument {
    * @return
    */
 
-  public GQLOperationDefinition named(String name) {
+  public GQLOperationDefinition named(final String name) {
     return this.definitions()
         .stream()
         .map(def -> def.apply(GQLDefinitionVisitors.operationExtractor()))
@@ -28,7 +29,7 @@ public abstract class GQLDocument {
         .orElse(null);
   }
 
-  public GQLFragmentDefinition fragment(String name) {
+  public GQLFragmentDefinition fragment(final String name) {
 
     final GQLFragmentDefinition ret = this.definitions()
         .stream()
@@ -62,7 +63,7 @@ public abstract class GQLDocument {
         .collect(Collectors.toList());
   }
 
-  public GQLSelectedOperation select(String namedQuery) {
+  public GQLSelectedOperation select(final String namedQuery) {
     return GQLSelectedOperation.namedQuery(this, namedQuery);
   }
 

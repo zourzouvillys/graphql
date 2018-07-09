@@ -3,6 +3,8 @@ package io.zrz.graphql.core.value;
 import org.immutables.value.Value;
 
 @Value.Immutable
+@Value.Style(allowedClasspathAnnotations = { Override.class })
+
 public abstract class GQLEnumValueRef implements GQLScalarValue {
 
   @Value.Parameter

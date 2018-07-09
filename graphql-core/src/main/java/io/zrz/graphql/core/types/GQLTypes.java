@@ -18,11 +18,11 @@ import io.zrz.graphql.core.doc.GQLDirective;
 
 public class GQLTypes {
 
-  public static GQLTypeReference ref(GQLTypeDeclaration type) {
+  public static GQLTypeReference ref(final GQLTypeDeclaration type) {
     return GQLDeclarationRef.builder().name(type.name()).ref(type).build();
   }
 
-  public static GQLDeclarationRef concreteTypeRef(String typename) {
+  public static GQLDeclarationRef concreteTypeRef(final String typename) {
     return GQLDeclarationRef.builder().name(typename).build();
   }
 
@@ -91,7 +91,7 @@ public class GQLTypes {
     return ImmutableGQLNonNullType.builder().type(typeRef(name)).build();
   }
 
-  public static GQLTypeReference nonNull(GQLTypeReference type, Collection<GQLDirective> directives) {
+  public static GQLTypeReference nonNull(final GQLTypeReference type, final Collection<GQLDirective> directives) {
     return ImmutableGQLNonNullType.builder().type(type).directives(directives).build();
   }
 
@@ -99,7 +99,7 @@ public class GQLTypes {
     return ImmutableGQLNonNullType.builder().type(type).build();
   }
 
-  public static GQLDeclarationRef typeRef(final String name, Collection<GQLDirective> directives) {
+  public static GQLDeclarationRef typeRef(final String name, final Collection<GQLDirective> directives) {
     return GQLDeclarationRef.builder().name(name).directives(directives).build();
   }
 
@@ -119,11 +119,11 @@ public class GQLTypes {
     return ImmutableGQLObjectTypeDeclaration.builder().name(name);
   }
 
-  public static GQLTypeReference listOf(GQLTypeReference type) {
+  public static GQLTypeReference listOf(final GQLTypeReference type) {
     return ImmutableGQLListType.builder().type(type).build();
   }
 
-  public static GQLTypeReference listOf(GQLTypeReference type, Collection<GQLDirective> directives) {
+  public static GQLTypeReference listOf(final GQLTypeReference type, final Collection<GQLDirective> directives) {
     return ImmutableGQLListType.builder().type(type).directives(directives).build();
   }
 

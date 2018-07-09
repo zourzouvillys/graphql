@@ -7,6 +7,7 @@ import org.immutables.value.Value;
 import io.zrz.graphql.core.types.GQLDeclarationRef;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLFragmentDefinition implements GQLDefinition {
 
   public abstract String name();

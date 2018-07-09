@@ -16,23 +16,24 @@ import io.zrz.graphql.core.value.GQLValue;
  * @author theo
  */
 
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 @Value.Immutable(copy = true)
 public interface GQLArgumentDefinition {
 
-  abstract String name();
+  String name();
 
   @Nullable
-  abstract String description();
+  String description();
 
-  abstract List<GQLDirective> directives();
+  List<GQLDirective> directives();
 
-  abstract GQLTypeReference type();
+  GQLTypeReference type();
 
-  ImmutableGQLArgumentDefinition withType(GQLTypeReference value);
+  GQLArgumentDefinition withType(GQLTypeReference value);
 
-  abstract Optional<GQLValue> defaultValue();
+  Optional<GQLValue> defaultValue();
 
-  public static ImmutableGQLArgumentDefinition.Builder builder() {
+  static ImmutableGQLArgumentDefinition.Builder builder() {
     return ImmutableGQLArgumentDefinition.builder();
   }
 

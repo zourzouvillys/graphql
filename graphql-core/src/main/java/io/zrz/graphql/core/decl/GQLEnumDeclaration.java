@@ -7,6 +7,7 @@ import org.immutables.value.Value;
 import io.zrz.graphql.core.types.GQLTypeDeclKind;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLEnumDeclaration implements GQLExtendableTypeDeclaration {
 
   public abstract List<GQLEnumValue> values();

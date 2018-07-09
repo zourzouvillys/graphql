@@ -1,17 +1,56 @@
+plugins {
+  id "java-library"
+  id "eclipse"
+}
 
 eclipse.project.name = 'graphql:core'
 
+
 dependencies {
   
-  compileOnly         'com.google.errorprone:error_prone_annotations:2.3.1'
   compileOnly         'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.100'
-  compileOnly         'org.immutables:builder:2.6.1'
-  compileOnly         'org.immutables:value:2.6.1:annotations'
 
-  annotationProcessor 'org.immutables:builder:2.6.1'
+  // compileOnly         'org.immutables:builder:2.6.1'
+  compileOnly         'org.immutables:value:2.6.1'
+
+  // annotationProcessor 'org.immutables:builder:2.6.1'
   annotationProcessor 'org.immutables:value:2.6.1'
 
   testImplementation  'junit:junit:4.12'
   testImplementation  'org.assertj:assertj-core:3.6.1'
 
+}
+
+//javadoc {
+//  options.addBooleanOption('html5', true)
+//  doFirst {
+//    options.addStringOption('-module-path', classpath.asPath)
+//  }
+//}  
+
+compileJava {
+    inputs.property("moduleName", "zrz.graphql.core")
+    doFirst {
+        options.compilerArgs = [ '--module-path', classpath.asPath ]
+        classpath = files() // classpath.filter { true }
+    }
+}
+
+eclipse {
+    classpath {
+        file.whenMerged { cp ->
+            cp.entries.add( new org.gradle.plugins.ide.eclipse.model.SourceFolder('build/generated/source/apt/main/', null) )
+        }
+    }
+}
+
+eclipse.classpath.file {
+  whenMerged {
+    entries
+      .each { println (it.kind.equals('lib')) + " " + it }
+      .findAll { it.kind == 'lib' }
+      .each {
+        it.entryAttributes['module'] = 'true' 
+      } 
+  }
 }

@@ -22,6 +22,7 @@ import io.zrz.graphql.core.types.GQLTypeDeclKind;
  */
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLScalarTypeDeclaration implements GQLTypeDeclaration {
 
   @Override
@@ -49,7 +50,7 @@ public abstract class GQLScalarTypeDeclaration implements GQLTypeDeclaration {
   }
 
   @Override
-  public final <R> R apply(GQLTypeDeclarationVisitor<R> visitor) {
+  public final <R> R apply(final GQLTypeDeclarationVisitor<R> visitor) {
     return visitor.visitScalar(this);
   }
 

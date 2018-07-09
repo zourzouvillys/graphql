@@ -42,7 +42,7 @@ dependencies {
   
 
   implementation      'com.google.guava:guava:25.1-jre'
-  implementation      'com.github.zourzouvillys:commons:950d929406'
+  //implementation      'com.github.zourzouvillys:commons:950d929406'
   implementation      'org.apache.commons:commons-lang3:3.7'
 
   // grpc
@@ -56,21 +56,16 @@ dependencies {
   implementation 'com.salesforce.servicelibs:grpc-contrib:0.8.0'
   implementation 'io.reactivex.rxjava2:rxjava:2.1.14'
   implementation 'io.netty:netty-tcnative-boringssl-static:2.0.10.Final'
-  implementation 'io.opencensus:opencensus-impl-lite:0.14.0'
-  implementation 'io.opencensus:opencensus-contrib-zpages:0.14.0'
-  implementation 'io.opencensus:opencensus-api:0.14.0'
+  
+  //implementation 'io.opencensus:opencensus-impl-lite:0.14.0'
+  //implementation 'io.opencensus:opencensus-contrib-zpages:0.14.0'
+  //implementation 'io.opencensus:opencensus-api:0.14.0'
     
-  compileOnly         'org.glassfish:javax.annotation:10.0-b28'
+  // compileOnly         'org.glassfish:javax.annotation:10.0-b28'
   
 
   // compile time only dependencies
   compileOnly         'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.150'
-
-  compileOnly         'org.immutables:builder:2.6.1'
-  compileOnly         'org.immutables:value:2.6.1:annotations'
-
-  annotationProcessor 'org.immutables:builder:2.6.1'
-  annotationProcessor 'org.immutables:value:2.6.1'
 
   testImplementation  'junit:junit:4.12'
   testImplementation  'org.assertj:assertj-core:3.6.1'
@@ -81,6 +76,34 @@ dependencies {
 ///
 
 
+
+
+compileJava {
+    inputs.property("moduleName", "zrz.graphql.grpc")
+    doFirst {
+        options.compilerArgs = [
+            '--module-path', classpath.filter { !it.name.contains('grpc-context') } .asPath,            
+        ]
+        classpath = classpath.filter {
+          return it.name.contains('grpc-context')
+          // return false
+        } 
+    }
+}
+
+eclipse.classpath.file {
+  whenMerged {
+    entries    
+      .findAll { it.kind.equals('src') }
+      .each { it.entryAttributes['module'] = 'true' } 
+    entries    
+      .findAll { it.kind.equals('lib') }
+      .findAll { !(it.moduleVersion.group.equals('io.grpc') && it.moduleVersion.name.equals('grpc-context')) }
+      .each {
+        it.entryAttributes['module'] = 'true' 
+      } 
+  }
+}
 
 
 

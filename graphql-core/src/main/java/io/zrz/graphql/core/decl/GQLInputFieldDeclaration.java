@@ -8,6 +8,7 @@ import io.zrz.graphql.core.types.GQLTypeReference;
 import io.zrz.graphql.core.value.GQLValue;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLInputFieldDeclaration implements GQLFieldDeclaration {
 
   @Nullable

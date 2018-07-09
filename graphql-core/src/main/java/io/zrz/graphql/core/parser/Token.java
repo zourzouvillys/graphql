@@ -5,6 +5,7 @@ import org.immutables.value.Value;
 import io.zrz.graphql.core.parser.Lexer.TokenType;
 
 @Value.Immutable
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class Token {
 
   @Value.Parameter
@@ -21,15 +22,15 @@ public abstract class Token {
     return String.format("%s[%s]@%s", this.type(), this.value(), this.position());
   }
 
-  public static Token from(TokenType type, String string, SourcePosition range) {
+  public static Token from(final TokenType type, final String string, final SourcePosition range) {
     return ImmutableToken.of(type, string, range);
   }
 
-  public static Token name(String string, SourcePosition range) {
+  public static Token name(final String string, final SourcePosition range) {
     return ImmutableToken.of(TokenType.NAME, string, range);
   }
 
-  public static Token fragmentSpread(SourcePosition range) {
+  public static Token fragmentSpread(final SourcePosition range) {
     return ImmutableToken.of(TokenType.PUNCTUATION, "...", range);
   }
 

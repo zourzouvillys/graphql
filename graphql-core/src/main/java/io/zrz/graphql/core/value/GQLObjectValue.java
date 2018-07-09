@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLObjectValue implements GQLValue {
 
   private static final GQLObjectValue EMPTY = builder().build();
@@ -22,12 +23,13 @@ public abstract class GQLObjectValue implements GQLValue {
     return this.values();
   }
 
-  public Optional<GQLValue> entry(String key) {
+  public Optional<GQLValue> entry(final String key) {
     return Optional.ofNullable(this.values().get(key));
   }
 
   /**
-   * Note: toStrings are never used for output to clients. Only degbugging/logging.
+   *
+   * Note: toStrings are never used for output to clients. Only degbugging/logging..
    */
 
   @Override
@@ -45,11 +47,11 @@ public abstract class GQLObjectValue implements GQLValue {
     return EMPTY;
   }
 
-  public static GQLObjectValue singleValue(String key, String value) {
+  public static GQLObjectValue singleValue(final String key, final String value) {
     return GQLObjectValue.builder().putValues(key, GQLValues.stringValue(value)).build();
   }
 
-  public static GQLObjectValue singleValue(String key, GQLValue value) {
+  public static GQLObjectValue singleValue(final String key, final GQLValue value) {
     return GQLObjectValue.builder().putValues(key, value).build();
   }
 
@@ -61,17 +63,17 @@ public abstract class GQLObjectValue implements GQLValue {
    * @return
    */
 
-  public static GQLValueVisitor<GQLValue> fieldExtractor(String fieldName) {
+  public static GQLValueVisitor<GQLValue> fieldExtractor(final String fieldName) {
 
-    return new DefaultValueVisitor<GQLValue>() {
+    return new DefaultValueVisitor<>() {
 
       @Override
-      public GQLValue visitDefaultValue(GQLValue value) {
+      public GQLValue visitDefaultValue(final GQLValue value) {
         return null;
       }
 
       @Override
-      public GQLValue visitObjectValue(GQLObjectValue value) {
+      public GQLValue visitObjectValue(final GQLObjectValue value) {
         return value.entry(fieldName).orElse(null);
       }
 

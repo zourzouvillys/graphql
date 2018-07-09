@@ -3,7 +3,7 @@ package io.zrz.graphql.core.parser;
 import org.immutables.value.Value;
 
 @Value.Immutable(copy = true)
-@Value.Style(overshadowImplementation = true)
+@Value.Style(overshadowImplementation = true, allowedClasspathAnnotations = { Override.class })
 public abstract class GQLSourceRange {
 
   public abstract GQLSourceInput input();

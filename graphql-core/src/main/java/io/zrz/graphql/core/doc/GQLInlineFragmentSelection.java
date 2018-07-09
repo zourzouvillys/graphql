@@ -7,6 +7,7 @@ import org.immutables.value.Value;
 import io.zrz.graphql.core.types.GQLDeclarationRef;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public interface GQLInlineFragmentSelection extends GQLSelection {
 
   GQLDeclarationRef typeCondition();
@@ -21,26 +22,26 @@ public interface GQLInlineFragmentSelection extends GQLSelection {
   }
 
   @Override
-  default <R> R apply(GQLSelectionVisitor<R> visitor) {
+  default <R> R apply(final GQLSelectionVisitor<R> visitor) {
     return visitor.visitInlineFragment(this);
   }
 
   @Override
-  default <T, R> R apply(FunctionVisitor<T, R> visitor, T value) {
+  default <T, R> R apply(final FunctionVisitor<T, R> visitor, final T value) {
     return visitor.visitInlineFragment(this, value);
   }
 
   @Override
-  default <T> void apply(ConsumerVisitor<T> visitor, T value) {
+  default <T> void apply(final ConsumerVisitor<T> visitor, final T value) {
     visitor.visitInlineFragment(this, value);
   }
 
   @Override
-  default void apply(VoidVisitor visitor) {
+  default void apply(final VoidVisitor visitor) {
     visitor.visitInlineFragment(this);
   }
 
-  public static ImmutableGQLInlineFragmentSelection.Builder builder() {
+  static ImmutableGQLInlineFragmentSelection.Builder builder() {
     return ImmutableGQLInlineFragmentSelection.builder();
   }
 

@@ -13,6 +13,7 @@ import org.immutables.value.Value;
  */
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public interface GQLFieldSelection extends GQLSelection {
 
   String name();
@@ -43,34 +44,34 @@ public interface GQLFieldSelection extends GQLSelection {
   }
 
   @Override
-  default <R> R apply(GQLSelectionVisitor<R> visitor) {
+  default <R> R apply(final GQLSelectionVisitor<R> visitor) {
     return visitor.visitFieldSelection(this);
   }
 
   @Override
-  default <T, R> R apply(FunctionVisitor<T, R> visitor, T value) {
+  default <T, R> R apply(final FunctionVisitor<T, R> visitor, final T value) {
     return visitor.visitFieldSelection(this, value);
   }
 
   @Override
-  default <T> void apply(ConsumerVisitor<T> visitor, T value) {
+  default <T> void apply(final ConsumerVisitor<T> visitor, final T value) {
     visitor.visitFieldSelection(this, value);
   }
 
   @Override
-  default void apply(VoidVisitor visitor) {
+  default void apply(final VoidVisitor visitor) {
     visitor.visitFieldSelection(this);
   }
 
-  default GQLArgument args(String name) {
+  default GQLArgument args(final String name) {
     return this.args().stream().filter(a -> a.name().equals(name)).findAny().orElse(null);
   }
 
-  public static GQLFieldSelection fieldSelection(final String name) {
+  static GQLFieldSelection fieldSelection(final String name) {
     return builder().name(name).build();
   }
 
-  public static ImmutableGQLFieldSelection.Builder builder() {
+  static ImmutableGQLFieldSelection.Builder builder() {
     return ImmutableGQLFieldSelection.builder();
   }
 

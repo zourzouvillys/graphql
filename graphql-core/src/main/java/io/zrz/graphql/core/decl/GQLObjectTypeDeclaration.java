@@ -9,6 +9,7 @@ import io.zrz.graphql.core.types.GQLTypeDeclKind;
 import io.zrz.graphql.core.types.GQLTypeReference;
 
 @Value.Immutable(copy = true)
+@Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLObjectTypeDeclaration implements GQLExtendableTypeDeclaration {
 
   @Override
@@ -33,10 +34,10 @@ public abstract class GQLObjectTypeDeclaration implements GQLExtendableTypeDecla
     return visitor.visitObject(this);
   }
 
-  public GQLParameterableFieldDeclaration field(String name) {
+  public GQLParameterableFieldDeclaration field(final String name) {
     return this.fields().stream().filter(d -> d.name().equals(name)).findAny().orElse(null);
   }
-
+  //
   // public abstract GQLObjectTypeDeclaration withIfaces(GQLDeclarationRef value);
 
   public static Builder builder() {

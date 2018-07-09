@@ -1,9 +1,7 @@
 package io.zrz.graphql.core.utils;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Collection;
 
 import io.zrz.graphql.core.doc.GQLDefinition;
 import io.zrz.graphql.core.doc.GQLDocument;
