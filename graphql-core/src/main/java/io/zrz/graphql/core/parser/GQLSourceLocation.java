@@ -30,7 +30,7 @@ public abstract class GQLSourceLocation {
   }
 
   public static Builder builder() {
-    return ImmutableGQLSourceLocation.builder();
+    return new Builder();
   }
 
 }
