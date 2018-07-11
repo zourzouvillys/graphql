@@ -56,7 +56,7 @@ public abstract class GQLParameterableFieldDeclaration implements GQLFieldDeclar
   }
 
   public static Builder builder() {
-    return ImmutableGQLParameterableFieldDeclaration.builder();
+    return new Builder();
   }
 
 }
