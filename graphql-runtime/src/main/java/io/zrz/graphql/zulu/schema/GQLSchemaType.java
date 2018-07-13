@@ -3,12 +3,14 @@ package io.zrz.graphql.zulu.schema;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNull;
 
 import io.zrz.graphql.core.types.GQLTypeKind;
 import io.zrz.graphql.zulu.LogicalTypeKind;
+import io.zrz.graphql.zulu.annotations.GQLField;
 import io.zrz.graphql.zulu.annotations.GQLObjectType;
 import io.zrz.graphql.zulu.executable.ExecutableEnumType;
 import io.zrz.graphql.zulu.executable.ExecutableInputType;
@@ -95,7 +97,7 @@ public class GQLSchemaType {
   // # OBJECT and INTERFACE only
   // fields(includeDeprecated: Boolean = false): [__Field!]
 
-  public List<@NonNull GQLSchemaField> fields(final Boolean includeDeprecated) {
+  public List<@NonNull GQLSchemaField> fields(@GQLField("includeDeprecated") final Optional<Boolean> includeDeprecated) {
 
     switch (this.type.logicalKind()) {
 
@@ -155,7 +157,7 @@ public class GQLSchemaType {
   //
   // # ENUM only
   // enumValues(includeDeprecated: Boolean = false): [__EnumValue!]
-  public List<GQLSchemaEnumValue> enumValues(final boolean includeDeprecated) {
+  public List<GQLSchemaEnumValue> enumValues(@GQLField("includeDeprecated") final Optional<Boolean> includeDeprecated) {
 
     if (this.type.logicalKind() != LogicalTypeKind.ENUM)
       return null;

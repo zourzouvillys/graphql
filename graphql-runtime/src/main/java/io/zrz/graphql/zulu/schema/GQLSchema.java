@@ -2,6 +2,7 @@ package io.zrz.graphql.zulu.schema;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -42,7 +43,7 @@ public class GQLSchema {
     return this.schema.rootType(GQLOpType.Subscription).map(type -> new GQLSchemaType(type)).orElse(null);
   }
 
-  public List<GQLSchemaType> types() {
+  public List<GQLSchemaType> types(Optional<Boolean> includeDeprecated) {
     return this.schema.types()
         .filter(type -> !type.typeName().startsWith("__"))
         .filter(type -> !this.isBuiltin(type))

@@ -92,7 +92,7 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
         res.headers().set(HttpHeaderNames.CONTENT_LENGTH, 0);
 
         if (request.headers().getAsString(HttpHeaderNames.ORIGIN) != null) {
-          res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+          res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, request.headers().get(HttpHeaderNames.ORIGIN));
           res.headers().add(HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS, "content-type,ETag,Vary,Content-Encoding,Authorization");
           res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
           res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, "POST,GET,OPTIONS");
@@ -107,7 +107,7 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
       final FullHttpResponse res = this.handleRequest(request);
 
       if (request.headers().getAsString(HttpHeaderNames.ORIGIN) != null) {
-        res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+        res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, request.headers().get(HttpHeaderNames.ORIGIN));
         res.headers().add(HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS, "Content-Type,ETag,Vary,Content-Encoding,Authorization");
         res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
         res.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, "POST, GET, OPTIONS");
