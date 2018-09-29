@@ -3,6 +3,10 @@ eclipse.project.name = 'graphql:runtime'
 
 dependencies {
   
+  // note: should be internnal only, annd use Flow.Publisher instead.
+  implementation    'io.reactivex.rxjava2:rxjava:2.2.2'
+  implementation    'com.github.akarnokd:rxjava2-jdk9-interop:0.2.2'
+  
   // runtime shared dependencies.
   api                 'org.slf4j:slf4j-api:1.7.25'
 
@@ -42,29 +46,10 @@ dependencies {
 }
 
 
-compileJava {
-    inputs.property("moduleName", "zrz.graphql.runtime")
-    doFirst {
-        options.compilerArgs = [ '--module-path', classpath.asPath ]
-        classpath = files()
-    }
-}
-
-
 eclipse {
     classpath {
         file.whenMerged { cp ->
             cp.entries.add( new org.gradle.plugins.ide.eclipse.model.SourceFolder('build/generated/source/apt/main/', null) )
         }
     }
-}
-
-eclipse.classpath.file {
-  whenMerged {
-    entries
-      .findAll { it.kind.equals('lib') || it.kind.equals('src') }
-      .each {
-        it.entryAttributes['module'] = 'true' 
-      } 
-  }
 }

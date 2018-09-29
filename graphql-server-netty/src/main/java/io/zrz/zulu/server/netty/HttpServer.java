@@ -22,9 +22,9 @@ public class HttpServer extends AbstractService {
   private final NettyServerConnector connector;
   private final int port;
 
-  public HttpServer(final int port, final HttpResponder responder) {
+  public HttpServer(final ZuluHttpEngine server, final int port, final HttpResponder responder) {
     this.port = port;
-    this.connector = new HttpServerConnector(responder);
+    this.connector = new HttpServerConnector(server, responder);
   }
 
   @Override

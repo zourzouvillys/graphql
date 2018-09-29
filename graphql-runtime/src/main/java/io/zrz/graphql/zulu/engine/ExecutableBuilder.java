@@ -82,7 +82,12 @@ class ExecutableBuilder {
    */
 
   ZuluExecutable build() {
-    final ExecutableOutputType type = this.engine.schema().rootType(this.op.type()).get();
+    final Optional<ExecutableOutputType> rootType = this.engine.schema().rootType(this.op.type());
+    if (!rootType.isPresent()) {
+      // the operation type is not supported in this schema. we return a stub executable.
+      return new ZuluExecutable(this, null);
+    }
+    final ExecutableOutputType type = rootType.get();
     return new ZuluExecutable(this, type);
   }
 
@@ -238,9 +243,9 @@ class ExecutableBuilder {
    * returns a handle for invoking this field. the handle takes the receiver context & request. it returns the result.
    *
    * @param sel
-   *                       The selection to execute.
+   *          The selection to execute.
    * @param receiverType
-   *                       the receiver type of the selection - may be different than the field type (due to spread).
+   *          the receiver type of the selection - may be different than the field type (due to spread).
    * @param field
    * @return
    */
@@ -486,9 +491,9 @@ class ExecutableBuilder {
    * inserts an argument that provides the required value.
    *
    * @param param
-   *                the input parameter definition.
+   *          the input parameter definition.
    * @param sel
-   *                the selection on the field.
+   *          the selection on the field.
    *
    */
 
@@ -634,7 +639,7 @@ class ExecutableBuilder {
     //
     Object value = ctx.parameter(name, targetType);
 
-    if (value == null && targetType.javaType().getRawType().equals(Optional.class)) {
+    if ((value == null) && targetType.javaType().getRawType().equals(Optional.class)) {
       value = Optional.empty();
     }
 
@@ -645,7 +650,7 @@ class ExecutableBuilder {
    * adds a warning generated during compilation.
    *
    * @param warning
-   *                  the warning to add.
+   *          the warning to add.
    */
 
   private void addWarning(final ZuluWarning warning) {

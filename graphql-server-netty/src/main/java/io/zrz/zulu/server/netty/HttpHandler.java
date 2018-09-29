@@ -16,10 +16,14 @@ public class HttpHandler extends ChannelInboundHandlerAdapter {
   public void channelRead(final ChannelHandlerContext ctx, final Object msg) throws Exception {
 
     if (msg instanceof FullHttpRequest) {
-      ctx.writeAndFlush(responder.processRequest((FullHttpRequest) msg));
+
+      ctx.writeAndFlush(this.responder.processRequest((FullHttpRequest) msg));
+
     }
     else {
+
       super.channelRead(ctx, msg);
+
     }
 
   }

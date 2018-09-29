@@ -17,7 +17,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 
+import io.reactivex.Flowable;
 import io.zrz.graphql.zulu.ZuluUtils;
+import io.zrz.graphql.zulu.executable.typehandlers.FlowableHandler;
 import io.zrz.graphql.zulu.executable.typehandlers.IterableHandler;
 import io.zrz.graphql.zulu.executable.typehandlers.ReturnTypeHandlerFactory.ReturnTypeHandler;
 import io.zrz.graphql.zulu.executable.typehandlers.StreamHandler;
@@ -113,7 +115,6 @@ class JavaOutputMapper {
 
   JavaOutputMapper(final JavaOutputMapper parent, final TypeToken<?> modelType, final UnaryOperator<MethodHandle> transformer, final int arity) {
     Preconditions.checkArgument(!modelType.getRawType().equals(Object.class), parent);
-    // Preconditions.checkArgument(!TypeVariable.class.isAssignableFrom(modelType.getType().getClass()), modelType);
     this.javaType = modelType;
     this.modelType = modelType;
     this.apply = handle -> transformer.apply(parent.apply.apply(handle));
@@ -278,6 +279,18 @@ class JavaOutputMapper {
       else if (wrapped.isSubtypeOf(Stream.class)) {
 
         final ReturnTypeHandler<?> handler = new StreamHandler<>().createHandler(wrapped);
+
+        return new JavaOutputMapper(
+            this,
+            handler.unwrap(),
+            target -> MethodHandles.filterReturnValue(target, handler.adapt()),
+            handler.arity()).unwrap();
+
+      }
+
+      else if (wrapped.isSubtypeOf(Flowable.class)) {
+
+        final ReturnTypeHandler<?> handler = new FlowableHandler<>().createHandler(wrapped);
 
         return new JavaOutputMapper(
             this,

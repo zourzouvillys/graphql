@@ -18,16 +18,19 @@ public class ZuluNettyServer {
   private final HttpServer http;
   private final ZuluEngine zulu;
   private final ZuluHttpResponder responder;
+  private final DefaultZuluHttpEngine engine;
 
   ZuluNettyServer(final int port, final ZuluEngine zulu) {
     this.responder = new ZuluHttpResponder(zulu, new ObjectMapper());
-    this.http = new HttpServer(port, this.responder);
+    this.engine = new DefaultZuluHttpEngine(zulu, this.responder);
+    this.http = new HttpServer(this.engine, port, this.responder);
     this.zulu = zulu;
   }
 
   ZuluNettyServer(final int port, final ZuluEngine zulu, final ObjectMapper mapper) {
     this.responder = new ZuluHttpResponder(zulu, mapper);
-    this.http = new HttpServer(port, this.responder);
+    this.engine = new DefaultZuluHttpEngine(zulu, this.responder);
+    this.http = new HttpServer(this.engine, port, this.responder);
     this.zulu = zulu;
   }
 

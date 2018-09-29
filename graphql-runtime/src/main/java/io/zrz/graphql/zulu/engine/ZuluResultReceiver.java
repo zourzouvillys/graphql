@@ -2,7 +2,7 @@ package io.zrz.graphql.zulu.engine;
 
 /**
  * consumer facing API to receive results from execution.
- * 
+ *
  * @author theo
  */
 
@@ -10,9 +10,9 @@ public interface ZuluResultReceiver {
 
   /**
    * called every time a node in the selection set is entered, before invocation of it.
-   * 
+   *
    * @param ctx
-   *              The context that has been entered.
+   *          The context that has been entered.
    */
 
   void push(ZuluSelectionContainer container, Object instance);
@@ -31,14 +31,14 @@ public interface ZuluResultReceiver {
 
   /**
    * called each time an instance context has been entered.
-   * 
+   *
    * when processing an array, this will be called for each instance before {@link ZuluResultReceiver#pop()} is called.
    * So the calls would be push(array_field), next(a), next(b), next(c), pop().
-   * 
+   *
    * note that further pushes may occur if the selection has sub selections.
-   * 
+   *
    * @param instance
-   *                   the underlying java instance (or instance token).
+   *          the underlying java instance (or instance token).
    */
 
   void next(Object instance);
@@ -51,10 +51,10 @@ public interface ZuluResultReceiver {
 
   /**
    * called when a field is missing a value, i.e null.
-   * 
+   *
    * default values will be provided as the type of the default, so this will only be called when there is a missing
    * value.
-   * 
+   *
    */
 
   void write(ZuluSelection field);

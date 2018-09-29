@@ -4,6 +4,9 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Streams;
 
 import io.zrz.graphql.zulu.engine.ZuluParameterReader;
 import io.zrz.graphql.zulu.executable.ExecutableInput;
@@ -16,6 +19,11 @@ public class ZuluJacksonParameterProvider implements ZuluParameterReader {
   public ZuluJacksonParameterProvider(final ObjectMapper mapper, final Map<String, JsonNode> variables) {
     this.mapper = mapper;
     this.vars = variables;
+  }
+
+  public ZuluJacksonParameterProvider(final ObjectMapper mapper, final ObjectNode variables) {
+    this.mapper = mapper;
+    this.vars = Streams.stream(variables.fields()).collect(ImmutableMap.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
   }
 
   @Override
@@ -35,8 +43,9 @@ public class ZuluJacksonParameterProvider implements ZuluParameterReader {
 
   @Override
   public boolean has(final String parameterName) {
-    if (this.vars == null)
+    if (this.vars == null) {
       return false;
+    }
     return this.vars.containsKey(parameterName);
   }
 

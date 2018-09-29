@@ -13,6 +13,7 @@ import io.zrz.graphql.core.runtime.GQLOperationType;
 import io.zrz.graphql.zulu.doc.DefaultGQLPreparedOperation.OpInputType;
 import io.zrz.graphql.zulu.executable.ExecutableElement;
 import io.zrz.graphql.zulu.executable.ExecutableOutputType;
+import zulu.runtime.subscriptions.ZuluSubscriptionContext;
 
 public class ZuluExecutable implements ZuluSelectionContainer, ExecutableElement {
 
@@ -56,6 +57,10 @@ public class ZuluExecutable implements ZuluSelectionContainer, ExecutableElement
     return this.bind(root, EmptyParameterReader.INSTANCE, scope);
   }
 
+  public <RootT> ZuluSubscriptionContext subscribe(final RootT root, final ZuluExecutionScope scope, final ZuluRequest req) {
+    return new DefaultSubscriptionContext<>(this, Objects.requireNonNull(root), scope, req);
+  }
+
   @Override
   public ZuluExecutable executable() {
     return this;
@@ -76,8 +81,9 @@ public class ZuluExecutable implements ZuluSelectionContainer, ExecutableElement
 
   public ZuluSelection selectionOrDefault(final String fieldName, final ZuluSelection defaultValue) {
     final ZuluSelection field = this.fields.get(fieldName);
-    if (field == null)
+    if (field == null) {
       return defaultValue;
+    }
     return field;
   }
 

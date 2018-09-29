@@ -6,10 +6,10 @@ public interface ZuluContext {
 
   /**
    * execute a single field.
-   * 
+   *
    * @param fieldName
    *          The output field name to execute
-   * 
+   *
    * @return The value
    */
 
@@ -27,7 +27,7 @@ public interface ZuluContext {
    */
 
   default Map<ZuluSelection, Object> execute() {
-    MapCollectingZuluResultsReceiver collector = new MapCollectingZuluResultsReceiver();
+    final MapCollectingZuluResultsReceiver collector = new MapCollectingZuluResultsReceiver();
     execute(new DefaultZuluRequest(), collector);
     return collector.result();
   }
@@ -36,13 +36,13 @@ public interface ZuluContext {
    * helper method which executes using a default receiver and returns the values directly.
    */
 
-  default Object execute(String fieldName) {
-    MapCollectingZuluResultsReceiver collector = new MapCollectingZuluResultsReceiver();
+  default Object execute(final String fieldName) {
+    final MapCollectingZuluResultsReceiver collector = new MapCollectingZuluResultsReceiver();
     execute(new DefaultZuluRequest(), collector, fieldName);
     return collector.result();
   }
 
-  default ZuluExecutionResult execute(ZuluResultReceiver results) {
+  default ZuluExecutionResult execute(final ZuluResultReceiver results) {
     return execute(new DefaultZuluRequest(), results);
   }
 

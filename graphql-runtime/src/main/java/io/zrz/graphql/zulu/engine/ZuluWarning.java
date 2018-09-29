@@ -182,6 +182,11 @@ public interface ZuluWarning {
       return error;
     }
 
+    @Override
+    public String toString() {
+      return "ParseWarning[" + kind + "](" + detail() + "): " + input + cause();
+    }
+
   }
 
   ZuluWarningKind warningKind();

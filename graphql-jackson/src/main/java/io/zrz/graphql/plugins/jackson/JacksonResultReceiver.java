@@ -38,10 +38,12 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   @Override
   public void startStruct(final ZuluSelectionContainer container, final Object context) {
     try {
-      if (this.jg.getOutputContext().inArray() || container instanceof ZuluExecutable)
+      if (this.jg.getOutputContext().inArray() || (container instanceof ZuluExecutable) || this.jg.getOutputContext().inRoot()) {
         this.jg.writeStartObject();
-      else
+      }
+      else {
         this.jg.writeObjectFieldStart(container.outputName());
+      }
     }
     catch (final IOException e) {
       throw new RuntimeException(e);
@@ -93,8 +95,9 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
       if (this.jg.getOutputContext().inObject()) {
         this.jg.writeNullField(field.outputName());
       }
-      else
+      else {
         this.jg.writeNull();
+      }
     }
     catch (final IOException e) {
       throw new RuntimeException(e);
@@ -104,10 +107,12 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   @Override
   public void write(final ZuluSelection field, final int value) {
     try {
-      if (this.jg.getOutputContext().inObject())
+      if (this.jg.getOutputContext().inObject()) {
         this.jg.writeNumberField(field.outputName(), value);
-      else
+      }
+      else {
         this.jg.writeNumber(value);
+      }
     }
     catch (final IOException e) {
       throw new RuntimeException(e);
@@ -118,10 +123,12 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   @Override
   public void write(final ZuluSelection field, final long value) {
     try {
-      if (this.jg.getOutputContext().inObject())
+      if (this.jg.getOutputContext().inObject()) {
         this.jg.writeNumberField(field.outputName(), value);
-      else
+      }
+      else {
         this.jg.writeNumber(value);
+      }
     }
     catch (final IOException e) {
       throw new RuntimeException(e);
@@ -131,10 +138,12 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   @Override
   public void write(final ZuluSelection field, final boolean value) {
     try {
-      if (this.jg.getOutputContext().inObject())
+      if (this.jg.getOutputContext().inObject()) {
         this.jg.writeBooleanField(field.outputName(), value);
-      else
+      }
+      else {
         this.jg.writeBoolean(value);
+      }
     }
     catch (final IOException e) {
       throw new RuntimeException(e);
@@ -145,10 +154,12 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   @Override
   public void write(final ZuluSelection field, final double value) {
     try {
-      if (this.jg.getOutputContext().inObject())
+      if (this.jg.getOutputContext().inObject()) {
         this.jg.writeNumberField(field.outputName(), value);
-      else
+      }
+      else {
         this.jg.writeNumber(value);
+      }
     }
     catch (final IOException e) {
       throw new RuntimeException(e);
@@ -158,10 +169,12 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   @Override
   public void write(final ZuluSelection field, final String value) {
     try {
-      if (this.jg.getOutputContext().inObject())
+      if (this.jg.getOutputContext().inObject()) {
         this.jg.writeStringField(field.outputName(), value);
-      else
+      }
+      else {
         this.jg.writeString(value);
+      }
     }
     catch (final IOException e) {
       throw new RuntimeException(e);
@@ -171,10 +184,12 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   @Override
   public void write(final ZuluSelection field, final Object value) {
     try {
-      if (this.jg.getOutputContext().inObject())
+      if (this.jg.getOutputContext().inObject()) {
         this.jg.writeObjectField(field.outputName(), value);
-      else
+      }
+      else {
         this.jg.writeObject(value);
+      }
     }
     catch (final IOException e) {
       throw new RuntimeException(e);

@@ -21,35 +21,10 @@ dependencies {
 
 }
 
-//javadoc {
-//  options.addBooleanOption('html5', true)
-//  doFirst {
-//    options.addStringOption('-module-path', classpath.asPath)
-//  }
-//}  
-
-compileJava {
-    inputs.property("moduleName", "zrz.graphql.core")
-    doFirst {
-        options.compilerArgs = [ '--module-path', classpath.asPath ]
-        classpath = files() // classpath.filter { true }
-    }
-}
-
 eclipse {
     classpath {
         file.whenMerged { cp ->
             cp.entries.add( new org.gradle.plugins.ide.eclipse.model.SourceFolder('build/generated/source/apt/main/', null) )
         }
     }
-}
-
-eclipse.classpath.file {
-  whenMerged {
-    entries
-      .findAll { it.kind == 'lib' }
-      .each {
-        it.entryAttributes['module'] = 'true' 
-      } 
-  }
 }

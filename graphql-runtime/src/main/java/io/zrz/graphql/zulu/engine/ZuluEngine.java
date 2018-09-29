@@ -21,6 +21,7 @@ import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.parser.GQLException;
 import io.zrz.graphql.core.parser.GQLSourceLocation;
 import io.zrz.graphql.core.parser.GQLSourceRange;
+import io.zrz.graphql.core.runtime.GQLOperationType;
 import io.zrz.graphql.zulu.doc.CachingGQLDocumentManager;
 import io.zrz.graphql.zulu.doc.GQLDocumentManager;
 import io.zrz.graphql.zulu.doc.GQLPreparedDocument;
@@ -32,8 +33,10 @@ import io.zrz.graphql.zulu.executable.ExecutableInput;
 import io.zrz.graphql.zulu.executable.ExecutableSchema;
 import io.zrz.graphql.zulu.executable.ExecutableTypeUse;
 import io.zrz.graphql.zulu.executable.JavaExecutableUtils;
+import io.zrz.graphql.zulu.server.ImmutableBindParams;
 import io.zrz.graphql.zulu.server.ImmutableQuery;
 import io.zrz.graphql.zulu.server.ImmutableZuluServerRequest;
+import io.zrz.graphql.zulu.server.ZuluInjector;
 import io.zrz.zulu.types.ZField;
 import io.zrz.zulu.types.ZTypeUse;
 import io.zrz.zulu.values.ZArrayValue;
@@ -43,6 +46,7 @@ import io.zrz.zulu.values.ZIntValue;
 import io.zrz.zulu.values.ZScalarValue;
 import io.zrz.zulu.values.ZStringValue;
 import io.zrz.zulu.values.ZValue;
+import zulu.runtime.subscriptions.ZuluSubscriptionContext;
 
 public class ZuluEngine {
 
@@ -71,8 +75,9 @@ public class ZuluEngine {
       System.err.println("schema: " + schema);
       this.docs = new CachingGQLDocumentManager(schema);
     }
-    else
+    else {
       this.docs = Objects.requireNonNull(docmgr);
+    }
 
   }
 
@@ -336,6 +341,16 @@ public class ZuluEngine {
 
   }
 
+  /**
+   * use bind() instead.
+   *
+   * @param req
+   * @param q
+   * @param scope
+   * @return
+   *
+   */
+  @Deprecated()
   private ZuluExecutionResult processRequest(final ImmutableZuluServerRequest req, final ImmutableQuery q, final ZuluExecutionScope scope) {
 
     final ExecutionResult.Builder res = ExecutionResult.builder();
@@ -352,8 +367,12 @@ public class ZuluEngine {
     final ZuluExecutable doc = compileResult.executable();
 
     if (doc == null) {
-
       // an error occured. messages will have been handled by the warnings.
+      return res.build();
+    }
+
+    if (doc.outputType() == null) {
+      res.addNote(new ZuluWarning.ParseWarning(ZuluWarningKind.INVALID_OPERATION, "unsupported operation type for this endpoint", null));
       return res.build();
     }
 
@@ -372,12 +391,32 @@ public class ZuluEngine {
       throw new RuntimeException(e);
     }
 
-    // bind to the context for this caller.
-    final ZuluContext ctx = doc.executable().bind(instance, scope);
+    if (doc.executable().operationType() == GQLOpType.Subscription) {
 
-    final ZuluExecutionResult execres = ctx.execute(new ZuluRequest(q.variables()), receiver);
+      // subscriptions are handled separately - we first use the instance to set up the subscription
+      // and then perform an execution on each value it returns. the main difference is the same field
+      // may be returned multiple times.
 
-    res.addAllNotes(execres.notes());
+      // flow control is important here - we may have a slow subscriber, and need to do some buffering and then
+      // abort the subscription with a buffer overflow error if they can't keep up (or switch to on-disk spooling, etc).
+
+      final ZuluSubscriptionContext sub = doc.executable().subscribe(instance, scope, new ZuluRequest(q.variables()));
+
+      // then, subscribe to each event that is emitted by the subscription and execute against that.
+
+    }
+    else {
+
+      // bind to the context for this caller.
+      final ZuluContext ctx = doc.executable().bind(instance, scope);
+
+      // execute
+      final ZuluExecutionResult execres = ctx.execute(new ZuluRequest(q.variables()), receiver);
+
+      // add the notes from execution to the response.
+      res.addAllNotes(execres.notes());
+
+    }
 
     // and execute it.
     try {
@@ -396,6 +435,89 @@ public class ZuluEngine {
 
   public static ZuluEngineBuilder builder() {
     return new ZuluEngineBuilder();
+  }
+
+  /**
+   * new invocation API, which splits the internal binding from the actual fetching of the data in some scenarios
+   * (currently just subscriptions). this allows flow controlled subscriptions. once the portal is returned, results can
+   * be retrieved.
+   */
+
+  public ZuluPortal bind(final ImmutableBindParams q, final ZuluInjector injector) {
+
+    final ZuluExecutionScope scope = new ZuluExecutionScope(this, injector);
+
+    final ExecutionResult.Builder res = ExecutionResult.builder();
+
+    // compile the query. may use cache if it already exists.
+    final ZuluCompileResult compileResult = this.compile(q.query(), q.operationName(), q.persistedQuery());
+
+    if (!compileResult.warnings().isEmpty()) {
+      res.addAllNotes(compileResult.warnings());
+    }
+
+    final ZuluExecutable doc = compileResult.executable();
+
+    if (doc == null) {
+      // an error occured. messages will have been handled by the warnings.
+      return new ErrorPortal(res.build());
+    }
+
+    if (doc.outputType() == null) {
+      res.addNote(new ZuluWarning.ParseWarning(ZuluWarningKind.INVALID_OPERATION, "unsupported operation type for this endpoint", null));
+      return new ErrorPortal(res.build());
+    }
+
+    final Stopwatch timer = Stopwatch.createStarted();
+
+    try {
+
+      Object instance;
+
+      try {
+
+        instance = injector.newInstance(compileResult.executable().javaType());
+
+      }
+      catch (final RuntimeException e) {
+        throw e;
+      }
+      catch (final Throwable e) {
+        throw new RuntimeException(e);
+      }
+
+      final ZuluRequest reqvars = new ZuluRequest(q.variables());
+
+      final GQLOperationType optype = doc.executable().operationType();
+
+      if (optype == GQLOpType.Query) {
+
+        return new ImmediatePortal(doc.executable(), instance, scope, reqvars, res.build());
+
+      }
+      else if (optype == GQLOpType.Subscription) {
+
+        return new SubscriptionPortal(doc.executable(), instance, scope, reqvars, res.build());
+
+      }
+      else if (optype == GQLOpType.Mutation) {
+
+        // bind to the context for this caller.
+        return new ImmediatePortal(doc.executable(), instance, scope, reqvars, res.build());
+
+      }
+      else {
+
+        throw new IllegalArgumentException("invalid operation type: " + optype);
+
+      }
+
+    }
+    finally {
+      timer.stop();
+      this.addTiming(timer);
+    }
+
   }
 
 }

@@ -32,21 +32,3 @@ dependencies {
   testImplementation  'ch.qos.logback:logback-classic:1.2.3'
 
 }
-
-compileJava {
-    inputs.property("moduleName", "zrz.graphql.jackson")
-    doFirst {
-        options.compilerArgs = [ '--module-path', classpath.asPath ]
-        classpath = files()
-    }
-}
-
-eclipse.classpath.file {
-  whenMerged {
-    entries
-      .findAll { it.kind == 'lib' || it.kind.equals('src') }
-      .each {
-        it.entryAttributes['module'] = 'true' 
-      } 
-  }
-}

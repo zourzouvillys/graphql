@@ -142,21 +142,25 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
         final RequestParams params = new RequestParams();
 
-        if (decoder.parameters().containsKey("query"))
+        if (decoder.parameters().containsKey("query")) {
           params.query = decoder.parameters().get("query").get(0);
+        }
 
-        if (decoder.parameters().containsKey("operationName"))
+        if (decoder.parameters().containsKey("operationName")) {
           params.operationName = decoder.parameters().get("operationName").get(0);
+        }
 
-        if (decoder.parameters().containsKey("variables"))
+        if (decoder.parameters().containsKey("variables")) {
           params.variables = this.mapper.readValue(
               decoder.parameters().get("variables").get(0),
               this.mapper.getTypeFactory().constructMapType(Map.class, String.class, JsonNode.class));
+        }
 
-        if (decoder.parameters().containsKey("extensions"))
+        if (decoder.parameters().containsKey("extensions")) {
           params.extensions = this.mapper.readValue(
               decoder.parameters().get("extensions").get(0),
               this.mapper.getTypeFactory().constructMapType(Map.class, String.class, JsonNode.class));
+        }
 
         // If-None-Match
         final String ifNoneMatch = request.headers().get(HttpHeaderNames.IF_NONE_MATCH);
@@ -266,7 +270,7 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
       q.query(param.query);
       q.variables(new ZuluJacksonParameterProvider(this.mapper, param.variables));
 
-      if (param.extensions != null && param.extensions.containsKey("persistedQuery")) {
+      if ((param.extensions != null) && param.extensions.containsKey("persistedQuery")) {
 
         q.persistedQuery(param.extensions.get("persistedQuery").get("sha256Hash").asText());
 
@@ -347,7 +351,7 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
     dataHash = hasher.hash().toString();
 
-    if (dataHash != null && ifNoneMatch != null) {
+    if ((dataHash != null) && (ifNoneMatch != null)) {
 
       if (StringUtils.equals(dataHash, ifNoneMatch)) {
 
@@ -372,7 +376,7 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
     final FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, buffer);
 
-    if (dataHash != null && method == HttpMethod.GET) {
+    if ((dataHash != null) && (method == HttpMethod.GET)) {
       response.headers().set(HttpHeaderNames.ETAG, dataHash);
       response.headers().set(HttpHeaderNames.VARY, "Accept-Encoding,Origin,Authorization");
     }
@@ -405,7 +409,7 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
 
             final GQLPreparedSelection sel = warn.selection();
 
-            if (sel != null && !node.has("path")) {
+            if ((sel != null) && !node.has("path")) {
               node.put("path", sel.path());
             }
 
@@ -563,6 +567,10 @@ public class ZuluHttpResponder implements HttpResponder, ZuluInjector {
   @Override
   public <T> ZuluExecutionScopeProvider<T> contextProvider(final Type type) {
     return (ZuluExecutionScopeProvider<T>) this.providers.get(type);
+  }
+
+  public ObjectMapper mapper() {
+    return this.mapper;
   }
 
 }

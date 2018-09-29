@@ -21,6 +21,7 @@ dependencies {
   implementation      'com.google.guava:guava:25.1-jre'
   implementation      'com.github.zourzouvillys:commons:950d929406'
   implementation      'org.apache.commons:commons-lang3:3.7'
+  implementation      'io.reactivex.rxjava2:rxjava:2.2.2'
 
 
   // compile time only dependencies

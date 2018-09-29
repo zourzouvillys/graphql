@@ -34,4 +34,21 @@ public interface ZuluServerRequest {
 
   }
 
+  @Value.Immutable
+  public interface BindParams {
+
+    @Nullable
+    String query();
+
+    @Nullable
+    String operationName();
+
+    @Nullable
+    ZuluParameterReader variables();
+
+    @Nullable
+    String persistedQuery();
+
+  }
+
 }
