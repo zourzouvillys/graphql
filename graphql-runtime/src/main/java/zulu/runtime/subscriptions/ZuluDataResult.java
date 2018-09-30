@@ -1,6 +1,9 @@
 package zulu.runtime.subscriptions;
 
+import java.util.List;
+
 import io.zrz.graphql.zulu.engine.ZuluResultReceiver;
+import io.zrz.graphql.zulu.engine.ZuluWarning;
 
 /**
  * base interface for all events emitted during an execution of any operation.
@@ -11,5 +14,7 @@ import io.zrz.graphql.zulu.engine.ZuluResultReceiver;
 public interface ZuluDataResult extends ZuluResult {
 
   void data(ZuluResultReceiver receiver);
+
+  List<ZuluWarning> errors();
 
 }

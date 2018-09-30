@@ -41,8 +41,12 @@ public class SimpleGQLWSFrame implements GQLWSFrame {
     return this.id() + ": " + this.type().kindName() + " " + this.rawPayload();
   }
 
-  public static SimpleGQLWSFrame create(final StandardGQLWSFrameKind kind) {
-    return new SimpleGQLWSFrame(null, kind, null);
+  public static SimpleGQLWSFrame ack() {
+    return new SimpleGQLWSFrame(null, StandardGQLWSFrameKind.GQL_CONNECTION_ACK, null);
+  }
+
+  public static SimpleGQLWSFrame keepAlive() {
+    return new SimpleGQLWSFrame(null, StandardGQLWSFrameKind.GQL_CONNECTION_KEEP_ALIVE, null);
   }
 
   public static SimpleGQLWSFrame data(final String id, final ObjectNode content) {
@@ -54,9 +58,9 @@ public class SimpleGQLWSFrame implements GQLWSFrame {
     content.set("data", data);
     if ((errors != null) && !errors.isEmpty()) {
       // TODO: really need a better way of handling error encoding.
-      final ArrayNode errarr = content.arrayNode();
+      final ArrayNode errarr = content.withArray("errors");
       for (final ZuluWarning err : errors) {
-        final ObjectNode erritem = errarr.objectNode();
+        final ObjectNode erritem = errarr.addObject();
         erritem.put("type", err.warningKind().name());
         erritem.put("message", err.detail());
       }

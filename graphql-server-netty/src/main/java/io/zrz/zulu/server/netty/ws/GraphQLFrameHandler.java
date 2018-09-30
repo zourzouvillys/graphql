@@ -43,7 +43,8 @@ public class GraphQLFrameHandler extends SimpleChannelInboundHandler<GQLWSFrame>
     log.info("initialized new session");
     final GQLWebSocketSession session = this.sessions.initializeSession(msg.rawPayload(), Flowable.empty());
     ctx.channel().attr(SESSION).set(session);
-    ctx.writeAndFlush(SimpleGQLWSFrame.create(StandardGQLWSFrameKind.GQL_CONNECTION_ACK));
+    ctx.writeAndFlush(SimpleGQLWSFrame.ack());
+    // we don't send higher level keepalives - usel ower level WS frames for it.
     session.subscribe(frame -> {
       ctx.writeAndFlush(frame);
     });

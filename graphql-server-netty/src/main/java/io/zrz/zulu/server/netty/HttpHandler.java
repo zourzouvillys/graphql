@@ -3,6 +3,7 @@ package io.zrz.zulu.server.netty;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpHeaderNames;
 
 public class HttpHandler extends ChannelInboundHandlerAdapter {
 
@@ -16,15 +17,13 @@ public class HttpHandler extends ChannelInboundHandlerAdapter {
   public void channelRead(final ChannelHandlerContext ctx, final Object msg) throws Exception {
 
     if (msg instanceof FullHttpRequest) {
-
-      ctx.writeAndFlush(this.responder.processRequest((FullHttpRequest) msg));
-
+      if (!((FullHttpRequest) msg).headers().contains(HttpHeaderNames.UPGRADE)) {
+        ctx.writeAndFlush(this.responder.processRequest((FullHttpRequest) msg));
+        return;
+      }
     }
-    else {
 
-      super.channelRead(ctx, msg);
-
-    }
+    super.channelRead(ctx, msg);
 
   }
 

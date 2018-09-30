@@ -1,16 +1,19 @@
 package io.zrz.zulu.server.netty.ws;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.reactivestreams.Subscriber;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.processors.UnicastProcessor;
+import io.zrz.graphql.zulu.engine.ZuluWarning;
 import io.zrz.zulu.server.netty.ZuluHttpEngine;
 
 /**
@@ -73,8 +76,10 @@ public class GQLWebSocketSession extends Flowable<GQLWSFrame> {
     final Disposable handle = this.engine.execute(new GQLWSRequest(this, start))
         .subscribe(
             data -> {
-              log.trace("sending frame {}", data);
-              this.writer.onNext(SimpleGQLWSFrame.data(start.id(), data.data(), data.errors(), data.extensions()));
+              final ObjectNode content = data.data();
+              final List<ZuluWarning> errors = data.errors();
+              log.trace("sending frame {}", data, errors);
+              this.writer.onNext(SimpleGQLWSFrame.data(start.id(), content, errors, data.extensions()));
             },
             err -> {
               log.info("error processing WS operation", err);

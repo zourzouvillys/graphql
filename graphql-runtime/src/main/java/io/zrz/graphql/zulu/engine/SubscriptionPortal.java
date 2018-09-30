@@ -107,6 +107,8 @@ public class SubscriptionPortal implements ZuluPortal, ZuluRequestContext {
 
     return new ZuluDataResult() {
 
+      private ImmutableList<ZuluWarning> notes = ImmutableList.of();
+
       @Override
       public String toString() {
         return sel.fieldName() + ": " + value.toString() + " " + (sel.isLeaf() ? "LEAF" : "!LEAF");
@@ -124,6 +126,13 @@ public class SubscriptionPortal implements ZuluPortal, ZuluRequestContext {
         sel.apply(new Inner(state), value);
         receiver.endStruct((ZuluSelectionContainer) sel, value);
 
+        this.notes = ImmutableList.copyOf(state.notes());
+
+      }
+
+      @Override
+      public List<ZuluWarning> errors() {
+        return SubscriptionPortal.this.notes;
       }
 
     };

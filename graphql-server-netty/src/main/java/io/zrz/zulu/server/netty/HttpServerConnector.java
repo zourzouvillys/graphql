@@ -30,13 +30,15 @@ public class HttpServerConnector implements NettyServerConnector {
     return new ChannelInitializer<SocketChannel>() {
       @Override
       public void initChannel(final SocketChannel ch) throws Exception {
+
         ch.pipeline().addLast(CODEC_HANDLER_NAME, new HttpServerCodec());
         ch.pipeline().addLast(COMPRESSOR_HANDLER_NAME, new HttpContentCompressor());
         ch.pipeline().addLast(AGGREGATOR_HANDLER_NAME, new HttpObjectAggregator(512 * 1024));
 
+        ch.pipeline().addLast(HTTP_REQUEST_HANDLER_NAME, new HttpHandler(HttpServerConnector.this.responder));
+
         this.initWebsockets(ch);
 
-        ch.pipeline().addLast(HTTP_REQUEST_HANDLER_NAME, new HttpHandler(HttpServerConnector.this.responder));
       }
 
       private void initWebsockets(final SocketChannel ch) {

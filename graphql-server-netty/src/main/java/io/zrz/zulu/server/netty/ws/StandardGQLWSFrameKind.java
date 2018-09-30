@@ -32,6 +32,9 @@ public enum StandardGQLWSFrameKind implements GQLWSFrameKind {
 
   @Override
   public String kindName() {
+    if (this == GQL_CONNECTION_KEEP_ALIVE) {
+      return "ka";
+    }
     return this.name().substring(4).toLowerCase();
   }
 

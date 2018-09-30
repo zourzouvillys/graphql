@@ -46,8 +46,9 @@ public class ZuluEngineBuilder {
     return this;
   }
 
-  public void extension(final Class<@NonNull ?> type) {
+  public ZuluEngineBuilder extension(final Class<@NonNull ?> type) {
     this.schema.registerExtension(type);
+    return this;
   }
 
   /**

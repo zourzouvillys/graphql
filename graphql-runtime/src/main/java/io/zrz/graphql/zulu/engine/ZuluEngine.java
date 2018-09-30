@@ -200,6 +200,11 @@ public class ZuluEngine {
             return null;
           }
 
+          @Override
+          public String toString() {
+            return "undefined variable: " + field.fieldName();
+          }
+
         });
 
         error.set(true);

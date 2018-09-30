@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableList;
 
 import hu.akarnokd.rxjava2.interop.FlowInterop;
 import io.reactivex.Flowable;
@@ -60,7 +59,7 @@ public class DefaultZuluHttpEngine implements ZuluHttpEngine {
 
   ZuluJacksonResult mapResult(final ZuluResult res) {
 
-    log.debug("RESULT: {}", res);
+    final ZuluDataResult data = (ZuluDataResult) res;
 
     return new ZuluJacksonResult() {
 
@@ -71,7 +70,7 @@ public class DefaultZuluHttpEngine implements ZuluHttpEngine {
 
       @Override
       public List<ZuluWarning> errors() {
-        return ImmutableList.of();
+        return data.errors();
       }
 
       @Override

@@ -3,9 +3,12 @@ package io.zrz.graphql.zulu.engine;
 import java.util.List;
 import java.util.concurrent.Flow.Subscriber;
 
+import hu.akarnokd.rxjava2.interop.FlowInterop;
+import io.reactivex.Flowable;
+import zulu.runtime.subscriptions.ZuluDataResult;
 import zulu.runtime.subscriptions.ZuluResult;
 
-public class ErrorPortal implements ZuluPortal {
+public class ErrorPortal implements ZuluPortal, ZuluDataResult {
 
   private final ExecutionResult res;
 
@@ -15,8 +18,11 @@ public class ErrorPortal implements ZuluPortal {
 
   @Override
   public void subscribe(final Subscriber<? super ZuluResult> subscriber) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented Method: ErrorPortal.subscribe invoked.");
+
+    Flowable.just(this)
+        .to(FlowInterop.toFlow())
+        .subscribe(subscriber);
+
   }
 
   @Override
@@ -26,6 +32,16 @@ public class ErrorPortal implements ZuluPortal {
 
   @Override
   public void cancel() {
+  }
+
+  @Override
+  public void data(final ZuluResultReceiver receiver) {
+    // none.
+  }
+
+  @Override
+  public List<ZuluWarning> errors() {
+    return this.res.notes();
   }
 
 }
