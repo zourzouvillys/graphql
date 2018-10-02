@@ -7,9 +7,10 @@ import com.google.common.collect.ImmutableList;
 
 import hu.akarnokd.rxjava2.interop.FlowInterop;
 import io.reactivex.Flowable;
+import zulu.runtime.subscriptions.ZuluDataResult;
 import zulu.runtime.subscriptions.ZuluResult;
 
-public class ImmediatePortal implements ZuluPortal, ZuluFullDataResult {
+public class ImmediatePortal implements ZuluPortal, ZuluFullDataResult, ZuluDataResult {
 
   private final ZuluExecutable executable;
   private final Object instance;
@@ -42,7 +43,7 @@ public class ImmediatePortal implements ZuluPortal, ZuluFullDataResult {
     final ZuluContext ctx = this.executable.bind(this.instance, this.scope);
 
     // execute
-    final ZuluExecutionResult execres = ctx.execute(this.reqvars, null);
+    final ZuluExecutionResult execres = ctx.execute(this.reqvars, receiver);
 
     // additional runtime notes.
     return execres.notes();
@@ -57,6 +58,18 @@ public class ImmediatePortal implements ZuluPortal, ZuluFullDataResult {
 
   @Override
   public void cancel() {
+  }
+
+  @Override
+  public void data(final ZuluResultReceiver receiver) {
+
+    this.accept(receiver);
+
+  }
+
+  @Override
+  public List<ZuluWarning> errors() {
+    return this.notes;
   }
 
 }

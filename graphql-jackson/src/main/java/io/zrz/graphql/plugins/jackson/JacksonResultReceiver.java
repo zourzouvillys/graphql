@@ -5,7 +5,6 @@ import java.io.IOException;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import io.zrz.graphql.zulu.engine.DefaultZuluResultReceiver;
-import io.zrz.graphql.zulu.engine.ZuluExecutable;
 import io.zrz.graphql.zulu.engine.ZuluResultReceiver;
 import io.zrz.graphql.zulu.engine.ZuluSelection;
 import io.zrz.graphql.zulu.engine.ZuluSelectionContainer;
@@ -38,14 +37,16 @@ public class JacksonResultReceiver extends DefaultZuluResultReceiver implements 
   @Override
   public void startStruct(final ZuluSelectionContainer container, final Object context) {
     try {
-      if (this.jg.getOutputContext().inArray() || (container instanceof ZuluExecutable) || this.jg.getOutputContext().inRoot()) {
+      if (!this.jg.getOutputContext().inObject()) {
         this.jg.writeStartObject();
       }
       else {
         this.jg.writeObjectFieldStart(container.outputName());
       }
     }
-    catch (final IOException e) {
+    catch (
+
+    final IOException e) {
       throw new RuntimeException(e);
     }
   }

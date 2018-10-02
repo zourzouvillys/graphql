@@ -50,7 +50,7 @@ public class DefaultZuluHttpEngine implements ZuluHttpEngine {
     return FlowInterop
         .fromFlowPublisher(portal)
         .doOnCancel(() -> {
-          log.debug("subscription cancelled");
+          log.debug("query cancelled");
           portal.cancel();
         })
         .map(this::mapResult);
@@ -78,10 +78,8 @@ public class DefaultZuluHttpEngine implements ZuluHttpEngine {
         final ZuluDataResult data = (ZuluDataResult) res;
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (JsonGenerator jg = DefaultZuluHttpEngine.this.responder.mapper().getFactory().createGenerator(baos)) {
-          jg.writeStartObject();
           final JacksonResultReceiver receiver = new JacksonResultReceiver(jg);
           data.data(receiver);
-          jg.writeEndObject();
           jg.flush();
           jg.close();
           return DefaultZuluHttpEngine.this.responder.mapper().readValue(baos.toByteArray(), ObjectNode.class);

@@ -1,6 +1,7 @@
 package io.zrz.zulu.server.netty;
 
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
@@ -9,11 +10,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.reflect.TypeToken;
 
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.WebSocketFrame;
+import io.reactivex.Flowable;
+import io.reactivex.functions.Predicate;
 import io.zrz.graphql.zulu.engine.ZuluEngine;
 import io.zrz.graphql.zulu.engine.ZuluEngineBuilder;
 import io.zrz.graphql.zulu.engine.ZuluExecutionScopeProvider;
+import io.zrz.graphql.zulu.engine.ZuluWarning;
+import io.zrz.zulu.server.netty.ws.GQLWSFrame;
+import io.zrz.zulu.server.netty.ws.GQLWSFrames;
+import io.zrz.zulu.server.netty.ws.GQLWSRequest;
+import io.zrz.zulu.server.netty.ws.SimpleGQLWSFrame;
+import io.zrz.zulu.server.netty.ws.StandardGQLWSFrameKind;
+import zrz.webports.spi.IncomingWebSocket;
 
 public class ZuluNettyServer {
+
+  private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ZuluNettyServer.class);
 
   private final HttpServer http;
   private final ZuluEngine zulu;
@@ -32,6 +46,10 @@ public class ZuluNettyServer {
     this.engine = new DefaultZuluHttpEngine(zulu, this.responder);
     this.http = new HttpServer(this.engine, port, this.responder);
     this.zulu = zulu;
+  }
+
+  public ZuluHttpEngine engine() {
+    return this.engine;
   }
 
   public ZuluNettyServer startAsync() {
@@ -83,6 +101,72 @@ public class ZuluNettyServer {
   public <T> ZuluNettyServer exceptionMapper(final Type exceptionType, final Function<Throwable, ObjectNode> mapper) {
     this.responder.exceptionMappers.put(exceptionType, mapper);
     return this;
+  }
+
+  /**
+   * provides a handler that
+   *
+   * @param req
+   * @return
+   */
+
+  public Flowable<WebSocketFrame> websocket(final IncomingWebSocket req) {
+
+    return req
+        .incoming()
+        .cast(TextWebSocketFrame.class)
+        .map(TextWebSocketFrame::text)
+        .map(GQLWSFrames::decode)
+        .doOnNext(msg -> {
+
+          if (msg.id() != null) {
+            return;
+          }
+
+          //
+          switch (msg.type().kindName()) {
+            case "connection_init":
+              log.debug("initialized connection");
+              break;
+            default:
+              log.info("unknown graphql-ws frame: {}", msg);
+              break;
+          }
+
+        })
+
+        .doAfterTerminate(() -> log.info("completed session"))
+
+        .filter(f -> f.id() != null)
+
+        .groupBy(f -> f.id())
+
+        .flatMap(flow -> {
+
+          return flow
+              .takeUntil((Predicate<GQLWSFrame>) f -> f.type().kindName().equals("stop"))
+              .onErrorReturn(err -> SimpleGQLWSFrame.error(flow.getKey(), err))
+              .filter(f -> f.type() == StandardGQLWSFrameKind.GQL_START)
+              .flatMap(e -> {
+
+                log.info("querying {}", e);
+                return this.engine.execute(new GQLWSRequest(e));
+
+              })
+              .map(data -> {
+
+                final ObjectNode content = data.data();
+                final List<ZuluWarning> errors = data.errors();
+                log.trace("sending frame {}", data, errors);
+                return SimpleGQLWSFrame.data(flow.getKey(), content, errors, data.extensions());
+
+              })
+              .doAfterTerminate(() -> log.info("query completed"));
+
+        })
+        .map(GQLWSFrames::encode)
+        .map(TextWebSocketFrame::new);
+
   }
 
 }

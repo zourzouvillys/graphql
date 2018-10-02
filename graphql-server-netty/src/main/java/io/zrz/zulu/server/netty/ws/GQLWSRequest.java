@@ -9,7 +9,7 @@ public class GQLWSRequest implements HttpOperationRequest {
 
   private final JsonNode payload;
 
-  public GQLWSRequest(final GQLWebSocketSession session, final GQLWSFrame start) {
+  public GQLWSRequest(final GQLWSFrame start) {
     this.payload = start.rawPayload();
   }
 

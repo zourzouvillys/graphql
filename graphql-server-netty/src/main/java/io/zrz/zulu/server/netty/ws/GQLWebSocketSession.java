@@ -73,7 +73,7 @@ public class GQLWebSocketSession extends Flowable<GQLWSFrame> {
   private void processStart(final GQLWSFrame start) {
     final String id = start.id();
     log.debug("starting query[{}]: {}", start.id(), start.rawPayload());
-    final Disposable handle = this.engine.execute(new GQLWSRequest(this, start))
+    final Disposable handle = this.engine.execute(new GQLWSRequest(start))
         .subscribe(
             data -> {
               final ObjectNode content = data.data();

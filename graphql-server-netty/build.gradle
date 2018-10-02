@@ -3,6 +3,7 @@ eclipse.project.name = 'graphql:server-netty'
 dependencies {
   
   // netty
+  implementation 'io.zrz.webports:webports:master-SNAPSHOT'
   implementation     'io.netty:netty-codec-http2:4.1.25.Final'
   
   // runtime shared dependencies.
@@ -22,6 +23,7 @@ dependencies {
   implementation      'com.github.zourzouvillys:commons:950d929406'
   implementation      'org.apache.commons:commons-lang3:3.7'
   implementation      'io.reactivex.rxjava2:rxjava:2.2.2'
+  implementation      'com.github.akarnokd:rxjava2-jdk9-interop:0.2.2'
 
 
   // compile time only dependencies
