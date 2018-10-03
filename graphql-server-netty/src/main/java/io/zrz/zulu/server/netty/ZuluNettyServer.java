@@ -10,8 +10,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.reflect.TypeToken;
 
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
+import io.netty.handler.codec.http2.DefaultHttp2DataFrame;
+import io.netty.handler.codec.http2.DefaultHttp2Headers;
+import io.netty.handler.codec.http2.DefaultHttp2HeadersFrame;
+import io.netty.handler.codec.http2.Http2StreamFrame;
 import io.reactivex.Flowable;
 import io.reactivex.functions.Predicate;
 import io.zrz.graphql.zulu.engine.ZuluEngine;
@@ -166,6 +172,57 @@ public class ZuluNettyServer {
         })
         .map(GQLWSFrames::encode)
         .map(TextWebSocketFrame::new);
+
+  }
+
+  public Flowable<Http2StreamFrame> process(final IncomingZuluRequest req) {
+
+    if (req.isOptions()) {
+      log.debug("CORS preflight/OPTIONS request");
+      final DefaultHttp2Headers headers = new DefaultHttp2Headers();
+      headers.status(HttpResponseStatus.OK.codeAsText());
+      // Access-Control-Request-Headers
+      // Access-Control-Request-Method
+      req.origin()
+          .ifPresent(
+              origin -> {
+                headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+                headers.add(HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS, "content-type,etag,vary,content-encoding,authorization");
+                headers.addBoolean(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, true);
+                headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, "POST,GET,OPTIONS");
+                headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, "content-type,accept,if-none-match,authorization");
+                headers.addInt(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, 600);
+              });
+      return Flowable.just(new DefaultHttp2HeadersFrame(headers, true));
+    }
+
+    // a full request.
+
+    final HttpOperationRequest opreq = req.request();
+
+    log.debug("GraphQL request {}", req);
+
+    return this.engine
+        .execute(opreq)
+        .singleOrError()
+        .toFlowable()
+        .flatMap(res -> {
+          final DefaultHttp2Headers headers = new DefaultHttp2Headers(true);
+          headers.status(HttpResponseStatus.OK.codeAsText());
+
+          req.origin()
+              .ifPresent(
+                  origin -> {
+                    headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+                    headers.add(HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS, "content-type,etag,vary,content-encoding,authorization");
+                    headers.addBoolean(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, true);
+                    headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, "POST,GET,OPTIONS");
+                    headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, "content-type,accept,if-none-match,authorization");
+                    headers.addInt(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, 600);
+                  });
+
+          return Flowable.just(new DefaultHttp2HeadersFrame(headers), new DefaultHttp2DataFrame(ZuluNettyUtils.toByteBuf(res), true));
+        });
 
   }
 

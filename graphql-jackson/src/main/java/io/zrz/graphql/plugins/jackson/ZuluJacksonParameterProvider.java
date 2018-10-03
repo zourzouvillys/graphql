@@ -18,12 +18,14 @@ public class ZuluJacksonParameterProvider implements ZuluParameterReader {
 
   public ZuluJacksonParameterProvider(final ObjectMapper mapper, final Map<String, JsonNode> variables) {
     this.mapper = mapper;
-    this.vars = variables;
+    this.vars = variables == null ? ImmutableMap.of() : variables;
   }
 
   public ZuluJacksonParameterProvider(final ObjectMapper mapper, final ObjectNode variables) {
     this.mapper = mapper;
-    this.vars = Streams.stream(variables.fields()).collect(ImmutableMap.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
+    this.vars = variables != null
+        ? Streams.stream(variables.fields()).collect(ImmutableMap.toImmutableMap(e -> e.getKey(), e -> e.getValue()))
+        : ImmutableMap.of();
   }
 
   @Override
