@@ -48,7 +48,8 @@ public class ZuluNettyUtils {
   }
 
   public static ByteBuf toByteBuf(final ZuluJacksonResult res) {
-    return toByteBuf(toFullResponse(res.data(), res.errors(), res.extensions()));
+    final ObjectNode data = res.data();
+    return toByteBuf(toFullResponse(data, res.errors(), res.extensions()));
   }
 
   public static JsonNode fromByteBuf(final ByteBuf buf, final boolean release) {

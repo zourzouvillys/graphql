@@ -178,21 +178,13 @@ public class ZuluNettyServer {
   public Flowable<Http2StreamFrame> process(final IncomingZuluRequest req) {
 
     if (req.isOptions()) {
-      log.debug("CORS preflight/OPTIONS request");
+      log.debug("CORS preflight/OPTIONS request, origin {}", req.origin());
       final DefaultHttp2Headers headers = new DefaultHttp2Headers();
       headers.status(HttpResponseStatus.OK.codeAsText());
       // Access-Control-Request-Headers
       // Access-Control-Request-Method
-      req.origin()
-          .ifPresent(
-              origin -> {
-                headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-                headers.add(HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS, "content-type,etag,vary,content-encoding,authorization");
-                headers.addBoolean(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, true);
-                headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, "POST,GET,OPTIONS");
-                headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, "content-type,accept,if-none-match,authorization");
-                headers.addInt(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, 600);
-              });
+      req.origin().ifPresent(origin -> this.addCORS(origin, headers));
+      this.addHeaders(headers);
       return Flowable.just(new DefaultHttp2HeadersFrame(headers, true));
     }
 
@@ -209,21 +201,30 @@ public class ZuluNettyServer {
         .flatMap(res -> {
           final DefaultHttp2Headers headers = new DefaultHttp2Headers(true);
           headers.status(HttpResponseStatus.OK.codeAsText());
-
-          req.origin()
-              .ifPresent(
-                  origin -> {
-                    headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-                    headers.add(HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS, "content-type,etag,vary,content-encoding,authorization");
-                    headers.addBoolean(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, true);
-                    headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, "POST,GET,OPTIONS");
-                    headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, "content-type,accept,if-none-match,authorization");
-                    headers.addInt(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, 600);
-                  });
-
+          req.origin().ifPresent(origin -> this.addCORS(origin, headers));
+          this.addHeaders(headers);
           return Flowable.just(new DefaultHttp2HeadersFrame(headers), new DefaultHttp2DataFrame(ZuluNettyUtils.toByteBuf(res), true));
         });
 
+  }
+
+  private void addHeaders(final DefaultHttp2Headers headers) {
+    headers.add("feature-policy", "sync-xhr 'none'; document-write 'none'");
+    headers.add("content-security-policy", "default-src 'none';");
+    headers.add("referrer-policy", "strict-origin");
+    headers.add(HttpHeaderNames.X_FRAME_OPTIONS, "SAMEORIGIN");
+    headers.add("strict-transport-security", "max-age=31536000000; includeSubDomains");
+    headers.add("x-xss-protection", "1; mode=block");
+    headers.add("x-content-type-options", "nosniff");
+  }
+
+  private void addCORS(final CharSequence origin, final DefaultHttp2Headers headers) {
+    headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+    headers.add(HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS, "content-type,etag,vary,content-encoding,authorization");
+    headers.addBoolean(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, true);
+    headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, "POST,GET,OPTIONS");
+    headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, "content-type,accept,if-none-match,authorization");
+    headers.addInt(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, 600);
   }
 
 }

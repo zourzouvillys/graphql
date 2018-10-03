@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import hu.akarnokd.rxjava2.interop.FlowInterop;
@@ -82,7 +83,11 @@ public class DefaultZuluHttpEngine implements ZuluHttpEngine {
           data.data(receiver);
           jg.flush();
           jg.close();
-          return DefaultZuluHttpEngine.this.responder.mapper().readValue(baos.toByteArray(), ObjectNode.class);
+          final byte[] bytes = baos.toByteArray();
+          if (bytes.length == 0) {
+            return JsonNodeFactory.instance.objectNode();
+          }
+          return DefaultZuluHttpEngine.this.responder.mapper().readValue(bytes, ObjectNode.class);
         }
         catch (final IOException e) {
           throw new RuntimeException(e);

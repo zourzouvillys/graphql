@@ -17,7 +17,7 @@ public interface IncomingZuluRequest {
    * the origin of this request (e.g, the HTTP Origin header).
    */
 
-  Optional<CharSequence> origin();
+  Optional<String> origin();
 
   /**
    * each of the operations in this request.
