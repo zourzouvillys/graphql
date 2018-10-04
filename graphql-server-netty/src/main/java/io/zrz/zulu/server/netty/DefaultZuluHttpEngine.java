@@ -2,11 +2,13 @@ package io.zrz.zulu.server.netty;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
 
 import hu.akarnokd.rxjava2.interop.FlowInterop;
 import io.reactivex.Flowable;
@@ -61,6 +63,30 @@ public class DefaultZuluHttpEngine implements ZuluHttpEngine {
   ZuluJacksonResult mapResult(final ZuluResult res) {
 
     final ZuluDataResult data = (ZuluDataResult) res;
+    final ObjectNode json;
+    final List<ZuluWarning> notes = new LinkedList<>();
+
+    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    try (JsonGenerator jg = DefaultZuluHttpEngine.this.responder.mapper().getFactory().createGenerator(baos)) {
+      final JacksonResultReceiver receiver = new JacksonResultReceiver(jg);
+      data.data(receiver, note -> notes.add(note));
+      jg.flush();
+      jg.close();
+      final byte[] bytes = baos.toByteArray();
+      if (!notes.isEmpty()) {
+        log.warn("notes: {}", notes);
+      }
+      if (bytes.length == 0) {
+        log.warn("null result");
+        json = JsonNodeFactory.instance.objectNode();
+      }
+      else {
+        json = DefaultZuluHttpEngine.this.responder.mapper().readValue(bytes, ObjectNode.class);
+      }
+    }
+    catch (final IOException e) {
+      throw new RuntimeException(e);
+    }
 
     return new ZuluJacksonResult() {
 
@@ -71,27 +97,17 @@ public class DefaultZuluHttpEngine implements ZuluHttpEngine {
 
       @Override
       public List<ZuluWarning> errors() {
-        return data.errors();
+        return ImmutableList.<ZuluWarning>builder().addAll(data.errors()).addAll(notes).build();
       }
 
       @Override
       public ObjectNode data() {
-        final ZuluDataResult data = (ZuluDataResult) res;
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (JsonGenerator jg = DefaultZuluHttpEngine.this.responder.mapper().getFactory().createGenerator(baos)) {
-          final JacksonResultReceiver receiver = new JacksonResultReceiver(jg);
-          data.data(receiver);
-          jg.flush();
-          jg.close();
-          final byte[] bytes = baos.toByteArray();
-          if (bytes.length == 0) {
-            return JsonNodeFactory.instance.objectNode();
-          }
-          return DefaultZuluHttpEngine.this.responder.mapper().readValue(bytes, ObjectNode.class);
-        }
-        catch (final IOException e) {
-          throw new RuntimeException(e);
-        }
+        return json;
+      }
+
+      @Override
+      public String toString() {
+        return "mappedResult(" + data + "): " + this.errors();
       }
 
     };

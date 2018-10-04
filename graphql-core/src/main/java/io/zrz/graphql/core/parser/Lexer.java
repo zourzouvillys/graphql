@@ -99,8 +99,28 @@ public final class Lexer {
 
     }
 
+    if (this.is("\"\"\"")) {
+      // read until */
+
+      final int idx = this.input.indexOf("\"\"\"", this.pos + 3);
+
+      if (idx == -1) {
+        throw ParserExceptions.endOfStream();
+      }
+
+      final String comment = this.input.substring(this.pos, idx + 3);
+
+      try {
+        return Token.from(TokenType.COMMENT, comment, this.createPosition(this.pos, idx + 3));
+      }
+      finally {
+        this.pos = idx + 3;
+      }
+
+    }
+
     // int/float.
-    if (this.input.charAt(this.pos) == '-' || Character.isDigit(this.input.charAt(this.pos))) {
+    if ((this.input.charAt(this.pos) == '-') || Character.isDigit(this.input.charAt(this.pos))) {
 
       for (int i = this.pos; i < this.input.length(); ++i) {
 
@@ -131,7 +151,7 @@ public final class Lexer {
 
     }
 
-    if (this.input.charAt(this.pos) == '"' || this.input.charAt(this.pos) == '\'') {
+    if ((this.input.charAt(this.pos) == '"') || (this.input.charAt(this.pos) == '\'')) {
 
       final char term = this.input.charAt(this.pos);
 
@@ -188,7 +208,7 @@ public final class Lexer {
 
     final Matcher m = comp.matcher(this.input);
 
-    if (!m.find(this.pos) || m.start() != this.pos) {
+    if (!m.find(this.pos) || (m.start() != this.pos)) {
       throw ParserExceptions.create(this, "Unrecognised input: '" + text + "'");
     }
 

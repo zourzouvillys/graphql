@@ -132,7 +132,7 @@ public class ZuluNettyServer {
           //
           switch (msg.type().kindName()) {
             case "connection_init":
-              log.debug("initialized connection");
+              log.debug("initialized connection, {}", msg.rawPayload());
               break;
             default:
               log.info("unknown graphql-ws frame: {}", msg);
@@ -155,15 +155,21 @@ public class ZuluNettyServer {
               .filter(f -> f.type() == StandardGQLWSFrameKind.GQL_START)
               .flatMap(e -> {
 
-                log.info("querying {}", e);
-                return this.engine.execute(new GQLWSRequest(e));
+                log.info("subscribing {}", e);
+
+                final Flowable<ZuluJacksonResult> res = this.engine.execute(new GQLWSRequest(e));
+
+                // apollo-link-ws errors if we send a null/missing "data" field for a subscription, so
+                // there is no way to indicate we accepted it.
+
+                return res; // .startWith(Flowable.just(new EmptyZuluJacksonResult()));
 
               })
               .map(data -> {
 
                 final ObjectNode content = data.data();
                 final List<ZuluWarning> errors = data.errors();
-                log.trace("sending frame {}", data, errors);
+                log.debug("sending frame {}", data, errors);
                 return SimpleGQLWSFrame.data(flow.getKey(), content, errors, data.extensions());
 
               })
@@ -198,13 +204,41 @@ public class ZuluNettyServer {
         .execute(opreq)
         .singleOrError()
         .toFlowable()
-        .flatMap(res -> {
+        //
+        // .flatMap(res -> {
+        //
+        // final Flowable<ZuluJacksonResult> dataset = this.engine.execute(null);
+        //
+        // // apollo-link-ws errors if we send a null/missing "data" field for a subscription, so
+        // // there is no way to indicate we accepted it.
+        //
+        // return dataset; // .startWith(Flowable.just(new EmptyZuluJacksonResult()));
+        //
+        // })
+        .flatMap(data -> {
+
+          log.debug("response {}", data);
+
           final DefaultHttp2Headers headers = new DefaultHttp2Headers(true);
+
           headers.status(HttpResponseStatus.OK.codeAsText());
+
           req.origin().ifPresent(origin -> this.addCORS(origin, headers));
+
           this.addHeaders(headers);
-          return Flowable.just(new DefaultHttp2HeadersFrame(headers), new DefaultHttp2DataFrame(ZuluNettyUtils.toByteBuf(res), true));
-        });
+
+          final DefaultHttp2DataFrame body = new DefaultHttp2DataFrame(ZuluNettyUtils.toByteBuf(data), true);
+
+          return Flowable.<Http2StreamFrame>just(new DefaultHttp2HeadersFrame(headers), body);
+
+          // final ObjectNode content = data.data();
+          // final List<ZuluWarning> errors = data.errors();
+          // log.debug("sending frame {}", data, errors);
+          // return SimpleGQLWSFrame.data(flow.getKey(), content, errors, data.extensions());
+          // return null;
+
+        })
+        .doAfterTerminate(() -> log.info("query completed"));
 
   }
 

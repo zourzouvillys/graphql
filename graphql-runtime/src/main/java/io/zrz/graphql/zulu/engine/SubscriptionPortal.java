@@ -115,7 +115,7 @@ public class SubscriptionPortal implements ZuluPortal, ZuluRequestContext {
       }
 
       @Override
-      public void data(final ZuluResultReceiver receiver) {
+      public void data(final ZuluResultReceiver receiver, final ZuluNotesReceiver notes) {
 
         final ExecutionState<? extends Object> state = new ExecutionState<>(
             SubscriptionPortal.this.scope,
@@ -127,6 +127,8 @@ public class SubscriptionPortal implements ZuluPortal, ZuluRequestContext {
         receiver.endStruct((ZuluSelectionContainer) sel, value);
 
         this.notes = ImmutableList.copyOf(state.notes());
+
+        notes.addAll(this.notes);
 
       }
 

@@ -191,6 +191,10 @@ public class ParseContext {
 
       final ImmutableGQLParameterableFieldDeclaration.Builder fb = GQLParameterableFieldDeclaration.builder();
 
+      if (this.is(TokenType.COMMENT)) {
+        fb.description(this.require(TokenType.COMMENT));
+      }
+
       fb.name(this.require(TokenType.NAME));
 
       if (this.is("(")) {
@@ -287,6 +291,10 @@ public class ParseContext {
 
       final ImmutableGQLArgumentDefinition.Builder ab = GQLArgumentDefinition.builder();
 
+      if (this.is(TokenType.COMMENT)) {
+        ab.description(this.require(TokenType.COMMENT));
+      }
+
       if (this.is("@")) {
         ab.directives(this.parseDirectives());
       }
@@ -323,6 +331,10 @@ public class ParseContext {
     while (!this.is("}")) {
 
       final ImmutableGQLEnumValue.Builder eb = GQLEnumValue.builder();
+
+      if (this.is(TokenType.COMMENT)) {
+        eb.description(this.require(TokenType.COMMENT));
+      }
 
       if (this.is("@")) {
         eb.directives(this.parseDirectives());
@@ -384,6 +396,10 @@ public class ParseContext {
     while (!this.is("}")) {
 
       final ImmutableGQLInputFieldDeclaration.Builder ib = GQLInputFieldDeclaration.builder();
+
+      if (this.is(TokenType.COMMENT)) {
+        ib.description(this.require(TokenType.COMMENT));
+      }
 
       if (this.is("@")) {
         ib.directives(this.parseDirectives());

@@ -35,8 +35,8 @@ public class ErrorPortal implements ZuluPortal, ZuluDataResult {
   }
 
   @Override
-  public void data(final ZuluResultReceiver receiver) {
-    // none.
+  public void data(final ZuluResultReceiver receiver, final ZuluNotesReceiver notes) {
+    notes.addAll(this.res.notes());
   }
 
   @Override

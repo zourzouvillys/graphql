@@ -34,7 +34,7 @@ public abstract class GQLInterfaceTypeDeclaration implements GQLExtendableTypeDe
   }
 
   public static GQLInterfaceTypeDeclaration.Builder builder() {
-    return GQLInterfaceTypeDeclaration.builder();
+    return new Builder();
   }
 
 }

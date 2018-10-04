@@ -2,6 +2,7 @@ package zulu.runtime.subscriptions;
 
 import java.util.List;
 
+import io.zrz.graphql.zulu.engine.ZuluNotesReceiver;
 import io.zrz.graphql.zulu.engine.ZuluResultReceiver;
 import io.zrz.graphql.zulu.engine.ZuluWarning;
 
@@ -13,7 +14,7 @@ import io.zrz.graphql.zulu.engine.ZuluWarning;
  */
 public interface ZuluDataResult extends ZuluResult {
 
-  void data(ZuluResultReceiver receiver);
+  void data(ZuluResultReceiver receiver, ZuluNotesReceiver notes);
 
   List<ZuluWarning> errors();
 

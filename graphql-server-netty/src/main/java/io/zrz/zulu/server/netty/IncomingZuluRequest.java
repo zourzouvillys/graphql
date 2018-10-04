@@ -14,6 +14,12 @@ public interface IncomingZuluRequest {
   boolean isOptions();
 
   /**
+   * the request is for the schema
+   */
+
+  boolean isSchemaRequest();
+
+  /**
    * the origin of this request (e.g, the HTTP Origin header).
    */
 

@@ -61,9 +61,13 @@ public class ImmediatePortal implements ZuluPortal, ZuluFullDataResult, ZuluData
   }
 
   @Override
-  public void data(final ZuluResultReceiver receiver) {
+  public void data(final ZuluResultReceiver receiver, final ZuluNotesReceiver notes) {
 
-    this.accept(receiver);
+    final List<ZuluWarning> res = this.accept(receiver);
+
+    if ((res != null) && !res.isEmpty()) {
+      notes.addAll(res);
+    }
 
   }
 

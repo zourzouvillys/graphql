@@ -55,8 +55,13 @@ public class SimpleGQLWSFrame implements GQLWSFrame {
 
   public static SimpleGQLWSFrame data(final String id, final ObjectNode data, final List<ZuluWarning> errors, final ObjectNode extensions) {
     final ObjectNode content = JsonNodeFactory.instance.objectNode();
-    content.set("data", data);
-    if ((errors != null) && !errors.isEmpty()) {
+    if (data != null) {
+      content.set("data", data);
+    }
+    else {
+      content.set("data", JsonNodeFactory.instance.nullNode());
+    }
+    if (errors != null) {
       // TODO: really need a better way of handling error encoding.
       final ArrayNode errarr = content.withArray("errors");
       for (final ZuluWarning err : errors) {
@@ -64,6 +69,9 @@ public class SimpleGQLWSFrame implements GQLWSFrame {
         erritem.put("type", err.warningKind().name());
         erritem.put("message", err.detail());
       }
+    }
+    else {
+      content.set("errors", JsonNodeFactory.instance.nullNode());
     }
     if (extensions != null) {
       content.set("extensions", extensions);
