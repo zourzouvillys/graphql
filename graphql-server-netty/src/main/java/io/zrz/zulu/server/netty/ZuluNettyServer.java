@@ -198,7 +198,7 @@ public class ZuluNettyServer {
 
     final HttpOperationRequest opreq = req.request();
 
-    log.debug("GraphQL request {}", req);
+    log.trace("GraphQL request {}", req);
 
     return this.engine
         .execute(opreq)

@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
+import io.zrz.graphql.zulu.executable.ExecutableEnumType;
 import io.zrz.graphql.zulu.executable.ExecutableInputField;
 import io.zrz.graphql.zulu.executable.ExecutableOutputField;
 import io.zrz.graphql.zulu.executable.ExecutableOutputFieldParam;
@@ -26,6 +27,7 @@ public class SchemaGenerator {
     final StringBuilder sb = new StringBuilder();
 
     this.j.types()
+        .filter(t -> !t.typeName().startsWith("__"))
         .forEach(nt -> {
 
           switch (nt.logicalKind()) {
@@ -34,7 +36,10 @@ public class SchemaGenerator {
               break;
             case SCALAR:
               this.generate((ExecutableScalarType) nt, sb);
+              break;
             case ENUM:
+              this.generate((ExecutableEnumType) nt, sb);
+              break;
             case INPUT:
             case INTERFACE:
             case UNION:
@@ -88,11 +93,41 @@ public class SchemaGenerator {
 
     sb.append(" {\n\n");
 
-    nt.fields().values().stream()
+    nt.fields().values()
+        .stream()
+        .filter(m -> !m.fieldName().startsWith("__"))
         .forEach(m -> {
 
           sb.append(" ").append(StringUtils.replaceAll(this.generate(m), "\n", "\n ")).append("\n\n");
 
+        });
+
+    sb.append("}\n\n");
+
+  }
+
+  private void generate(final ExecutableEnumType nt, final StringBuilder sb) {
+
+    sb.append("enum");
+
+    sb.append(" ");
+    sb.append(nt.typeName());
+
+    // List<String> supertypes = nt.type()
+    // .supertypes()
+    // .flatMap(x -> x.names().stream())
+    // .collect(Collectors.toList());
+    //
+    // if (!supertypes.isEmpty()) {
+    // sb.append(" implements ");
+    // sb.append(supertypes.stream().collect(Collectors.joining(" & ")));
+    // }
+
+    sb.append(" {\n\n");
+
+    nt.values()
+        .forEach(val -> {
+          sb.append(" ").append(val.name()).append("\n");
         });
 
     sb.append("}\n\n");
