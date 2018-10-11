@@ -58,8 +58,9 @@ public class ZuluEngineBuilder {
    *
    */
 
-  public void stubType(final Type type) {
+  public ZuluEngineBuilder stubType(final Type type) {
     this.schema.addStubType(type, null, null);
+    return this;
   }
 
   public ZuluEngineBuilder plugin(final ZuluPlugin plugin) {

@@ -6,6 +6,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 
+import org.eclipse.jdt.annotation.NonNull;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.reflect.TypeToken;
@@ -23,6 +25,7 @@ import io.reactivex.functions.Predicate;
 import io.zrz.graphql.zulu.engine.ZuluEngine;
 import io.zrz.graphql.zulu.engine.ZuluEngineBuilder;
 import io.zrz.graphql.zulu.engine.ZuluExecutionScopeProvider;
+import io.zrz.graphql.zulu.engine.ZuluScopedContext;
 import io.zrz.graphql.zulu.engine.ZuluWarning;
 import io.zrz.zulu.server.netty.ws.GQLWSFrame;
 import io.zrz.zulu.server.netty.ws.GQLWSFrames;
@@ -259,6 +262,31 @@ public class ZuluNettyServer {
     headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, "POST,GET,OPTIONS");
     headers.add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, "content-type,accept,if-none-match,authorization");
     headers.addInt(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, 600);
+  }
+
+  public <T> ZuluNettyServer inject(final Class<@NonNull T> klass, final T ctx) {
+
+    final ZuluScopedContext<Object> provider = new ZuluScopedContext<>() {
+
+      @Override
+      public T get() {
+        return ctx;
+      }
+
+      @Override
+      public void complete() {
+      }
+
+      @Override
+      public void error() {
+      }
+
+    };
+
+    this.contextProvider(klass, type -> provider);
+
+    return this;
+
   }
 
 }
