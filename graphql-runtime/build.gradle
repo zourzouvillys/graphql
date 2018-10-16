@@ -6,7 +6,8 @@ dependencies {
   
   // note: should be internnal only, annd use Flow.Publisher instead.
   implementation    'io.reactivex.rxjava2:rxjava:2.2.2'
-  implementation    'com.github.akarnokd:rxjava2-jdk9-interop:0.2.2'
+  implementation 'com.github.akarnokd:rxjava2-jdk8-interop:0.3.2'
+  implementation      'com.github.akarnokd:rxjava2-jdk9-interop:0.2.2'
   
   // runtime shared dependencies.
   api                 'org.slf4j:slf4j-api:1.7.25'

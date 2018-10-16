@@ -116,6 +116,7 @@ eclipse {
   }  
 
   artifacts {
+    archives jar
     archives sourcesJar
     //archives javadocJar
   }

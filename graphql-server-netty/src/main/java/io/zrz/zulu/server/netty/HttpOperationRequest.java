@@ -12,4 +12,6 @@ public interface HttpOperationRequest {
 
   ObjectNode extensions();
 
+  boolean isSchemaRequest();
+
 }

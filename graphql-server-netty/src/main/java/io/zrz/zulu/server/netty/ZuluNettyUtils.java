@@ -1,5 +1,7 @@
 package io.zrz.zulu.server.netty;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -9,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Preconditions;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
@@ -54,9 +57,11 @@ public class ZuluNettyUtils {
 
   public static JsonNode fromByteBuf(final ByteBuf buf, final boolean release) {
 
+    Preconditions.checkArgument(buf.isReadable());
+
     try (ByteBufInputStream in = new ByteBufInputStream(buf, release)) {
 
-      return objectMapper.readTree(in);
+      return requireNonNull(objectMapper.readTree(in));
 
     }
     catch (final IOException e) {

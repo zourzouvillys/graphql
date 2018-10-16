@@ -33,17 +33,9 @@ public class GQLWSRequest implements HttpOperationRequest {
     return this.payload.get("operationName").textValue();
   }
 
-  // final ObjectNode content = mapper.getNodeFactory().objectNode();
-  //
-  // final ObjectNode data = content.putObject("data");
-  //
-  // final ObjectNode result = data.putObject("newItemCreated");
-  // result.put("id", 1234);
-  // result.put("__typename", "Item");
-
-  // this.writer.onNext(SimpleGQLWSFrame.data(start.id(), content));
-
-  // Flowable.interval(5, TimeUnit.SECONDS).map(e -> SimpleGQLWSFrame.data(start.id(),
-  // content)).subscribe(this.writer);
+  @Override
+  public boolean isSchemaRequest() {
+    return false;
+  }
 
 }
