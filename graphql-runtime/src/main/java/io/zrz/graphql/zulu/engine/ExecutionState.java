@@ -14,6 +14,8 @@ import io.zrz.graphql.zulu.executable.ExecutableInput;
 
 class ExecutionState<RootT> implements ZuluSelectionVisitor.ConsumerVisitor<Object>, ZuluExecutionResult, ZuluRequestContext {
 
+  private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ExecutionState.class);
+
   /**
    *
    */
@@ -86,6 +88,7 @@ class ExecutionState<RootT> implements ZuluSelectionVisitor.ConsumerVisitor<Obje
 
     }
     catch (final Exception ex) {
+      log.warn("Execution Error", ex);
       this.note(new ZuluWarning.ExecutionError(leaf, ex, value), leaf);
       return;
     }
@@ -167,6 +170,7 @@ class ExecutionState<RootT> implements ZuluSelectionVisitor.ConsumerVisitor<Obje
       }
     }
     catch (final Exception ex) {
+      log.warn("Execution Error", ex);
       this.note(new ZuluWarning.ExecutionError(container, ex, value), container);
       return;
     }

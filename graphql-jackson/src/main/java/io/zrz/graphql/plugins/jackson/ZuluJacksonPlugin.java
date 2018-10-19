@@ -21,6 +21,10 @@ public class ZuluJacksonPlugin implements ZuluPlugin {
         .registerModules(modules);
   }
 
+  public ObjectMapper mapper() {
+    return this.mapper;
+  }
+
   @Override
   public void onPluginRegistered(final ZuluEngineBuilder builder) {
     builder.schema(schema -> schema.typeBinder(new ZuluJacksonTypeBinder(this.mapper)));

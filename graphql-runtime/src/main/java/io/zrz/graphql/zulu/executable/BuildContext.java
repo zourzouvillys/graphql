@@ -63,6 +63,8 @@ class BuildContext implements OutputFieldFilter {
       case SCALAR:
         return this.use(container, TypeToken.of(String.class), 0, false, new Annotation[0]);
       case STRUCT:
+        Preconditions.checkNotNull(container.javaType());
+        return this.use(container, container.javaType(), 0, false, new Annotation[0]);
       case ARRAY:
       case ENUM:
       case TUPLE:
@@ -344,7 +346,7 @@ class BuildContext implements OutputFieldFilter {
 
   public Stream<? extends JavaOutputField> outputFieldsFor(final Symbol symbol, final ExecutableOutputType type) {
 
-    if (symbol.handle == null || symbol.stub) {
+    if ((symbol.handle == null) || symbol.stub) {
       return this.builder().outputFieldsFor(symbol, type);
     }
 

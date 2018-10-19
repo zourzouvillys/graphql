@@ -31,8 +31,9 @@ public class JavaExecutableUtils {
       final Class<?> superClass = declaringClass.getSuperclass();
 
       if (superClass != null) {
-        if (Modifier.isPublic(superClass.getModifiers()))
+        if (Modifier.isPublic(superClass.getModifiers())) {
           return superClass.getMethod(myMethod.getName(), myMethod.getParameterTypes());
+        }
       }
 
     }

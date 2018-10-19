@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.eclipse.jdt.annotation.NonNull;
 
+import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
 
 import io.zrz.zulu.types.ZField;
@@ -42,6 +43,7 @@ public final class ExecutableInputField implements ZField, ExecutableElement, Ex
 
   @Override
   public TypeToken<?> javaType() {
+    Preconditions.checkNotNull(null, "invalid", this.inputType, this.zfield);
     return null;
   }
 

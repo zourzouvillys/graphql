@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonAnyFormatVisitor;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonArrayFormatVisitor;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonBooleanFormatVisitor;
+import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatTypes;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitable;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonIntegerFormatVisitor;
@@ -211,7 +212,20 @@ public class ZuluJacksonTypeBinder implements ZuluTypeBinder {
 
     @Override
     public JsonArrayFormatVisitor expectArrayFormat(final JavaType type) throws JsonMappingException {
-      throw new IllegalArgumentException("unable to map");
+      // throw new IllegalArgumentException("unable to map");
+      return new JsonArrayFormatVisitor.Base() {
+
+        @Override
+        public void itemsFormat(final JsonFormatVisitable handler, final JavaType elementType) throws JsonMappingException {
+          handler.acceptJsonFormatVisitor(FormatVisitor.this, type);
+        }
+
+        @Override
+        public void itemsFormat(final JsonFormatTypes format) throws JsonMappingException {
+          // TODO Auto-generated method stub
+          throw new UnsupportedOperationException("Unimplemented Method: Type1539892676252.itemsFormat invoked.");
+        }
+      };
     }
 
     /**
