@@ -47,7 +47,7 @@ ext.libraries = [
 allprojects {
 
 
-  group = 'io.zrz.graphql'
+  group = 'com.github.zourzouvillys.graphql'
   version = 'master-SNAPSHOT'
 
 }

@@ -1,5 +1,8 @@
 # Java GraphQL
 
+[![](https://jitpack.io/v/zourzouvillys/graphql.svg)](https://jitpack.io/#zourzouvillys/graphql)
+
+
 A Java 8+ implementation of GraphQL.
 
 ## Overview
@@ -21,8 +24,8 @@ repositories {
 
 
 dependencies {
-  implementation 'io.zrz.graphql:graphql-server-netty:master-SNAPSHOT'
-  implementation 'io.zrz.graphql:graphql-jackson:master-SNAPSHOT'
+  implementation 'com.github.zourzouvillys.graphql:graphql-server-netty:master-SNAPSHOT'
+  implementation 'com.github.zourzouvillys.graphql:graphql-jackson:master-SNAPSHOT'
 }
   
 ```
