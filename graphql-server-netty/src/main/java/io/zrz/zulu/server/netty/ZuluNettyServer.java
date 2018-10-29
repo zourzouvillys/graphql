@@ -32,7 +32,7 @@ import io.zrz.zulu.server.netty.ws.GQLWSFrames;
 import io.zrz.zulu.server.netty.ws.GQLWSRequest;
 import io.zrz.zulu.server.netty.ws.SimpleGQLWSFrame;
 import io.zrz.zulu.server.netty.ws.StandardGQLWSFrameKind;
-import zrz.webports.spi.IncomingWebSocket;
+import zrz.webports.api.IncomingWebSocket;
 
 public class ZuluNettyServer {
 

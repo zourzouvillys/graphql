@@ -3,7 +3,7 @@ eclipse.project.name = 'graphql:server-netty'
 dependencies {
   
   // netty
-  implementation     'com.github.zourzouvillys:webports:eeb5e22aec'
+  implementation     'com.github.zourzouvillys.webports:webports-core:81e3e829de'
   implementation     'io.netty:netty-codec-http2:4.1.25.Final'
   
   // runtime shared dependencies.
