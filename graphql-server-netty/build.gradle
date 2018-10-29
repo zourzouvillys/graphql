@@ -4,6 +4,7 @@ dependencies {
   
   // netty
   implementation     'com.github.zourzouvillys.webports:webports-core:81e3e829de'
+  implementation     'com.github.zourzouvillys.webports:webports-api:81e3e829de'
   implementation     'io.netty:netty-codec-http2:4.1.25.Final'
   
   // runtime shared dependencies.
