@@ -2,14 +2,13 @@
 eclipse.project.name = 'graphql:annotations'
 
 dependencies {
-  
-  compileOnly         'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.100'
+
+  compileOnly         libraries.jdtAnnotation
 
   testImplementation  'junit:junit:4.12'
   testImplementation  'org.assertj:assertj-core:3.6.1'
 
 }
-
 
 
 compileJava {

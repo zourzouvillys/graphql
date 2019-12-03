@@ -4,28 +4,22 @@ eclipse.project.name = 'graphql:jackson'
 dependencies {
   
   // runtime shared dependencies.
-  api                 'org.slf4j:slf4j-api:1.7.25'
+  api                 libraries.slf4j.api
   
   // these are internal only, shaded for deploy.
-  implementation      'com.google.guava:guava:25.1-jre'
-  //implementation      'org.apache.commons:commons-lang3:3.7'
-  //implementation      'com.github.zourzouvillys:commons:950d929406'
-  //implementation      'org.apache.commons:commons-text:1.4'
-  //implementation      'net.jodah:typetools:0.5.0'
+  implementation      libraries.guava
   
   api                 project(':graphql-runtime')
   api                 project(':graphql-core')
   
-  api                 'com.fasterxml.jackson.core:jackson-databind:2.9.6'
+  api                 libraries.jackson.databind
 
-  implementation      'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.6'
-  implementation      'com.fasterxml.jackson.module:jackson-module-parameter-names:2.9.6'
-  implementation      'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.6'
-  //implementation      'com.fasterxml.jackson.module:jackson-module-jsonSchema:2.9.6'
+  implementation      libraries.jackson.datatype.jdk8
+  implementation      libraries.jackson.module.parameterNames
+  implementation      libraries.jackson.datatype.jsr310
 
   // compile time only dependencies
-  // compileOnly         'com.google.errorprone:error_prone_annotations:2.3.1'
-  compileOnly         'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.100'
+  compileOnly         libraries.jdtAnnotation
 
   testImplementation  'junit:junit:4.12'
   testImplementation  'org.assertj:assertj-core:3.6.1'

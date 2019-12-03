@@ -9,47 +9,14 @@ buildscript {
   }
 
   dependencies {
-	classpath "com.prezi.pride:gradle-pride-plugin:0.11"
-	classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1+"
-    classpath 'net.ltgt.gradle:gradle-apt-plugin:0.15'
+    classpath "net.ltgt.gradle:gradle-apt-plugin:0.21"
   }
 
 }
 
-ext.libraries = [
-  lombok: 'org.projectlombok:lombok:1.16.18',
-  junit: 'junit:junit:4.12',
-  guava: 'com.google.guava:guava:23.1-jre',
-  slf4j: [
-    api: 'org.slf4j:slf4j-api:1.7.25'
-  ],
-  logback: [
-    classic: 'ch.qos.logback:logback-classic:1.2.3'
-  ],
-  jackson: [
-    databind: 'com.fasterxml.jackson.core:jackson-databind:2.9.1',
-    jaxrs_json_provider: 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.1'
-  ],
-  apache: [
-    commons: [
-      lang3: 'org.apache.commons:commons-lang3:3.6'
-    ]
-  ],
-  grpc: [
-    netty: 'io.grpc:grpc-netty:1.0.3'
-  ],
-  unirest: 'com.mashape.unirest:unirest-java:1.4.9',
-  assertj: [
-    core: 'org.assertj:assertj-core:3.6.1'
-  ]
-]
-
 allprojects {
-
-
   group = 'com.github.zourzouvillys.graphql'
   version = 'master-SNAPSHOT'
-
 }
 
 subprojects {
@@ -60,6 +27,7 @@ subprojects {
   apply plugin: 'net.ltgt.apt-eclipse'
   apply plugin: 'maven'
 
+  apply from: "${rootDir}/gradle/deps.gradle"
 
   repositories {
     mavenCentral()
@@ -145,5 +113,5 @@ eclipse {
 }
 
 wrapper {
-    gradleVersion = '4.8'
+    gradleVersion = '6.0.1'
 }

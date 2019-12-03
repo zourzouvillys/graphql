@@ -1,0 +1,71 @@
+
+
+configurations.all {
+  resolutionStrategy {
+    // cacheDynamicVersionsFor 1, 'days'
+    // cacheChangingModulesFor 1, 'days'
+    // failOnVersionConflict()          
+    // preferProjectModules()
+    // activateDependencyLocking()
+  }
+}
+
+
+dependencyLocking {
+  // lockAllConfigurations()
+}
+
+
+
+    
+
+
+ext {
+
+  useImmutableValues = { ->
+  }
+
+  libraries = [
+    errorProne: 'com.google.errorprone:error_prone_annotations:2.3.1',
+    vavr: 'io.vavr:vavr:0.9.2',
+    typetools: 'net.jodah:typetools:0.6.1',
+    jdtAnnotation: 'org.eclipse.jdt:org.eclipse.jdt.annotation:2.2.300',
+    lombok: 'org.projectlombok:lombok:1.16.18',
+    guava: 'com.google.guava:guava:28.1-jre',
+    immutables: [
+      value: 'org.immutables:value:2.8.2',
+      builder: 'org.immutables:builder:2.8.2',
+    ],
+    commons: [
+      lang3: 'org.apache.commons:commons-lang3:3.9',
+      text: 'org.apache.commons:commons-text:1.4',
+    ],
+    rxjava2: [
+      'io.reactivex.rxjava2:rxjava:2.2.2',
+      'com.github.akarnokd:rxjava2-jdk8-interop:0.3.2',
+      'com.github.akarnokd:rxjava2-jdk9-interop:0.2.2',
+    ],
+    slf4j: [
+      api: 'org.slf4j:slf4j-api:1.7.29'
+    ],
+    logback: [
+      classic: 'ch.qos.logback:logback-classic:1.2.3'
+    ],
+    jackson: [
+      databind: 'com.fasterxml.jackson.core:jackson-databind:2.10.1',
+      jaxrs_json_provider: 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.10.1',
+      datatype: [
+        jdk8: 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.10.1',
+        jsr310: 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.6',
+      ],
+      module: [
+        parameterNames: 'com.fasterxml.jackson.module:jackson-module-parameter-names:2.10.1',
+      ]
+    ],
+    netty: [
+      codec: [ http2: 'io.netty:netty-codec-http2:4.1.25.Final' ],
+    ],
+  ]
+
+
+}

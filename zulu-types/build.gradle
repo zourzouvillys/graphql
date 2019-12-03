@@ -7,13 +7,9 @@ eclipse.project.name = 'graphql:zulu-types'
 
 dependencies {
   
-  compileOnly         'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.100'
-
-  // compileOnly         'org.immutables:builder:2.6.1'
-  compileOnly         'org.immutables:value:2.6.1'
-
-  // annotationProcessor 'org.immutables:builder:2.6.1'
-  annotationProcessor 'org.immutables:value:2.6.1'
+  compileOnly         libraries.jdtAnnotation
+  compileOnly         libraries.immutables.value
+  annotationProcessor libraries.immutables.value
 
   testImplementation  'junit:junit:4.12'
   testImplementation  'org.assertj:assertj-core:3.6.1'
