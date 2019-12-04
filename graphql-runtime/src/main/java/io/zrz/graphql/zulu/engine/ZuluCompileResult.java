@@ -45,7 +45,12 @@ public class ZuluCompileResult {
     StringBuilder sb = new StringBuilder();
 
     sb.append(op).append("\n");
-    sb.append(warnings).append("\n");
+    if (warnings == null) {
+      sb.append("# warnings: none").append("\n");
+    }
+    else {
+      sb.append("# warnings: ").append(warnings).append("\n");
+    }
     sb.append(executable).append("\n");
 
     return sb.toString();

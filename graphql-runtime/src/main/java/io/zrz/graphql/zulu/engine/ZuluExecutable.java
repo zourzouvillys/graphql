@@ -110,7 +110,7 @@ public class ZuluExecutable implements ZuluSelectionContainer, ExecutableElement
   }
 
   @Deprecated
-  public ZuluExecutionResult execute(final ZuluRequest req, final ZuluResultReceiver receiver) {
+  private ZuluExecutionResult execute(final ZuluRequest req, final ZuluResultReceiver receiver) {
 
     final ZuluExecutionScope scope = new ZuluExecutionScope();
 

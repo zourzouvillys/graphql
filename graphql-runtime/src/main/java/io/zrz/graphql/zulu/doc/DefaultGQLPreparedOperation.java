@@ -10,6 +10,7 @@ import io.zrz.graphql.core.doc.GQLFragmentDefinition;
 import io.zrz.graphql.core.doc.GQLOpType;
 import io.zrz.graphql.core.doc.GQLOperationDefinition;
 import io.zrz.graphql.core.doc.GQLSelectedOperation;
+import io.zrz.graphql.core.doc.GQLSelection;
 import io.zrz.graphql.core.doc.GQLVariableDefinition;
 import io.zrz.graphql.core.types.GQLTypeRefKind;
 import io.zrz.graphql.core.value.GQLValue;
@@ -38,7 +39,8 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
     this.resolver = resolver;
     this.op = op;
     this.inputType = new OpInputType();
-    this.selection = this.op
+    this.selection =
+      this.op
         .operation()
         .selections()
         .stream()
@@ -87,7 +89,7 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
       }
 
     })
-        .collect(Collectors.toList());
+      .collect(Collectors.toList());
   }
 
   public class OpInputField implements ZField {
@@ -101,7 +103,8 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
       if (defaultValue == null)
         this.defaultValue = Optional.empty();
       else
-        this.defaultValue = defaultValue
+        this.defaultValue =
+          defaultValue
             .apply(new ConstantZValueValueExtractor(DefaultGQLPreparedOperation.this, null, null));
     }
 
@@ -138,7 +141,9 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
     private final Map<String, OpInputField> fields;
 
     public OpInputType() {
-      this.fields = DefaultGQLPreparedOperation.this.op.operation().vars()
+      this.fields =
+        DefaultGQLPreparedOperation.this.op.operation()
+          .vars()
           .stream()
           .collect(Collectors.toMap(x -> x.name(), x -> new OpInputField(x)));
     }
@@ -150,6 +155,14 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
 
     public void validate(final GQLPreparedValidationListener listener) {
       // TODO Auto-generated method stub
+    }
+
+    @Override
+    public String toString() {
+      return this.fields.entrySet()
+        .stream()
+        .map(e -> String.format("$%s: %s", e.getKey(), e.getValue().fieldType()))
+        .collect(Collectors.joining(", "));
     }
 
   }
@@ -181,11 +194,6 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
   }
 
   @Override
-  public String toString() {
-    return this.operation().type() + " " + this.operationName().orElse("<unnamed>");
-  }
-
-  @Override
   public GQLPreparedDocument document() {
     return this.doc;
   }
@@ -196,6 +204,21 @@ public class DefaultGQLPreparedOperation implements GQLPreparedOperation {
       this.inputType.validate(listener);
     }
     this.selection.forEach(sel -> sel.validate(listener));
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append(this.operation().type());
+    sb.append(" ");
+    sb.append(this.operationName().orElse("<unnamed>"));
+    sb.append("(");
+    sb.append(this.inputType);
+    sb.append(")");
+    sb.append(" {\n");
+    this.selection.forEach(sel -> sb.append("  ").append(sel).append("\n"));
+    sb.append("}\n");
+    return sb.toString();
   }
 
 }

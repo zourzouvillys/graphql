@@ -18,7 +18,8 @@ public class ExecutableEnumType implements ExecutableType {
   public ExecutableEnumType(final ExecutableSchema schema, final Symbol symbol, final BuildContext buildContext) {
     buildContext.add(symbol, this);
     this.schema = schema;
-    this.symbols = JavaExecutableUtils
+    this.symbols =
+      JavaExecutableUtils
         .enumValuesFrom(symbol.typeToken.getRawType())
         .stream()
         .map(name -> new ExecutableEnumValue(name))
@@ -48,6 +49,11 @@ public class ExecutableEnumType implements ExecutableType {
   @Override
   public TypeToken<?> javaType() {
     throw new IllegalStateException("no java type for enum");
+  }
+
+  @Override
+  public String toString() {
+    return "enum type " + this.typeName;
   }
 
 }

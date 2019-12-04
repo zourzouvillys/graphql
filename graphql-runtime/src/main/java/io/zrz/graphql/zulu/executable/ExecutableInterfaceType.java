@@ -26,8 +26,10 @@ public class ExecutableInterfaceType implements ExecutableType, ExecutableElemen
     this.javaType = symbol.typeToken;
     this.typeName = symbol.typeName;
 
-    final Map<String, ExecutableOutputField> declaredFields = buildctx
-        .outputFieldsFor(symbol, this).map(field -> new ExecutableOutputField(this, symbol, field, buildctx))
+    final Map<String, ExecutableOutputField> declaredFields =
+      buildctx
+        .outputFieldsFor(symbol, this)
+        .map(field -> new ExecutableOutputField(this, symbol, field, buildctx))
         .collect(ImmutableMap.toImmutableMap(k -> k.fieldName(), k -> k, this::mergeFields));
 
     this.interfaces = buildctx.interfacesFor(symbol, this);
@@ -68,6 +70,11 @@ public class ExecutableInterfaceType implements ExecutableType, ExecutableElemen
   @Override
   public TypeToken<?> javaType() {
     return this.javaType;
+  }
+
+  @Override
+  public String toString() {
+    return "interface type " + this.typeName;
   }
 
 }

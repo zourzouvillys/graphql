@@ -22,9 +22,6 @@ dependencyLocking {
 
 ext {
 
-  useImmutableValues = { ->
-  }
-
   libraries = [
     errorProne: 'com.google.errorprone:error_prone_annotations:2.3.1',
     vavr: 'io.vavr:vavr:0.9.2',
@@ -37,7 +34,7 @@ ext {
       builder: 'org.immutables:builder:2.8.2',
     ],
     commons: [
-      lang3: 'org.apache.commons:commons-lang3:3.9',
+      lang3: 'org.apache.commons:commons-lang3:3.7',
       text: 'org.apache.commons:commons-text:1.4',
     ],
     rxjava2: [

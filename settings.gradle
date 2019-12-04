@@ -1,24 +1,15 @@
 rootProject.name = 'graphql'
 
-
-[
- 'annotations',
- 'core',
- 'runtime',
- 'schema',
  //'validator',
  //'generator',
- 'jackson',
- 'server-netty',
 // 'client-grpc',
 // 'server-grpc'
- ].each { _ ->
 
+include ':graphql-annotations'
+include ':graphql-core'
+include ':graphql-runtime'
+include ':graphql-schema'
+include ':graphql-jackson'
+include ':graphql-server-netty'
 
-  include 'graphql-' + _
-  project(':graphql-' + _).projectDir = file('graphql-' + _)
-
-}
-
-include 'zulu-types'
-project(':zulu-types').projectDir = file('zulu-types')
+include ':zulu-types'

@@ -39,4 +39,9 @@ public class ExecutableScalarType implements ExecutableType {
     return this.javaType;
   }
 
+  @Override
+  public String toString() {
+    return "scalar type " + this.typeName;
+  }
+  
 }
