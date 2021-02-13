@@ -35,10 +35,8 @@ subprojects {
     maven { url 'https://jitpack.io' }
   }
 
-  sourceCompatibility = 9
-  targetCompatibility = 9
-
-
+  sourceCompatibility = 11
+  targetCompatibility = 11
 
 // --------------------------------------------------
 // compile
@@ -113,5 +111,5 @@ eclipse {
 }
 
 wrapper {
-    gradleVersion = '6.0.1'
+    gradleVersion = '6.8.2'
 }
