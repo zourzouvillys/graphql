@@ -1,6 +1,7 @@
 package io.zrz.graphql.core.doc;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.immutables.value.Value;
@@ -40,7 +41,7 @@ public abstract class GQLOperationDefinition implements GQLDefinition {
 
   public abstract List<GQLSelection> selections();
 
-  public abstract GQLSourceRange range();
+  public abstract Optional<GQLSourceRange> range();
 
   /**
    *

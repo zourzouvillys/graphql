@@ -2,6 +2,8 @@ package io.zrz.graphql.zulu.engine;
 
 import java.util.Objects;
 
+import javax.annotation.Nullable;
+
 import io.zrz.graphql.core.parser.GQLException;
 import io.zrz.graphql.core.parser.GQLSourceLocation;
 import io.zrz.graphql.core.parser.Lexer.LineInfo;
@@ -193,6 +195,7 @@ public interface ZuluWarning {
 
   String detail();
 
+  @Nullable
   GQLSourceLocation sourceLocation();
 
   ExecutableElement context();

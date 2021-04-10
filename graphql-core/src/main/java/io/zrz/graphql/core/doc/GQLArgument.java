@@ -1,5 +1,7 @@
 package io.zrz.graphql.core.doc;
 
+import java.util.Optional;
+
 import org.immutables.value.Value;
 
 import io.zrz.graphql.core.parser.GQLSourceRange;
@@ -10,7 +12,7 @@ import io.zrz.graphql.core.value.GQLValues;
 @Value.Style(allowedClasspathAnnotations = { Override.class })
 public abstract class GQLArgument {
 
-  public abstract GQLSourceRange location();
+  public abstract Optional<GQLSourceRange> location();
 
   public abstract String name();
 

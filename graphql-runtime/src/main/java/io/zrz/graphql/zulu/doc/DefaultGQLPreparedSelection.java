@@ -76,7 +76,7 @@ class DefaultGQLPreparedSelection implements GQLPreparedSelection {
 
   @Override
   public GQLSourceLocation sourceLocation() {
-    return this.selection.location();
+    return this.selection.location().orElse(null);
   }
 
   public void validate() {

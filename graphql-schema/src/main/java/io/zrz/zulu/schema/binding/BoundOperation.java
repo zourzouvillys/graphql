@@ -35,7 +35,8 @@ public class BoundOperation implements BoundSelectionContainer, BoundElement {
     this.name = op.name();
     this.type = op.type();
 
-    this.raw = StringUtils.trimToNull(op.range().content());
+    this.raw = StringUtils.trimToNull(op.range().map(e -> e.content()).orElse(null));
+    
     this.normalized = NormalizedDefinitionPrinter.normalize(op, true);
 
     this.vars = op.vars()
@@ -55,13 +56,13 @@ public class BoundOperation implements BoundSelectionContainer, BoundElement {
   public Stream<BoundVariable> mandatoryParameters() {
     return this.vars()
         .stream()
-        .filter(var -> !var.type().isNullable() && var.defaultValue() == null);
+        .filter(var -> !var.type().isNullable() && (var.defaultValue() == null));
   }
 
   public Stream<BoundVariable> optionalParameters() {
     return this.vars()
         .stream()
-        .filter(var -> var.type().isNullable() || var.defaultValue() != null);
+        .filter(var -> var.type().isNullable() || (var.defaultValue() != null));
   }
 
   public BoundDocument doc() {

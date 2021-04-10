@@ -1,5 +1,7 @@
 package io.zrz.graphql.core.doc;
 
+import java.util.Optional;
+
 import io.zrz.graphql.core.parser.GQLSourceLocation;
 
 /**
@@ -13,7 +15,7 @@ public interface GQLSelection {
 
   GQLSelectionKind selectionKind();
 
-  GQLSourceLocation location();
+  Optional<GQLSourceLocation> location();
 
   GQLSelection withLocation(GQLSourceLocation location);
 

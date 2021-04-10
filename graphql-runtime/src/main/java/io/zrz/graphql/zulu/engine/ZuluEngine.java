@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -52,7 +53,8 @@ public class ZuluEngine {
 
   private static Logger log = LoggerFactory.getLogger(ZuluEngine.class);
 
-  private final Cache<String, ZuluCompileResult> cache = CacheBuilder.newBuilder()
+  private final Cache<String, ZuluCompileResult> cache =
+    CacheBuilder.newBuilder()
       .maximumSize(1_000)
       .build();
 
@@ -111,8 +113,8 @@ public class ZuluEngine {
   public Stream<ZuluCompileResult> compileDocument(final String documentString) {
     final GQLPreparedDocument doc = this.docs.prepareDocument(this.docs.parse(documentString));
     return doc
-        .operations()
-        .map(op -> this.compile(op));
+      .operations()
+      .map(op -> this.compile(op));
   }
 
   /**
@@ -136,14 +138,14 @@ public class ZuluEngine {
       if (queryString == null) {
         // add warn?
         return ZuluCompileResult.withErrors(
-            new ZuluWarning.ParseWarning(ZuluWarningKind.PERSISTED_QUERY_NOT_FOUND, queryString, null));
+          new ZuluWarning.ParseWarning(ZuluWarningKind.PERSISTED_QUERY_NOT_FOUND, queryString, null));
       }
 
     }
 
     if (queryString == null) {
       return ZuluCompileResult.withErrors(
-          new ZuluWarning.ParseWarning(ZuluWarningKind.SYNTAX_ERROR, "empty query string", null));
+        new ZuluWarning.ParseWarning(ZuluWarningKind.SYNTAX_ERROR, "empty query string", null));
     }
 
     final String hashCode = Hashing.sha256().hashString(queryString, StandardCharsets.UTF_8).toString();
@@ -155,7 +157,7 @@ public class ZuluEngine {
     }
     catch (final GQLException ex) {
       return ZuluCompileResult.withErrors(
-          new ZuluWarning.ParseWarning(ZuluWarningKind.SYNTAX_ERROR, queryString, ex));
+        new ZuluWarning.ParseWarning(ZuluWarningKind.SYNTAX_ERROR, queryString, ex));
     }
 
     final AtomicBoolean error = new AtomicBoolean(false);
@@ -166,7 +168,7 @@ public class ZuluEngine {
     class CollectingListener implements GQLPreparedValidationListener {
 
       @Override
-      public void error(final ZField field, final GQLSourceRange location, final String string) {
+      public void error(final ZField field, final Optional<GQLSourceRange> location, final String string) {
 
         errors.add(new ZuluWarning() {
 
@@ -177,7 +179,7 @@ public class ZuluEngine {
 
           @Override
           public GQLSourceLocation sourceLocation() {
-            return location.start();
+            return location.map(e -> e.start()).orElse(null);
           }
 
           @Override
@@ -227,14 +229,14 @@ public class ZuluEngine {
       if (operationName == null) {
 
         return ZuluCompileResult.withErrors(
-            doc,
-            new ZuluWarning.DocumentWarning(ZuluWarningKind.OPERATION_NAME_REQUIRED, doc));
+          doc,
+          new ZuluWarning.DocumentWarning(ZuluWarningKind.OPERATION_NAME_REQUIRED, doc));
 
       }
 
       return ZuluCompileResult.withErrors(
-          doc,
-          new ZuluWarning.DocumentWarning(ZuluWarningKind.INVALID_OPERATION, doc, operationName));
+        doc,
+        new ZuluWarning.DocumentWarning(ZuluWarningKind.INVALID_OPERATION, doc, operationName));
 
     }
 
@@ -275,10 +277,10 @@ public class ZuluEngine {
             final String stringValue = ((ZStringValue) scalar).stringValue();
             if (rawType.isEnum()) {
               return Arrays.stream(rawType.getEnumConstants())
-                  .map(e -> Enum.class.cast(e))
-                  .filter(e -> e.name().equals(stringValue))
-                  .findFirst()
-                  .get();
+                .map(e -> Enum.class.cast(e))
+                .filter(e -> e.name().equals(stringValue))
+                .findFirst()
+                .get();
             }
             return stringValue;
           }
@@ -289,9 +291,9 @@ public class ZuluEngine {
       }
       case ARRAY:
         return ((ZArrayValue) value)
-            .values()
-            .map(val -> this.get(param, val))
-            .toArray(length -> JavaExecutableUtils.makeArray(param, length));
+          .values()
+          .map(val -> this.get(param, val))
+          .toArray(length -> JavaExecutableUtils.makeArray(param, length));
       case ENUM:
       case STRUCT:
       case TUPLE:
@@ -399,11 +401,14 @@ public class ZuluEngine {
     if (doc.executable().operationType() == GQLOpType.Subscription) {
 
       // subscriptions are handled separately - we first use the instance to set up the subscription
-      // and then perform an execution on each value it returns. the main difference is the same field
+      // and then perform an execution on each value it returns. the main difference is the same
+      // field
       // may be returned multiple times.
 
-      // flow control is important here - we may have a slow subscriber, and need to do some buffering and then
-      // abort the subscription with a buffer overflow error if they can't keep up (or switch to on-disk spooling, etc).
+      // flow control is important here - we may have a slow subscriber, and need to do some
+      // buffering and then
+      // abort the subscription with a buffer overflow error if they can't keep up (or switch to
+      // on-disk spooling, etc).
 
       final ZuluSubscriptionContext sub = doc.executable().subscribe(instance, scope, new ZuluRequest(q.variables()));
 
@@ -443,9 +448,9 @@ public class ZuluEngine {
   }
 
   /**
-   * new invocation API, which splits the internal binding from the actual fetching of the data in some scenarios
-   * (currently just subscriptions). this allows flow controlled subscriptions. once the portal is returned, results can
-   * be retrieved.
+   * new invocation API, which splits the internal binding from the actual fetching of the data in
+   * some scenarios (currently just subscriptions). this allows flow controlled subscriptions. once
+   * the portal is returned, results can be retrieved.
    */
 
   public ZuluPortal bind(final ImmutableBindParams q, final ZuluInjector injector) {
