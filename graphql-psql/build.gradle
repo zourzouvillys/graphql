@@ -3,11 +3,14 @@ plugins {
   id "eclipse"
 }
 
-eclipse.project.name = 'graphql:core'
-
+eclipse.project.name = 'graphql:psql'
 
 dependencies {
-  
+    
+  api                 libraries.slf4j.api
+  api                 project(':graphql-core')
+  api                 'io.zrz.psqlwriter:psqlwriter:0.1'
+
   compileOnly         libraries.jdtAnnotation
   compileOnly         libraries.immutables.value
   annotationProcessor libraries.immutables.value

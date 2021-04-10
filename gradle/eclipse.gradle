@@ -1,0 +1,94 @@
+
+project.apply plugin: 'eclipse'
+project.apply plugin: 'net.ltgt.apt-eclipse'
+
+project.afterEvaluate {
+
+  if (project.tasks.findByName('cleanEclipseFactorypath')) {
+
+	  project.rootProject.tasks['configureBuildship'].dependsOn(
+	  
+	    project.tasks['cleanEclipseFactorypath'],
+	    project.tasks['cleanEclipseClasspath'],
+	    project.tasks['cleanEclipseJdtApt'],
+	    project.tasks['cleanEclipseJdt'],
+	    
+	    project.tasks['eclipseClasspath'],
+	    project.tasks['eclipseFactorypath'],
+	    project.tasks['eclipseJdt'],
+	    project.tasks['eclipseJdtApt'],
+	    project.tasks['eclipseProject']
+	    
+	  )
+  
+  }  
+  else if (project.tasks.findByName('eclipseFactorypath')) {
+
+	  project.rootProject.tasks['configureBuildship'].dependsOn(
+	  	    
+	    project.tasks['eclipseClasspath'],
+	    project.tasks['eclipseFactorypath'],
+	    project.tasks['eclipseJdt'],
+	    project.tasks['eclipseJdtApt'],
+	    project.tasks['eclipseProject']
+	    
+	  )
+
+  }  
+  
+  project.eclipse {
+    project.name = createProjectDisplayName()
+    project.natures << 'org.eclipse.buildship.core.gradleprojectnature'
+  }
+  
+  
+
+  project.eclipse.classpath {
+
+    defaultOutputDir = file('build/classes/java/main')
+
+    file.whenMerged {
+    
+      entries.each { source ->
+        if (source.kind == 'src' && source.toString().contains('output') && source.output == 'bin/main') {
+           source.output = 'build/classes/java/main'
+        }
+        if (source.kind == 'src' && source.toString().contains('output') && source.output == 'bin/test') {
+           source.output = 'build/classes/java/test'
+        }
+      }
+
+      def aptSource = new org.gradle.plugins.ide.eclipse.model.SourceFolder('.apt_generated','build/classes/java/main')
+      aptSource.entryAttributes['optional'] = 'true'
+      aptSource.entryAttributes['ignore_optional_problems'] = 'true'
+      entries += aptSource      
+    
+      project.plugins.withId('com.google.protobuf') {
+        def protoSource = new org.gradle.plugins.ide.eclipse.model.SourceFolder('build/generated/source/proto/main/java','bin/main')
+        protoSource.entryAttributes['optional'] = 'true'
+        protoSource.entryAttributes['ignore_optional_problems'] = 'true'
+        entries += protoSource
+      }
+      
+      project.plugins.withId('antlr') {
+        def protoSource = new org.gradle.plugins.ide.eclipse.model.SourceFolder('build/generated-src/antlr/main','bin/main')
+        protoSource.entryAttributes['optional'] = 'true'
+        protoSource.entryAttributes['ignore_optional_problems'] = 'true'
+        entries += protoSource
+      }
+      
+    }      
+
+  }
+
+
+}
+
+
+def createProjectDisplayName() {
+  if (project == project.rootProject) {
+    return project.name  
+  }
+  return "${project.rootProject.name}${project.path}"
+}
+

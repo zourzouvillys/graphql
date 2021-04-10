@@ -35,11 +35,3 @@ dependencies {
 
 }
 
-
-eclipse {
-    classpath {
-        file.whenMerged { cp ->
-            cp.entries.add( new org.gradle.plugins.ide.eclipse.model.SourceFolder('build/generated/source/apt/main/', null) )
-        }
-    }
-}

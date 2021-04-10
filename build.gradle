@@ -1,17 +1,6 @@
 
-buildscript {
-
-  repositories {
-    maven {
-      url 'https://plugins.gradle.org/m2/'
-    }
-    jcenter()
-  }
-
-  dependencies {
-    classpath "net.ltgt.gradle:gradle-apt-plugin:0.21"
-  }
-
+plugins {
+  id 'net.ltgt.apt-eclipse' version '0.21' apply false
 }
 
 allprojects {
@@ -19,7 +8,7 @@ allprojects {
   version = 'master-SNAPSHOT'
 }
 
-subprojects {
+subprojects { project ->
 
   apply plugin: 'java-library'
   apply plugin: 'eclipse'
@@ -29,34 +18,36 @@ subprojects {
 
   apply from: "${rootDir}/gradle/deps.gradle"
 
+
   repositories {
-    mavenCentral()
+    // mavenCentral()
     jcenter()
-    maven { url 'https://jitpack.io' }
+    // maven { url 'https://jitpack.io' }
+    // maven { url 'https://zrz-131509674320.d.codeartifact.us-west-2.amazonaws.com/maven/zrz/' }
   }
 
-  sourceCompatibility = 11
-  targetCompatibility = 11
+  sourceCompatibility = 15
+  targetCompatibility = 15
 
-// --------------------------------------------------
-// compile
-// --------------------------------------------------
-
-
-tasks.withType(JavaCompile) {
-    options.compilerArgs << '-parameters'
-}
-
-
-eclipse {
-  jdt {
-    file {
-      withProperties { properties ->
-        properties.setProperty("org.eclipse.jdt.core.compiler.codegen.methodParameters", "generate")
-      }
-    }
-  }
-}
+	// --------------------------------------------------
+	// compile
+	// --------------------------------------------------
+	
+	
+	tasks.withType(JavaCompile) {
+	    options.compilerArgs << '-parameters'
+	}
+	
+	
+	eclipse {
+	  jdt {
+	    file {
+	      withProperties { properties ->
+	        properties.setProperty("org.eclipse.jdt.core.compiler.codegen.methodParameters", "generate")
+	      }
+	    }
+	  }
+	}
 
   // --------------------------------------------------
   // install
@@ -113,3 +104,34 @@ eclipse {
 wrapper {
     gradleVersion = '6.8.2'
 }
+
+// ---
+
+
+
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+
+
+
+allprojects { project ->
+
+  project.repositories {
+    mavenCentral()
+  }
+
+  project.apply from: "${rootDir}/gradle/eclipse.gradle"
+
+}
+
+
+
+
+task configureBuildship {
+  dependsOn gradle.includedBuilds*.task(':configureBuildship')
+}
+
+eclipse {
+  synchronizationTasks configureBuildship
+}
+

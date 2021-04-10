@@ -4,12 +4,17 @@ rootProject.name = 'graphql'
  //'generator',
 // 'client-grpc',
 // 'server-grpc'
+// include ':graphql-server-netty'
 
 include ':graphql-annotations'
 include ':graphql-core'
 include ':graphql-runtime'
 include ':graphql-schema'
 include ':graphql-jackson'
-include ':graphql-server-netty'
+include ':graphql-psql'
 
 include ':zulu-types'
+
+if (file("../psqlwriter").exists()) {
+  includeBuild('../psqlwriter')
+}
